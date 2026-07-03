@@ -103,6 +103,8 @@ export default function AppointmentsPage() {
   const [selectedDate,setSelectedDate]= useState(() => new Date());
   const [billingAppt,  setBillingAppt]  = useState<Appt | null>(null);
   const [settings,     setSettings]     = useState<any>(null);
+  const [movingApptId, setMovingApptId] = useState<string | null>(null);
+  const [moveTarget,   setMoveTarget]   = useState<{staffId:string; slot:number} | null>(null);
 
   // Derived scheduler hours configuration from settings
   const dayStart = settings?.openingTime ? parseHour(settings.openingTime, 10) : 10;
@@ -235,6 +237,33 @@ export default function AppointmentsPage() {
     try {
       await fetch(`/api/appointments/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
     } catch {}
+  };
+
+  // Move an existing appointment to a different stylist column and/or time slot (drag-and-drop reschedule).
+  const moveAppt = async (id: string, staffId: string, startSlot: number) => {
+    const appt = appts.find(a => a.id === id);
+    if (!appt) return;
+    const endSlot = startSlot + appt.durationSlots;
+    const clash = appts.some(a =>
+      a.id !== id && a.staffId === staffId && a.status !== "CANCELLED" &&
+      startSlot < a.startSlot + a.durationSlots && endSlot > a.startSlot
+    );
+    if (clash) { toast.error("That stylist already has an appointment at this time."); return; }
+
+    const prevAppts = appts;
+    setAppts(prev => prev.map(a => a.id === id ? { ...a, staffId, startSlot } : a));
+    try {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staffId, startSlot, endSlot }),
+      });
+      const j = await res.json();
+      if (!j.success) { setAppts(prevAppts); toast.error(j.error || "Could not reschedule appointment."); return; }
+      toast.success("Appointment rescheduled");
+    } catch {
+      setAppts(prevAppts);
+      toast.error("Network error. Please try again.");
+    }
   };
   const deleteAppt = async (id: string) => {
     setDetailAppt(null);
@@ -389,15 +418,19 @@ export default function AppointmentsPage() {
             const colAppts = dayAppts.filter(a => a.staffId === s.id);
             const dragMin  = drag?.staffId === s.id ? Math.min(drag.start, drag.end) : null;
             const dragMax  = drag?.staffId === s.id ? Math.max(drag.start, drag.end) : null;
+            const movingAppt = movingApptId ? appts.find(a => a.id === movingApptId) : null;
+            const moveMin = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot : null;
+            const moveMax = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot + movingAppt.durationSlots - 1 : null;
             return (
               <div key={s.id} className="flex-1 min-w-[155px] relative" style={{ borderRight:"1px solid #C5A8AE" }}>
                 {/* Slot cells */}
                 {Array.from({ length: totalSlots }, (_, i) => {
                   const occupied = colAppts.some(a => i >= a.startSlot && i < a.startSlot + a.durationSlots);
                   const inDrag   = dragMin !== null && dragMax !== null && i >= dragMin && i <= dragMax;
+                  const inMoveTarget = moveMin !== null && moveMax !== null && i >= moveMin && i <= moveMax;
                   return (
                     <div key={i}
-                      className={cn("transition-colors", inDrag ? "bg-primary-100" : occupied ? "" : "hover:bg-rose-50")}
+                      className={cn("transition-colors", inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : "hover:bg-rose-50")}
                       style={{
                         height: SLOT_H,
                         cursor: occupied ? "default" : "crosshair",
@@ -405,6 +438,13 @@ export default function AppointmentsPage() {
                       }}
                       onMouseDown={e => { e.preventDefault(); if (!occupied) onCellDown(s.id, i); }}
                       onMouseEnter={() => onCellEnter(s.id, i)}
+                      onDragOver={e => { if (movingApptId) { e.preventDefault(); setMoveTarget({ staffId: s.id, slot: i }); } }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        if (movingApptId) moveAppt(movingApptId, s.id, i);
+                        setMovingApptId(null);
+                        setMoveTarget(null);
+                      }}
                     />
                   );
                 })}
@@ -433,12 +473,18 @@ export default function AppointmentsPage() {
                   const isCancelled  = appt.status === "CANCELLED";
                   const isInProgress = appt.status === "IN_PROGRESS";
                   const isWaiting    = appt.status === "WAITING";
+                  const isMovable    = !isCompleted && !isCancelled;
                   return (
                     <div key={appt.id}
+                      draggable={isMovable}
+                      onDragStart={e => { if (isMovable) { setMovingApptId(appt.id); e.dataTransfer.effectAllowed = "move"; } }}
+                      onDragEnd={() => { setMovingApptId(null); setMoveTarget(null); }}
                       className={cn(
                         "absolute inset-x-1 rounded-lg overflow-hidden z-20 cursor-pointer transition-all duration-150",
                         "hover:inset-x-0 hover:z-30 hover:shadow-xl",
-                        isCancelled || isCompleted ? "opacity-55" : ""
+                        isMovable ? "active:cursor-grabbing" : "",
+                        isCancelled || isCompleted ? "opacity-55" : "",
+                        movingApptId === appt.id ? "opacity-30" : ""
                       )}
                       style={{
                         top:          appt.startSlot * SLOT_H + 2,
