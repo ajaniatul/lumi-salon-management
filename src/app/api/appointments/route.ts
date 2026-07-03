@@ -26,6 +26,8 @@ function toUI(a: any) {
     serviceId: a.services?.[0]?.serviceId ?? null,
     unitPrice: a.services?.[0]?.price != null ? Number(a.services[0].price) : null,
     gstRate: a.services?.[0]?.service?.gstRate != null ? Number(a.services[0].service.gstRate) : 18,
+    invoiceNumber: a.invoice?.invoiceNumber ?? null,
+    invoiceTotal: a.invoice?.totalAmount != null ? Number(a.invoice.totalAmount) : null,
     startSlot: timeToSlot(new Date(a.startTime)),
     durationSlots: Math.max(1, Math.round(a.duration / SLOT_MINS)),
     status: a.status,
@@ -51,6 +53,7 @@ export async function GET(request: NextRequest) {
       include: {
         customer: { select: { name: true, phone: true, customerId: true } },
         services: { include: { service: { select: { name: true, gstRate: true } } } },
+        invoice: { select: { invoiceNumber: true, totalAmount: true } },
       },
       orderBy: { startTime: "asc" },
     });

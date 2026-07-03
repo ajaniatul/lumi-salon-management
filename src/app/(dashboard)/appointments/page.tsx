@@ -63,6 +63,7 @@ type Status = "CONFIRMED"|"IN_PROGRESS"|"COMPLETED"|"WAITING"|"CANCELLED";
 type Appt = {
   id:string; staffId:string; customer:string; phone:string; customerCode?:string|null;
   service:string; serviceId?:string|null; unitPrice?:number|null; gstRate?:number;
+  invoiceNumber?:string|null; invoiceTotal?:number|null;
   startSlot:number; durationSlots:number; status:Status; notes?:string
 };
 
@@ -236,9 +237,16 @@ export default function AppointmentsPage() {
     } catch {}
   };
   const deleteAppt = async (id: string) => {
-    setAppts(prev => prev.filter(a => a.id !== id));
     setDetailAppt(null);
-    try { await fetch(`/api/appointments/${id}`, { method: "DELETE" }); toast.success("Appointment cancelled"); } catch {}
+    try {
+      const res = await fetch(`/api/appointments/${id}`, { method: "DELETE" });
+      const j = await res.json();
+      if (!j.success) { toast.error(j.error || "Could not delete appointment."); return; }
+      setAppts(prev => prev.filter(a => a.id !== id));
+      toast.success(j.data?.hadInvoice ? "Appointment deleted and its invoice/payment reversed" : "Appointment cancelled");
+    } catch {
+      toast.error("Network error. Please try again.");
+    }
   };
 
   const servicePrice = (name: string) => services.find(s => s.name === name)?.price ?? 1000;
@@ -798,6 +806,17 @@ export default function AppointmentsPage() {
                     <button className="w-full text-sm py-2 rounded-xl font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
                       onClick={() => deleteAppt(detailAppt.id)}>
                       Cancel Appointment
+                    </button>
+                  )}
+                  {detailAppt.status === "COMPLETED" && (
+                    <button className="w-full text-sm py-2 rounded-xl font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                      onClick={() => {
+                        const warning = detailAppt.invoiceNumber
+                          ? `This appointment was billed as ${detailAppt.invoiceNumber} (₹${detailAppt.invoiceTotal?.toLocaleString("en-IN")}). Deleting it will also delete that invoice and reverse the payment, spend, and loyalty points it added. Continue?`
+                          : "Delete this completed appointment? This cannot be undone.";
+                        if (window.confirm(warning)) deleteAppt(detailAppt.id);
+                      }}>
+                      Delete Appointment
                     </button>
                   )}
                 </div>
