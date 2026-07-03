@@ -467,7 +467,7 @@ export default function SettingsPage() {
                 ))}
               </div>
               <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-xs text-blue-700">
-                <strong>Note:</strong> Both CGST and SGST appear as separate line items on every invoice. The salon's GSTIN is auto-printed on all receipts. Input Tax Credit (ITC) on purchases is tracked separately in the Purchases module.
+                <strong>Note:</strong> Both CGST and SGST appear as separate line items on every invoice. The salon&apos;s GSTIN is auto-printed on all receipts. Input Tax Credit (ITC) on purchases is tracked separately in the Purchases module.
               </div>
               <button onClick={() => toast.success("GST & billing settings saved")} className="btn-primary text-sm flex items-center gap-2"><Save className="w-4 h-4" /> Save GST Settings</button>
             </div>
@@ -760,7 +760,7 @@ export default function SettingsPage() {
                     <Plus className="w-3.5 h-3.5" /> Add
                   </button>
                 </div>
-                <p className="text-[10px] text-muted-foreground">Category names are stored in uppercase with underscores (e.g. "Hair Care" → HAIR_CARE). Press Enter or click Add.</p>
+                <p className="text-[10px] text-muted-foreground">Category names are stored in uppercase with underscores (e.g. &quot;Hair Care&quot; → HAIR_CARE). Press Enter or click Add.</p>
               </div>
 
               <div className="border-t border-ivory-200" />
