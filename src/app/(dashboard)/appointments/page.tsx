@@ -75,6 +75,16 @@ const STATUS_META: Record<Status,{label:string;badge:string}> = {
   CANCELLED:   { label:"Cancelled",   badge:"bg-red-100 text-red-500 border border-red-200" },
 };
 
+// Same hues as STATUS_META's badges — used for the appointment block fill so status
+// is readable at a glance on the calendar; the block's border carries the stylist color.
+const STATUS_COLOR: Record<Status,string> = {
+  CONFIRMED:   "#3B82F6",
+  IN_PROGRESS: "#10B981",
+  COMPLETED:   "#9CA3AF",
+  WAITING:     "#F59E0B",
+  CANCELLED:   "#EF4444",
+};
+
 const defaultForm = {
   customerMode: "existing" as "existing"|"new",
   customerId: "",
@@ -487,13 +497,10 @@ export default function AppointmentsPage() {
                         movingApptId === appt.id ? "opacity-30" : ""
                       )}
                       style={{
-                        top:          appt.startSlot * SLOT_H + 2,
-                        height:       appt.durationSlots * SLOT_H - 4,
-                        background:   isCompleted || isCancelled ? "#F0EAEC" : `${s.color}1A`,
-                        borderLeft:   `3px solid ${s.color}`,
-                        borderTop:    `1px solid ${s.color}30`,
-                        borderRight:  `1px solid ${s.color}30`,
-                        borderBottom: isWaiting ? `2px dashed ${s.color}60` : `1px solid ${s.color}30`,
+                        top:    appt.startSlot * SLOT_H + 2,
+                        height: appt.durationSlots * SLOT_H - 4,
+                        background: `${STATUS_COLOR[appt.status]}22`,
+                        border: `2px solid ${s.color}`,
                       }}
                       onClick={() => setDetailAppt(appt)}
                     >
