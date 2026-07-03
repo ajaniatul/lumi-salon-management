@@ -94,7 +94,7 @@ export default function LoyaltyPage() {
           { label:"Total Points Issued", value:customers.reduce((s,c)=>s+c.earned,0).toLocaleString("en-IN"), desc:"All time, all customers" },
           { label:"Points Redeemed", value:totalRedeemed.toLocaleString("en-IN"), desc:`₹${totalRedeemed.toLocaleString("en-IN")} in discounts given` },
           { label:"Points Outstanding", value:totalPoints.toLocaleString("en-IN"), desc:`₹${totalPoints.toLocaleString("en-IN")} potential liability` },
-          { label:"Active Loyalty Members", value:customers.length.toString(), desc:"Customers with points" },
+          { label:"Active Loyalty Members", value:customers.filter(c => c.points > 0).length.toString(), desc:"Customers with points" },
         ].map(s => (
           <div key={s.label} className="card-luxury p-4">
             <p className="text-xl font-display font-bold text-foreground">{s.value}</p>

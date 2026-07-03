@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-display font-bold text-foreground">Analytics & Insights</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">Customer segmentation, retention trends and stylist performance — computed live from your salon's real data.</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Customer segmentation, retention trends and stylist performance — computed live from your salon&apos;s real data.</p>
       </div>
 
       {/* KPI Overview */}
@@ -129,7 +129,7 @@ export default function AnalyticsPage() {
         {/* Customer Retention Chart */}
         <div className="card-luxury p-5">
           <p className="text-sm font-semibold text-foreground mb-1">Customer Retention Trend</p>
-          <p className="text-xs text-muted-foreground mb-4">New vs retained vs churned customers per month. Churn for the current month is still unfolding, so it isn't counted yet.</p>
+          <p className="text-xs text-muted-foreground mb-4">New vs retained vs churned customers per month. Churn for the current month is still unfolding, so it isn&apos;t counted yet.</p>
           <div className="space-y-2">
             {retentionData.map(m => {
               const total = m.retained + m.new + m.churned || 1;

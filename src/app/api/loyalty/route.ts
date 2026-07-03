@@ -24,8 +24,10 @@ export async function GET() {
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   try {
+    // Every active customer is eligible for loyalty points — not just ones with
+    // existing activity — so a manager can award someone's very first points.
     const customers = await prisma.customer.findMany({
-      where: { OR: [{ loyaltyPoints: { gt: 0 } }, { loyaltyTransactions: { some: {} } }] },
+      where: { isActive: true },
       orderBy: { loyaltyPoints: "desc" },
       include: {
         membership: { include: { membership: { select: { tier: true } } } },
