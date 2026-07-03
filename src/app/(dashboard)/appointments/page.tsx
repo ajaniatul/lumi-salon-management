@@ -499,7 +499,7 @@ export default function AppointmentsPage() {
                       style={{
                         top:    appt.startSlot * SLOT_H + 2,
                         height: appt.durationSlots * SLOT_H - 4,
-                        background: `${STATUS_COLOR[appt.status]}22`,
+                        background: `${STATUS_COLOR[appt.status]}55`,
                         border: `2px solid ${s.color}`,
                       }}
                       onClick={() => setDetailAppt(appt)}
