@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { InvoiceA4, InvoiceData, generateInvoiceHTML } from "@/components/InvoiceA4";
-import { ChevronLeft, ChevronRight, X, UserPlus, Users, Receipt, Banknote, CreditCard, Smartphone, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, UserPlus, Users, Receipt, Banknote, CreditCard, Smartphone, Loader2, Copy, ClipboardPaste } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/components/layout/HeaderActionContext";
 import toast from "react-hot-toast";
@@ -118,6 +118,7 @@ export default function AppointmentsPage() {
   const [moveTarget,   setMoveTarget]   = useState<{staffId:string; slot:number} | null>(null);
   const [resizePreview, setResizePreview] = useState<{id:string; endSlot:number} | null>(null);
   const resizing = useRef<{id:string; staffId:string; startSlot:number; origEnd:number; startY:number; maxEnd:number} | null>(null);
+  const [copiedAppt, setCopiedAppt] = useState<{customerCode:string; customer:string; phone:string; serviceIds:string[]; notes?:string; durationSlots:number} | null>(null);
 
   // Derived scheduler hours configuration from settings
   const dayStart = settings?.openingTime ? parseHour(settings.openingTime, 10) : 10;
@@ -330,6 +331,37 @@ export default function AppointmentsPage() {
   const resizeApptRef = useRef(resizeAppt);
   useEffect(() => { resizeApptRef.current = resizeAppt; });
 
+  // Clear the copied appointment on Escape.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setCopiedAppt(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Paste a copied appointment onto another stylist's (or the same stylist's) empty slot —
+  // lets two stylists attend the same customer for different services at the same time.
+  const pasteAppt = async (staffId: string, startSlot: number) => {
+    if (!copiedAppt) return;
+    const endSlot = startSlot + copiedAppt.durationSlots;
+    try {
+      const res = await fetch("/api/appointments", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: curKey, staffId, startSlot, endSlot,
+          serviceIds: copiedAppt.serviceIds,
+          customerCode: copiedAppt.customerCode,
+          notes: copiedAppt.notes,
+        }),
+      });
+      const j = await res.json();
+      if (!j.success) { toast.error(j.error || "Could not paste appointment."); return; }
+      setAppts(a => [...a, j.data]);
+      toast.success(`Pasted ${copiedAppt.customer}`);
+    } catch {
+      toast.error("Network error. Please try again.");
+    }
+  };
+
   const deleteAppt = async (id: string) => {
     setDetailAppt(null);
     try {
@@ -429,7 +461,19 @@ export default function AppointmentsPage() {
             <span className="text-[11px] text-muted-foreground">{s.label}</span>
           </div>
         ))}
-        <span className="text-xs text-muted-foreground ml-auto hidden md:block">Drag on empty space to book · click an appointment to manage</span>
+        {copiedAppt ? (
+          <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-50 border border-primary-200">
+            <ClipboardPaste className="w-3.5 h-3.5 text-primary-600" />
+            <span className="text-xs text-primary-700">
+              Copied <strong>{copiedAppt.customer}</strong> — click an empty slot to paste
+            </span>
+            <button onClick={() => setCopiedAppt(null)} className="text-xs text-primary-500 hover:text-primary-700 underline">
+              Clear
+            </button>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground ml-auto hidden md:block">Drag on empty space to book · click an appointment to manage</span>
+        )}
       </div>
 
       {/* ── Scheduler grid ── */}
@@ -495,13 +539,18 @@ export default function AppointmentsPage() {
                   const inMoveTarget = moveMin !== null && moveMax !== null && i >= moveMin && i <= moveMax;
                   return (
                     <div key={i}
-                      className={cn("transition-colors", inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : "hover:bg-rose-50")}
+                      className={cn("transition-colors", inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : copiedAppt ? "hover:bg-primary-100" : "hover:bg-rose-50")}
                       style={{
                         height: SLOT_H,
-                        cursor: occupied ? "default" : "crosshair",
+                        cursor: occupied ? "default" : copiedAppt ? "copy" : "crosshair",
                         borderBottom: borderForSlot(i),
                       }}
-                      onMouseDown={e => { e.preventDefault(); if (!occupied) onCellDown(s.id, i); }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        if (occupied) return;
+                        if (copiedAppt) { pasteAppt(s.id, i); return; }
+                        onCellDown(s.id, i);
+                      }}
                       onMouseEnter={() => onCellEnter(s.id, i)}
                       onDragOver={e => { if (movingApptId) { e.preventDefault(); setMoveTarget({ staffId: s.id, slot: i }); } }}
                       onDrop={e => {
@@ -975,6 +1024,25 @@ export default function AppointmentsPage() {
                       Delete Appointment
                     </button>
                   )}
+                  <button className="w-full text-sm py-2 rounded-xl font-semibold border border-primary-200 text-primary-600 hover:bg-primary-50 transition-colors flex items-center justify-center gap-1.5"
+                    onClick={() => {
+                      if (!detailAppt.customerCode || !detailAppt.services?.length) {
+                        toast.error("This appointment is missing data and can't be copied.");
+                        return;
+                      }
+                      setCopiedAppt({
+                        customerCode: detailAppt.customerCode,
+                        customer: detailAppt.customer,
+                        phone: detailAppt.phone,
+                        serviceIds: detailAppt.services.map(sv => sv.id),
+                        notes: detailAppt.notes,
+                        durationSlots: detailAppt.durationSlots,
+                      });
+                      setDetailAppt(null);
+                      toast.success(`Copied ${detailAppt.customer} — click an empty slot to paste`);
+                    }}>
+                    <Copy className="w-3.5 h-3.5" /> Copy to Another Stylist
+                  </button>
                 </div>
               </div>
             </div>
