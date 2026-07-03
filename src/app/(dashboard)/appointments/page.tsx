@@ -854,6 +854,7 @@ export default function AppointmentsPage() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 customerId: billingAppt.customerCode,
+                appointmentId: billingAppt.id,
                 items: [{
                   type: "Service", dbId: billingAppt.serviceId, name: billingAppt.service,
                   unitPrice: base, qty: 1, gstRate,

@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       customerId,       // "CUS-0001" string
+      appointmentId,    // optional — links this invoice back to the appointment it was billed from
       items,            // [{ type, dbId, name, unitPrice, qty, gstRate }]
       discountAmt = 0,
       discountNote = "",
@@ -137,6 +138,7 @@ export async function POST(request: NextRequest) {
       data: {
         invoiceNumber,
         customerId:    customer.id,
+        appointmentId: appointmentId || null,
         subtotal:      rawSubtotal ?? total,
         discountAmount: discountAmt,
         taxableAmount: taxableAmt,
