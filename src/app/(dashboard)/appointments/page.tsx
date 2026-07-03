@@ -60,7 +60,11 @@ const TIER_CHIP: Record<string,string> = {
 };
 
 type Status = "CONFIRMED"|"IN_PROGRESS"|"COMPLETED"|"WAITING"|"CANCELLED";
-type Appt = { id:string; staffId:string; customer:string; phone:string; service:string; startSlot:number; durationSlots:number; status:Status; notes?:string };
+type Appt = {
+  id:string; staffId:string; customer:string; phone:string; customerCode?:string|null;
+  service:string; serviceId?:string|null; unitPrice?:number|null; gstRate?:number;
+  startSlot:number; durationSlots:number; status:Status; notes?:string
+};
 
 const STATUS_META: Record<Status,{label:string;badge:string}> = {
   CONFIRMED:   { label:"Confirmed",   badge:"bg-blue-100 text-blue-700 border border-blue-200" },
@@ -806,7 +810,7 @@ export default function AppointmentsPage() {
       {/* BILLING MODAL */}
       {billingAppt && (() => {
         const s        = STAFF.find(st => st.id === billingAppt.staffId)!;
-        const base         = servicePrice(billingAppt.service);
+        const base         = billingAppt.unitPrice ?? servicePrice(billingAppt.service);
         const dv           = Number(discountVal) || 0;
         const discountAmt  = discountType === "PCT"
           ? Math.round(base * dv / 100)
@@ -837,13 +841,41 @@ export default function AppointmentsPage() {
         const upiUrl = `upi://pay?pa=lumi@upi&pn=Lumi+Salon&am=${total}&tn=${currentInvNum}`;
         const qrSrc  = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUrl)}&bgcolor=FCF5F6&color=2D1B1F&margin=2`;
 
-        const doProcess = () => {
+        const doProcess = async () => {
+          if (!billingAppt.customerCode || !billingAppt.serviceId) {
+            toast.error("This appointment is missing customer/service data and can't be billed. Try re-booking it.");
+            return;
+          }
           setPayProcessing(true);
-          setTimeout(() => {
-            changeStatus(billingAppt.id, "COMPLETED");
+          const methodLabel = PAY_OPTS.find(p => p.id === payMethod)?.label ?? payMethod;
+          try {
+            const res = await fetch("/api/invoices", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                customerId: billingAppt.customerCode,
+                items: [{
+                  type: "Service", dbId: billingAppt.serviceId, name: billingAppt.service,
+                  unitPrice: base, qty: 1, gstRate,
+                }],
+                rawSubtotal: base,
+                discountAmt,
+                discountNote: discountNote.trim(),
+                gstRate, cgst, sgst, total,
+                paidAmt: total,
+                methodLabel,
+              }),
+            });
+            const json = await res.json();
+            if (!json.success) { toast.error(json.error || "Could not create invoice."); setPayProcessing(false); return; }
+            setCurrentInvNum(json.data.id);
+            await changeStatus(billingAppt.id, "COMPLETED");
             setPayProcessing(false);
             setPayDone(true);
-          }, 2000);
+          } catch {
+            toast.error("Network error — invoice was not created.");
+            setPayProcessing(false);
+          }
         };
 
         const closeAll = () => {

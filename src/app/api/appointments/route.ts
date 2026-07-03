@@ -21,7 +21,11 @@ function toUI(a: any) {
     staffId: a.staffId,
     customer: a.customer?.name ?? "",
     phone: a.customer?.phone ?? "",
+    customerCode: a.customer?.customerId ?? null,
     service: a.services?.[0]?.service?.name ?? "Service",
+    serviceId: a.services?.[0]?.serviceId ?? null,
+    unitPrice: a.services?.[0]?.price != null ? Number(a.services[0].price) : null,
+    gstRate: a.services?.[0]?.service?.gstRate != null ? Number(a.services[0].service.gstRate) : 18,
     startSlot: timeToSlot(new Date(a.startTime)),
     durationSlots: Math.max(1, Math.round(a.duration / SLOT_MINS)),
     status: a.status,
@@ -45,8 +49,8 @@ export async function GET(request: NextRequest) {
     const appts = await prisma.appointment.findMany({
       where: { startTime: { gte: dayStart, lt: dayEnd } },
       include: {
-        customer: { select: { name: true, phone: true } },
-        services: { include: { service: { select: { name: true } } } },
+        customer: { select: { name: true, phone: true, customerId: true } },
+        services: { include: { service: { select: { name: true, gstRate: true } } } },
       },
       orderBy: { startTime: "asc" },
     });
@@ -133,8 +137,8 @@ export async function POST(request: NextRequest) {
         services: { create: [{ serviceId: service.id, price: service.price, duration }] },
       },
       include: {
-        customer: { select: { name: true, phone: true } },
-        services: { include: { service: { select: { name: true } } } },
+        customer: { select: { name: true, phone: true, customerId: true } },
+        services: { include: { service: { select: { name: true, gstRate: true } } } },
       },
     });
     return NextResponse.json({ success: true, data: toUI(created) }, { status: 201 });
