@@ -60,9 +60,10 @@ const TIER_CHIP: Record<string,string> = {
 };
 
 type Status = "CONFIRMED"|"IN_PROGRESS"|"COMPLETED"|"WAITING"|"CANCELLED";
+type ApptService = { id:string; name:string; price:number; gstRate:number };
 type Appt = {
   id:string; staffId:string; customer:string; phone:string; customerCode?:string|null;
-  service:string; serviceId?:string|null; unitPrice?:number|null; gstRate?:number;
+  service:string; services?:ApptService[];
   invoiceNumber?:string|null; invoiceTotal?:number|null;
   startSlot:number; durationSlots:number; status:Status; notes?:string
 };
@@ -93,7 +94,7 @@ const defaultForm = {
   phone: "",
   email: "",
   saveToDb: true,
-  service: "",
+  serviceIds: [] as string[],
   notes: "",
   fromSlot: 0,
   toSlot: 1,
@@ -115,6 +116,8 @@ export default function AppointmentsPage() {
   const [settings,     setSettings]     = useState<any>(null);
   const [movingApptId, setMovingApptId] = useState<string | null>(null);
   const [moveTarget,   setMoveTarget]   = useState<{staffId:string; slot:number} | null>(null);
+  const [resizePreview, setResizePreview] = useState<{id:string; endSlot:number} | null>(null);
+  const resizing = useRef<{id:string; staffId:string; startSlot:number; origEnd:number; startY:number; maxEnd:number} | null>(null);
 
   // Derived scheduler hours configuration from settings
   const dayStart = settings?.openingTime ? parseHour(settings.openingTime, 10) : 10;
@@ -200,7 +203,7 @@ export default function AppointmentsPage() {
       label: "New Booking",
       onClick: () => {
         setBookModal({ staffId: STAFF[0].id, startSlot: toSlot(dayStart, 0), endSlot: toSlot(dayStart + 1, 0) });
-        setForm({ ...defaultForm, service: services[0]?.id ?? "", fromSlot: toSlot(dayStart, 0), toSlot: toSlot(dayStart + 1, 0) });
+        setForm({ ...defaultForm, serviceIds: services[0] ? [services[0].id] : [], fromSlot: toSlot(dayStart, 0), toSlot: toSlot(dayStart + 1, 0) });
       },
     });
     return () => setAction(null);
@@ -226,6 +229,32 @@ export default function AppointmentsPage() {
     window.addEventListener("mouseup", onUp);
     return () => window.removeEventListener("mouseup", onUp);
   }, []); // empty — all state accessed via refs
+
+  // ── global mousemove/mouseup for resizing an existing appointment's duration ──
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!resizing.current) return;
+      const { id, startSlot, origEnd, startY, maxEnd } = resizing.current;
+      const deltaSlots = Math.round((e.clientY - startY) / SLOT_H);
+      const endSlot = Math.min(maxEnd, Math.max(startSlot + 1, origEnd + deltaSlots));
+      setResizePreview({ id, endSlot });
+    };
+    const onUp = () => {
+      if (resizing.current) {
+        const { id, origEnd } = resizing.current;
+        // Read the latest preview in case state lagged behind the last mousemove.
+        setResizePreview(prev => {
+          const finalEnd = prev?.id === id ? prev.endSlot : origEnd;
+          resizeApptRef.current(id, finalEnd);
+          return null;
+        });
+        resizing.current = null;
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, []); // empty — all state accessed via refs/functional setState
 
   const onCellDown  = (staffId: string, slot: number) => {
     if (dayAppts.some(a => a.staffId === staffId && slot >= a.startSlot && slot < a.startSlot + a.durationSlots)) return;
@@ -275,6 +304,32 @@ export default function AppointmentsPage() {
       toast.error("Network error. Please try again.");
     }
   };
+
+  // Extend/shrink an appointment's duration by dragging its bottom edge (staff + start time unchanged).
+  const resizeAppt = async (id: string, endSlot: number) => {
+    const appt = appts.find(a => a.id === id);
+    if (!appt || endSlot === appt.startSlot + appt.durationSlots) return;
+    const prevAppts = appts;
+    setAppts(prev => prev.map(a => a.id === id ? { ...a, durationSlots: endSlot - a.startSlot } : a));
+    try {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staffId: appt.staffId, startSlot: appt.startSlot, endSlot }),
+      });
+      const j = await res.json();
+      if (!j.success) { setAppts(prevAppts); toast.error(j.error || "Could not resize appointment."); return; }
+      toast.success("Appointment duration updated");
+    } catch {
+      setAppts(prevAppts);
+      toast.error("Network error. Please try again.");
+    }
+  };
+  // Keeps a live reference to resizeAppt so the zero-dependency mouseup effect below
+  // (registered once) always calls the version closed over the latest `appts`, not
+  // a stale copy from first render.
+  const resizeApptRef = useRef(resizeAppt);
+  useEffect(() => { resizeApptRef.current = resizeAppt; });
+
   const deleteAppt = async (id: string) => {
     setDetailAppt(null);
     try {
@@ -310,7 +365,7 @@ export default function AppointmentsPage() {
   const customerReady = form.customerMode === "existing"
     ? !!form.customerId
     : !!(form.customer.trim() && form.phone.trim());
-  const canSubmit = timeValid && customerReady && !!form.service;
+  const canSubmit = timeValid && customerReady && form.serviceIds.length > 0;
   const [booking, setBooking] = useState(false);
 
   const submitBooking = async () => {
@@ -321,7 +376,7 @@ export default function AppointmentsPage() {
       staffId: bookModal.staffId,
       startSlot: form.fromSlot,
       endSlot: form.toSlot,
-      serviceId: form.service,
+      serviceIds: form.serviceIds,
       notes: form.notes,
     };
     if (form.customerMode === "existing" && selectedCustomer) {
@@ -484,21 +539,23 @@ export default function AppointmentsPage() {
                   const isInProgress = appt.status === "IN_PROGRESS";
                   const isWaiting    = appt.status === "WAITING";
                   const isMovable    = !isCompleted && !isCancelled;
+                  const isResizing   = resizePreview?.id === appt.id;
+                  const durationSlots = isResizing ? resizePreview!.endSlot - appt.startSlot : appt.durationSlots;
                   return (
                     <div key={appt.id}
-                      draggable={isMovable}
+                      draggable={isMovable && !isResizing}
                       onDragStart={e => { if (isMovable) { setMovingApptId(appt.id); e.dataTransfer.effectAllowed = "move"; } }}
                       onDragEnd={() => { setMovingApptId(null); setMoveTarget(null); }}
                       className={cn(
                         "absolute inset-x-1 rounded-lg overflow-hidden z-20 cursor-pointer transition-all duration-150",
-                        "hover:inset-x-0 hover:z-30 hover:shadow-xl",
+                        !isResizing ? "hover:inset-x-0 hover:z-30 hover:shadow-xl" : "z-30",
                         isMovable ? "active:cursor-grabbing" : "",
                         isCancelled || isCompleted ? "opacity-55" : "",
                         movingApptId === appt.id ? "opacity-30" : ""
                       )}
                       style={{
                         top:    appt.startSlot * SLOT_H + 2,
-                        height: appt.durationSlots * SLOT_H - 4,
+                        height: durationSlots * SLOT_H - 4,
                         background: `${STATUS_COLOR[appt.status]}55`,
                         border: `2px solid ${s.color}`,
                       }}
@@ -508,18 +565,18 @@ export default function AppointmentsPage() {
                         <p className="text-[11px] font-bold leading-tight truncate" style={{ color:isCompleted?"#7A6870":s.color }}>
                           {appt.customer}
                         </p>
-                        {appt.durationSlots >= 6 && (
+                        {durationSlots >= 6 && (
                           <p className="text-[10px] text-foreground opacity-75 truncate leading-tight">{appt.service}</p>
                         )}
-                        {appt.durationSlots >= 9 && (
+                        {durationSlots >= 9 && (
                           <p className="text-[9px] text-muted-foreground leading-tight">
-                            {slotToTime(appt.startSlot)} – {slotToTime(appt.startSlot + appt.durationSlots)}
+                            {slotToTime(appt.startSlot)} – {slotToTime(appt.startSlot + durationSlots)}
                           </p>
                         )}
-                        {appt.durationSlots >= 9 && appt.notes && (
+                        {durationSlots >= 9 && appt.notes && (
                           <p className="text-[9px] text-amber-500 font-medium">📌 Has notes</p>
                         )}
-                        {appt.durationSlots >= 12 && (
+                        {durationSlots >= 12 && (
                           <div className="mt-auto">
                             <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
                               style={{
@@ -531,6 +588,26 @@ export default function AppointmentsPage() {
                           </div>
                         )}
                       </div>
+                      {isMovable && (
+                        <div
+                          draggable={false}
+                          onMouseDown={e => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            const laterAppts = colAppts.filter(a =>
+                              a.id !== appt.id && a.status !== "CANCELLED" && a.startSlot >= appt.startSlot
+                            );
+                            const maxEnd = laterAppts.length ? Math.min(totalSlots, ...laterAppts.map(a => a.startSlot)) : totalSlots;
+                            resizing.current = {
+                              id: appt.id, staffId: appt.staffId, startSlot: appt.startSlot,
+                              origEnd: appt.startSlot + appt.durationSlots, startY: e.clientY, maxEnd,
+                            };
+                            setResizePreview({ id: appt.id, endSlot: appt.startSlot + appt.durationSlots });
+                          }}
+                          onClick={e => e.stopPropagation()}
+                          className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-black/10"
+                        />
+                      )}
                     </div>
                   );
                 })}
@@ -741,14 +818,40 @@ export default function AppointmentsPage() {
                   </select>
                 </div>
 
-                {/* ── Service ── */}
+                {/* ── Services ── */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground mb-1 block">Service <span className="text-red-400">*</span></label>
-                  <select className="input-luxury w-full text-sm" value={form.service}
-                    onChange={e => setForm(p => ({ ...p, service:e.target.value }))}>
-                    <option value="">Select a service...</option>
-                    {services.map(sv => <option key={sv.id} value={sv.id}>{sv.name} — Rs.{sv.price.toLocaleString("en-IN")}</option>)}
+                  <label className="text-xs font-semibold text-foreground mb-1 block">Services <span className="text-red-400">*</span></label>
+                  <select className="input-luxury w-full text-sm" value=""
+                    onChange={e => {
+                      const id = e.target.value;
+                      if (id) setForm(p => p.serviceIds.includes(id) ? p : { ...p, serviceIds: [...p.serviceIds, id] });
+                    }}>
+                    <option value="">Add a service...</option>
+                    {services.filter(sv => !form.serviceIds.includes(sv.id)).map(sv => (
+                      <option key={sv.id} value={sv.id}>{sv.name} — Rs.{sv.price.toLocaleString("en-IN")}</option>
+                    ))}
                   </select>
+                  {form.serviceIds.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {form.serviceIds.map(id => {
+                        const sv = services.find(s => s.id === id);
+                        if (!sv) return null;
+                        return (
+                          <span key={id} className="inline-flex items-center gap-1 text-xs pl-2 pr-1 py-1 rounded-lg bg-primary-50 text-primary-700 border border-primary-200">
+                            {sv.name} · Rs.{sv.price.toLocaleString("en-IN")}
+                            <button type="button"
+                              onClick={() => setForm(p => ({ ...p, serviceIds: p.serviceIds.filter(x => x !== id) }))}
+                              className="p-0.5 rounded hover:bg-primary-100">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        );
+                      })}
+                      <p className="text-[10px] text-muted-foreground w-full mt-0.5">
+                        Total: Rs.{form.serviceIds.reduce((sum, id) => sum + (services.find(s => s.id === id)?.price ?? 0), 0).toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* ── Notes ── */}
@@ -882,7 +985,7 @@ export default function AppointmentsPage() {
       {/* BILLING MODAL */}
       {billingAppt && (() => {
         const s        = STAFF.find(st => st.id === billingAppt.staffId)!;
-        const base         = billingAppt.unitPrice ?? servicePrice(billingAppt.service);
+        const base         = billingAppt.services?.length ? billingAppt.services.reduce((sum, sv) => sum + sv.price, 0) : servicePrice(billingAppt.service);
         const dv           = Number(discountVal) || 0;
         const discountAmt  = discountType === "PCT"
           ? Math.round(base * dv / 100)
@@ -914,7 +1017,7 @@ export default function AppointmentsPage() {
         const qrSrc  = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUrl)}&bgcolor=FCF5F6&color=2D1B1F&margin=2`;
 
         const doProcess = async () => {
-          if (!billingAppt.customerCode || !billingAppt.serviceId) {
+          if (!billingAppt.customerCode || !billingAppt.services?.length) {
             toast.error("This appointment is missing customer/service data and can't be billed. Try re-booking it.");
             return;
           }
@@ -927,10 +1030,10 @@ export default function AppointmentsPage() {
               body: JSON.stringify({
                 customerId: billingAppt.customerCode,
                 appointmentId: billingAppt.id,
-                items: [{
-                  type: "Service", dbId: billingAppt.serviceId, name: billingAppt.service,
-                  unitPrice: base, qty: 1, gstRate,
-                }],
+                items: billingAppt.services.map(sv => ({
+                  type: "Service", dbId: sv.id, name: sv.name,
+                  unitPrice: sv.price, qty: 1, gstRate,
+                })),
                 rawSubtotal: base,
                 discountAmt,
                 discountNote: discountNote.trim(),
@@ -1064,25 +1167,27 @@ export default function AppointmentsPage() {
                           </div>
                         </div>
 
-                        {/* Service row */}
+                        {/* Service row(s) */}
                         <div>
                           <div className="grid grid-cols-12 pb-1.5 mb-2" style={{ borderBottom:"1.5px solid #EDD0D4" }}>
                             <p className="col-span-6 text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Service</p>
                             <p className="col-span-3 text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Time</p>
                             <p className="col-span-3 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</p>
                           </div>
-                          <div className="grid grid-cols-12 items-center py-1">
-                            <div className="col-span-6">
-                              <p className="text-xs font-semibold text-foreground leading-snug">{billingAppt.service}</p>
-                              <p className="text-[9px] text-muted-foreground">{dur} min</p>
+                          {(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: base, gstRate }]).map((sv, i) => (
+                            <div key={sv.id ?? i} className="grid grid-cols-12 items-center py-1">
+                              <div className="col-span-6">
+                                <p className="text-xs font-semibold text-foreground leading-snug">{sv.name}</p>
+                                {i === 0 && <p className="text-[9px] text-muted-foreground">{dur} min total</p>}
+                              </div>
+                              <p className="col-span-3 text-[10px] text-muted-foreground leading-tight">
+                                {i === 0 ? (<>{slotToTime(billingAppt.startSlot)}<br />{slotToTime(billingAppt.startSlot + billingAppt.durationSlots)}</>) : "—"}
+                              </p>
+                              <p className="col-span-3 text-xs font-semibold text-foreground text-right">
+                                Rs.{sv.price.toLocaleString("en-IN")}
+                              </p>
                             </div>
-                            <p className="col-span-3 text-[10px] text-muted-foreground leading-tight">
-                              {slotToTime(billingAppt.startSlot)}<br />{slotToTime(billingAppt.startSlot + billingAppt.durationSlots)}
-                            </p>
-                            <p className="col-span-3 text-xs font-semibold text-foreground text-right">
-                              Rs.{base.toLocaleString("en-IN")}
-                            </p>
-                          </div>
+                          ))}
                         </div>
 
                         {/* Tax breakdown */}
@@ -1380,7 +1485,7 @@ export default function AppointmentsPage() {
       {/* A4 Invoice Viewer */}
       {showA4 && billingAppt && (() => {
         const s2      = STAFF.find(st => st.id === billingAppt.staffId)!;
-        const base2   = servicePrice(billingAppt.service);
+        const base2   = billingAppt.services?.length ? billingAppt.services.reduce((sum, sv) => sum + sv.price, 0) : servicePrice(billingAppt.service);
         const dv2     = Number(discountVal) || 0;
         const disc2   = discountType==="PCT" ? Math.round(base2*dv2/100) : Math.min(dv2,base2);
         const dBase2  = Math.max(0,base2-disc2);
@@ -1392,9 +1497,11 @@ export default function AppointmentsPage() {
           phone:         billingAppt.phone,
           stylist:       s2.name,
           stylistRole:   s2.role,
-          items:         [{ description:billingAppt.service, type:"Service",
-            amount:base2,
-            detail:`${billingAppt.durationSlots*SLOT_MINS} min · ${slotToTime(billingAppt.startSlot)} – ${slotToTime(billingAppt.startSlot+billingAppt.durationSlots)}` }],
+          items:         (billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: base2, gstRate }])
+            .map((sv, i) => ({
+              description: sv.name, type: "Service", amount: sv.price,
+              detail: i === 0 ? `${billingAppt.durationSlots*SLOT_MINS} min total · ${slotToTime(billingAppt.startSlot)} – ${slotToTime(billingAppt.startSlot+billingAppt.durationSlots)}` : undefined,
+            })),
           subtotal:      dBase2,
           discountAmt:   disc2||undefined,
           discountLabel: discountType==="PCT"?`${dv2}%`:undefined,

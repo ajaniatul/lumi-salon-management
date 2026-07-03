@@ -16,16 +16,21 @@ function timeToSlot(d: Date) {
 }
 
 function toUI(a: any) {
+  const svcRows = a.services ?? [];
+  const svcList = svcRows.map((sv: any) => ({
+    id: sv.serviceId,
+    name: sv.service?.name ?? "Service",
+    price: Number(sv.price),
+    gstRate: sv.service?.gstRate != null ? Number(sv.service.gstRate) : 18,
+  }));
   return {
     id: a.id,
     staffId: a.staffId,
     customer: a.customer?.name ?? "",
     phone: a.customer?.phone ?? "",
     customerCode: a.customer?.customerId ?? null,
-    service: a.services?.[0]?.service?.name ?? "Service",
-    serviceId: a.services?.[0]?.serviceId ?? null,
-    unitPrice: a.services?.[0]?.price != null ? Number(a.services[0].price) : null,
-    gstRate: a.services?.[0]?.service?.gstRate != null ? Number(a.services[0].service.gstRate) : 18,
+    service: svcList.length > 1 ? `${svcList[0].name} +${svcList.length - 1} more` : (svcList[0]?.name ?? "Service"),
+    services: svcList,
     invoiceNumber: a.invoice?.invoiceNumber ?? null,
     invoiceTotal: a.invoice?.totalAmount != null ? Number(a.invoice.totalAmount) : null,
     startSlot: timeToSlot(new Date(a.startTime)),
@@ -71,9 +76,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { date, staffId, startSlot, endSlot, serviceId, customerCode, newCustomer, notes } = body ?? {};
+    const { date, staffId, startSlot, endSlot, serviceIds, customerCode, newCustomer, notes } = body ?? {};
 
-    if (!date || !staffId || serviceId == null || startSlot == null || endSlot == null || endSlot <= startSlot) {
+    if (!date || !staffId || !Array.isArray(serviceIds) || serviceIds.length === 0 || startSlot == null || endSlot == null || endSlot <= startSlot) {
       return NextResponse.json({ success: false, error: "Missing or invalid booking details." }, { status: 400 });
     }
 
@@ -106,9 +111,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "A customer is required." }, { status: 400 });
     }
 
-    // ── Resolve service ──
-    const service = await prisma.service.findUnique({ where: { id: serviceId }, select: { id: true, price: true } });
-    if (!service) return NextResponse.json({ success: false, error: "Service not found." }, { status: 404 });
+    // ── Resolve services ──
+    const uniqueServiceIds = [...new Set(serviceIds)] as string[];
+    const svcs = await prisma.service.findMany({ where: { id: { in: uniqueServiceIds } }, select: { id: true, price: true } });
+    if (svcs.length !== uniqueServiceIds.length) {
+      return NextResponse.json({ success: false, error: "One or more services not found." }, { status: 404 });
+    }
 
     // ── Times ──
     const [y, mo, d] = String(date).split("-").map(Number);
@@ -137,7 +145,7 @@ export async function POST(request: NextRequest) {
         status: "CONFIRMED",
         notes: notes?.trim() || null,
         source: "WALK_IN",
-        services: { create: [{ serviceId: service.id, price: service.price, duration }] },
+        services: { create: svcs.map(sv => ({ serviceId: sv.id, price: sv.price, duration })) },
       },
       include: {
         customer: { select: { name: true, phone: true, customerId: true } },
