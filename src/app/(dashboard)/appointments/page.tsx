@@ -153,7 +153,7 @@ export default function AppointmentsPage() {
           fetch("/api/settings").then(r => r.json()),
         ]);
         if (st.success) setSTAFF(st.data.map((s: any, i: number) => ({
-          id: s.id, name: s.name, role: s.designation,
+          id: s.dbId, name: s.name, role: s.designation,
           color: STAFF_PALETTE[i % STAFF_PALETTE.length].color,
           grad:  STAFF_PALETTE[i % STAFF_PALETTE.length].grad,
         })));
