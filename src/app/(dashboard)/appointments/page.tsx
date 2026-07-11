@@ -124,6 +124,8 @@ export default function AppointmentsPage() {
   const resizing = useRef<{id:string; staffId:string; startSlot:number; origEnd:number; startY:number; maxEnd:number} | null>(null);
   const [copiedAppt, setCopiedAppt] = useState<{customerCode:string; customer:string; phone:string; serviceIds:string[]; notes?:string; durationSlots:number} | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x:number; y:number; appt:Appt } | null>(null);
+  const [cellContextMenu, setCellContextMenu] = useState<{ x:number; y:number; staffId:string; slot:number } | null>(null);
+  const [hoverCell, setHoverCell] = useState<{ staffId:string; slot:number } | null>(null);
 
   // Derived scheduler hours configuration from settings
   const dayStart = settings?.openingTime ? parseHour(settings.openingTime, 10) : 10;
@@ -338,8 +340,8 @@ export default function AppointmentsPage() {
 
   // Clear copied appointment + context menu on Escape / outside click.
   useEffect(() => {
-    const onKey   = (e: KeyboardEvent) => { if (e.key === "Escape") { setCopiedAppt(null); setContextMenu(null); } };
-    const onClick = () => setContextMenu(null);
+    const onKey   = (e: KeyboardEvent) => { if (e.key === "Escape") { setCopiedAppt(null); setContextMenu(null); setCellContextMenu(null); } };
+    const onClick = () => { setContextMenu(null); setCellContextMenu(null); };
     window.addEventListener("keydown", onKey);
     window.addEventListener("click",   onClick);
     return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("click", onClick); };
@@ -573,7 +575,13 @@ export default function AppointmentsPage() {
                         if (copiedAppt) { pasteAppt(s.id, i); return; }
                         onCellDown(s.id, i);
                       }}
-                      onMouseEnter={() => onCellEnter(s.id, i)}
+                      onMouseEnter={() => { onCellEnter(s.id, i); if (!occupied) setHoverCell({ staffId: s.id, slot: i }); }}
+                      onMouseLeave={() => setHoverCell(null)}
+                      onContextMenu={e => {
+                        if (occupied) return;
+                        e.preventDefault(); e.stopPropagation();
+                        setCellContextMenu({ x: e.clientX, y: e.clientY, staffId: s.id, slot: i });
+                      }}
                       onDragOver={e => { if (movingApptId) { e.preventDefault(); setMoveTarget({ staffId: s.id, slot: i }); } }}
                       onDrop={e => {
                         e.preventDefault();
@@ -583,6 +591,24 @@ export default function AppointmentsPage() {
                     />
                   );
                 })}
+
+                {/* Paste hover chip — shows when copiedAppt is active and user hovers an empty cell in this row */}
+                {copiedAppt && hoverCell?.staffId === s.id && (() => {
+                  const hSlot = hoverCell.slot;
+                  const isOccupied = rowAppts.some(a => hSlot >= a.startSlot && hSlot < a.startSlot + a.durationSlots);
+                  if (isOccupied) return null;
+                  return (
+                    <div className="absolute pointer-events-none z-40 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-lg text-white text-[11px] font-bold whitespace-nowrap animate-pulse"
+                      style={{
+                        left:  hSlot * SLOT_W,
+                        top:   "50%", transform: "translateY(-50%)",
+                        background: "linear-gradient(135deg,#B76E79,#C4956A)",
+                      }}>
+                      <ClipboardPaste className="w-3 h-3" />
+                      Paste {copiedAppt.customer}
+                    </div>
+                  );
+                })()}
 
                 {/* Drag preview */}
                 {dragMin !== null && dragMax !== null && (
@@ -815,6 +841,51 @@ export default function AppointmentsPage() {
                   </button>
                 )
               )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── CELL RIGHT-CLICK MENU (empty slot) ── */}
+      {cellContextMenu && (() => {
+        const { x, y, staffId, slot } = cellContextMenu;
+        const s = STAFF.find(st => st.id === staffId);
+        const menuW = 220;
+        const left  = x + menuW > window.innerWidth ? x - menuW : x;
+        const top   = y + 120 > window.innerHeight  ? y - 120   : y;
+        return (
+          <div
+            className="fixed z-[200] bg-white rounded-xl shadow-2xl border border-ivory-200 py-1 overflow-hidden"
+            style={{ left, top, width: menuW }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="px-3 py-2 border-b border-ivory-100" style={{ background:"#FDF6F7" }}>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                {s?.name} · {slotToTime(slot)}
+              </p>
+            </div>
+            <div className="py-1">
+              {copiedAppt && (
+                <button
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-white font-semibold hover:opacity-90 transition-colors"
+                  style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}
+                  onClick={() => { pasteAppt(staffId, slot); setCellContextMenu(null); }}
+                >
+                  <ClipboardPaste className="w-3.5 h-3.5" />
+                  Paste — {copiedAppt.customer}
+                </button>
+              )}
+              <button
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-foreground hover:bg-ivory-50 transition-colors"
+                onClick={() => {
+                  setBookModal({ staffId, startSlot: slot, endSlot: slot + 12 });
+                  setForm({ ...defaultForm, fromSlot: slot, toSlot: slot + 12 });
+                  setCellContextMenu(null);
+                }}
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                New Appointment Here
+              </button>
             </div>
           </div>
         );
