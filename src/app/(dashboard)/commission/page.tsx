@@ -79,7 +79,7 @@ export default function CommissionPage() {
   const rec = data.find(c => c.id === selected) ?? data[0] ?? null;
 
   return (
-    <div className="space-y-5">
+    <div className="px-6 space-y-5">
 
       {/* ── Month nav ── */}
       <div className="flex items-center gap-1">

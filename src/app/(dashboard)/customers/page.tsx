@@ -150,7 +150,7 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="-mx-6 space-y-6">
+    <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label:"Total",      value:customers.length.toString(),       sub:"customers",       icon:Users,       color:"#6366F1" },

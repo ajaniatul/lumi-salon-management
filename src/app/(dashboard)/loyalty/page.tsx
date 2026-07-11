@@ -83,7 +83,7 @@ export default function LoyaltyPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="px-6 space-y-6">
       <div>
         <h2 className="text-xl font-display font-bold text-foreground">Loyalty Program</h2>
         <p className="text-sm text-muted-foreground mt-0.5">Track earned and redeemed loyalty points per customer. Customers earn 1 point per ₹100 spent and redeem 100 points = ₹100 off.</p>

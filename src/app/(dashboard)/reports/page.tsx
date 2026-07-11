@@ -118,7 +118,7 @@ export default function ReportsPage() {
   const showMonthPicker = tab !== "yearly" && tab !== "monthly";
 
   return (
-    <div className="space-y-6">
+    <div className="px-6 space-y-6">
       {/* Tabs */}
       <div className="flex gap-0.5 border-b border-ivory-200 overflow-x-auto">
         {TABS.map(t=>(

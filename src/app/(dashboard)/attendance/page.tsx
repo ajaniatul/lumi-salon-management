@@ -149,7 +149,7 @@ export default function AttendancePage() {
     Object.fromEntries(s.records.map(r => [r.date, r]));
 
   return (
-    <div className="space-y-5">
+    <div className="px-6 space-y-5">
 
       {/* ── Month nav + tabs ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

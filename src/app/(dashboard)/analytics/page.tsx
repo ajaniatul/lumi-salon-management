@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="px-6 space-y-6">
       <div>
         <h2 className="text-xl font-display font-bold text-foreground">Analytics & Insights</h2>
         <p className="text-sm text-muted-foreground mt-0.5">Customer segmentation, retention trends and stylist performance — computed live from your salon&apos;s real data.</p>

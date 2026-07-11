@@ -86,7 +86,7 @@ export default function InventoryPage() {
   const selectedProduct = products.find(p => p.id === form.productId);
 
   return (
-    <div className="space-y-5">
+    <div className="px-6 space-y-5">
 
       {/* ── Low stock alert ── */}
       {!loading && lowItems.length > 0 && (

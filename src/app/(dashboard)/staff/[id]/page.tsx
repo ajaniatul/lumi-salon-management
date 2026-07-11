@@ -118,7 +118,7 @@ export default function StaffProfile({ params }: { params: { id: string } }) {
   const gstAmt = incl - excl;
 
   return (
-    <div className="space-y-5 pb-10">
+    <div className="px-6 space-y-5 pb-10">
 
       {/* ── Back ── */}
       <div className="flex items-center gap-2">

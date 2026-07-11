@@ -153,7 +153,7 @@ export default function PackagesPage() {
   const topPkg    = [...packages].sort((a, b) => b.activePurchases - a.activePurchases)[0];
 
   return (
-    <div className="space-y-6">
+    <div className="px-6 space-y-6">
 
       {/* ── KPI chips ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

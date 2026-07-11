@@ -38,7 +38,7 @@ export default async function DashboardLayout({
           />
 
           {/* Page Content */}
-          <main className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+          <main className="flex-1 overflow-y-auto py-6 scrollbar-thin">
             {children}
           </main>
         </HeaderActionProvider>

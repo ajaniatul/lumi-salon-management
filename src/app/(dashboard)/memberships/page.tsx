@@ -264,7 +264,7 @@ export default function MembershipsPage() {
   const expiringThisMonth = members.filter(m => m.daysLeft >= 0 && m.daysLeft <= 30).length;
 
   return (
-    <div className="space-y-6">
+    <div className="px-6 space-y-6">
 
       {/* ── KPI chips ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

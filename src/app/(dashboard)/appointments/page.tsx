@@ -450,7 +450,7 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 h-full" style={{ userSelect:"none" }}>
+    <div className="px-6 flex flex-col gap-4 h-full" style={{ userSelect:"none" }}>
 
       {/* ── Date navigation ── */}
       <div className="flex items-center gap-2">
@@ -1779,79 +1779,4 @@ export default function AppointmentsPage() {
                           </div>
                         </div>
                         <div>
-                          <label className="text-[10px] text-muted-foreground mb-1 block">Cardholder Name</label>
-                          <input className="input-luxury w-full text-sm uppercase tracking-wide" placeholder="AS ON CARD"
-                            value={cardDetails.name}
-                            onChange={e => setCardDetails(p => ({ ...p, name: e.target.value.toUpperCase() }))} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Loyalty */}
-                    <div className="flex items-center gap-2 p-2.5 rounded-xl"
-                      style={{ background:"#FBF6F0", border:"1px solid #EACFB0" }}>
-                      <span className="text-amber-500 text-sm">*</span>
-                      <p className="text-xs text-amber-700">Customer earns <strong>{points} loyalty points</strong> (1 pt per Rs.100)</p>
-                    </div>
-
-                    {/* Confirm */}
-                    <button disabled={!cardValid} onClick={doProcess}
-                      className="w-full py-3 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
-                      <Receipt className="w-4 h-4" />
-                      {payMethod === "UPI"  ? `Paid via UPI - Rs.${total.toLocaleString("en-IN")}`  :
-                       payMethod === "CARD" ? `Charge Card - Rs.${total.toLocaleString("en-IN")}` :
-                                             `Confirm Cash - Rs.${total.toLocaleString("en-IN")}`}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* A4 Invoice Viewer */}
-      {showA4 && billingAppt && (() => {
-        const s2      = STAFF.find(st => st.id === billingAppt.staffId)!;
-        const base2   = billingAppt.services?.length ? billingAppt.services.reduce((sum, sv) => sum + sv.price, 0) : servicePrice(billingAppt.service);
-        const dv2     = Number(discountVal) || 0;
-        const disc2   = discountType==="PCT" ? Math.round(base2*dv2/100) : Math.min(dv2,base2);
-        const dBase2  = Math.max(0,base2-disc2);
-        const hGst2   = gstRate/2;
-        const a4Data: InvoiceData = {
-          invoiceNo:     currentInvNum,
-          date:          selectedDate.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}),
-          customer:      billingAppt.customer,
-          phone:         billingAppt.phone,
-          stylist:       s2.name,
-          stylistRole:   s2.role,
-          items:         (billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: base2, gstRate }])
-            .map((sv, i) => ({
-              description: sv.name, type: "Service", amount: sv.price,
-              detail: i === 0 ? `${billingAppt.durationSlots*SLOT_MINS} min total · ${slotToTime(billingAppt.startSlot)} – ${slotToTime(billingAppt.startSlot+billingAppt.durationSlots)}` : undefined,
-            })),
-          subtotal:      dBase2,
-          discountAmt:   disc2||undefined,
-          discountLabel: discountType==="PCT"?`${dv2}%`:undefined,
-          discountNote:  discountNote||undefined,
-          cgst:          dBase2*hGst2/100,
-          sgst:          dBase2*hGst2/100,
-          halfGst:       hGst2,
-          total:         Math.round(dBase2+2*(dBase2*hGst2/100)),
-          payMethod:     payMethod,
-          status:        "PAID",
-          loyaltyPoints: Math.floor(Math.round(dBase2+2*(dBase2*hGst2/100))/100),
-          brandName:    settings?.salonName,
-          brandTagline: settings?.tagline,
-          brandAddress: settings?.address,
-          brandGstin:   settings?.gstin,
-          brandPhone:   settings?.phone,
-          brandEmail:   settings?.email,
-          brandLogo:    settings?.logo,
-        };
-        return <InvoiceA4 key="a4" data={a4Data} onClose={() => setShowA4(false)} />;
-      })()}
-    </div>
-  );
-}
+                          <label className="text-[10px] text-muted-foregr
