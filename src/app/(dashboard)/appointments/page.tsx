@@ -1291,8 +1291,8 @@ export default function AppointmentsPage() {
           : Math.min(dv, base);
         const discountedBase = Math.max(0, base - discountAmt);
         const halfGst  = gstRate / 2;
-        const cgst     = Math.round(discountedBase * halfGst / 100);
-        const sgst     = Math.round(discountedBase * halfGst / 100);
+        const cgst     = discountedBase * halfGst / 100;
+        const sgst     = discountedBase * halfGst / 100;
         const total    = Math.round(discountedBase + cgst + sgst);
         const points   = Math.floor(total / 100);
         const dur      = billingAppt.durationSlots * SLOT_MINS;
@@ -1497,11 +1497,11 @@ export default function AppointmentsPage() {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-xs text-muted-foreground">CGST @ {halfGst}%</span>
-                            <span className="text-xs text-muted-foreground">Rs.{cgst.toLocaleString("en-IN")}</span>
+                            <span className="text-xs text-muted-foreground">Rs.{cgst.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-xs text-muted-foreground">SGST @ {halfGst}%</span>
-                            <span className="text-xs text-muted-foreground">Rs.{sgst.toLocaleString("en-IN")}</span>
+                            <span className="text-xs text-muted-foreground">Rs.{sgst.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between items-center pt-2.5"
                             style={{ borderTop:"2px solid #B76E79" }}>
@@ -1679,11 +1679,11 @@ export default function AppointmentsPage() {
                       )}
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">CGST @ {halfGst}%</span>
-                        <span className="text-sm font-semibold text-muted-foreground">Rs.{cgst.toLocaleString("en-IN")}</span>
+                        <span className="text-sm font-semibold text-muted-foreground">Rs.{cgst.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">SGST @ {halfGst}%</span>
-                        <span className="text-sm font-semibold text-muted-foreground">Rs.{sgst.toLocaleString("en-IN")}</span>
+                        <span className="text-sm font-semibold text-muted-foreground">Rs.{sgst.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center pt-2" style={{ borderTop:"1.5px solid #EDD0D4" }}>
                         <span className="text-sm font-bold text-foreground">Total Payable</span>
@@ -1835,13 +1835,13 @@ export default function AppointmentsPage() {
           discountAmt:   disc2||undefined,
           discountLabel: discountType==="PCT"?`${dv2}%`:undefined,
           discountNote:  discountNote||undefined,
-          cgst:          Math.round(dBase2*hGst2/100),
-          sgst:          Math.round(dBase2*hGst2/100),
+          cgst:          dBase2*hGst2/100,
+          sgst:          dBase2*hGst2/100,
           halfGst:       hGst2,
-          total:         Math.round(dBase2+2*Math.round(dBase2*hGst2/100)),
+          total:         Math.round(dBase2+2*(dBase2*hGst2/100)),
           payMethod:     payMethod,
           status:        "PAID",
-          loyaltyPoints: Math.floor(Math.round(dBase2+2*Math.round(dBase2*hGst2/100))/100),
+          loyaltyPoints: Math.floor(Math.round(dBase2+2*(dBase2*hGst2/100))/100),
           brandName:    settings?.salonName,
           brandTagline: settings?.tagline,
           brandAddress: settings?.address,
