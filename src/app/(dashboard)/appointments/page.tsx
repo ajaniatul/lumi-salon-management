@@ -478,44 +478,49 @@ export default function AppointmentsPage() {
         )}
       </div>
 
-      {/* ── Scheduler grid — time across top, staff down left ── */}
+      {/* ── Scheduler — time ruler outside, rows fill frame dynamically ── */}
       <div
-        className="card-luxury overflow-auto"
-        style={{ minHeight:0, flex:"1 1 0" }}
+        className="flex flex-col"
+        style={{ minHeight:0, flex:"1 1 0", overflow:"hidden" }}
         onMouseLeave={() => { if (dragging.current) { dragging.current = false; dragStaffRef.current = null; dragRef.current = null; setDrag(null); } }}
       >
-        {/* Sticky top header: corner + time ruler */}
-        <div className="sticky top-0 z-30 flex bg-white" style={{ borderBottom:"2px solid #C5A8AE" }}>
-          {/* Corner cell */}
-          <div className="flex-shrink-0 bg-ivory-50 flex items-end pb-1 pl-2"
-            style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, borderRight:"2px solid #C5A8AE", height:36 }}>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Staff / Time</span>
-          </div>
-          {/* Time slots - only label on hour marks */}
-          <div className="relative flex-shrink-0" style={{ width: totalSlots * SLOT_W, height:36 }}>
-            {Array.from({ length: totalSlots }, (_, i) => {
-              const isHour = i % 12 === 0;
-              const isHalf = i % 6  === 0 && !isHour;
-              return (
-                <div key={i} className="absolute top-0 bottom-0"
-                  style={{ left: i * SLOT_W, width: SLOT_W, borderLeft: borderForSlot(i) }}>
-                  {isHour && (
-                    <span className="absolute text-[10px] font-semibold text-muted-foreground whitespace-nowrap"
-                      style={{ top:10, left:2 }}>{slotToTime(i)}</span>
-                  )}
-                  {isHalf && (
-                    <span className="absolute text-[9px] whitespace-nowrap" style={{ top:14, left:2, color:"#B8949C" }}>
-                      {slotToTime(i).replace(" AM","").replace(" PM","")}
-                    </span>
-                  )}
+        {/* Single horizontal-scroll wrapper — time ruler + card scroll together */}
+        <div className="flex flex-col min-h-0" style={{ flex:"1 1 0", overflowX:"auto", overflowY:"hidden" }}>
+          <div className="flex flex-col h-full" style={{ minWidth: STAFF_COL_W + totalSlots * SLOT_W }}>
+
+          {/* ── Time ruler — OUTSIDE the card ── */}
+          <div className="flex flex-shrink-0" style={{ height:30, borderBottom:"2px solid #C5A8AE" }}>
+            {/* Corner */}
+            <div className="flex-shrink-0 flex items-end pb-1 pl-2"
+              style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, borderRight:"2px solid #C5A8AE" }}>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Staff / Time</span>
+            </div>
+            {/* Time ticks */}
+            <div className="relative flex-shrink-0" style={{ width: totalSlots * SLOT_W }}>
+              {Array.from({ length: totalSlots }, (_, i) => {
+                const isHour = i % 12 === 0;
+                const isHalf = i % 6  === 0 && !isHour;
+                return (
+                  <div key={i} className="absolute top-0 bottom-0"
+                    style={{ left: i * SLOT_W, width: SLOT_W, borderLeft: borderForSlot(i) }}>
+                    {isHour && (
+                      <span className="absolute text-[10px] font-semibold text-muted-foreground whitespace-nowrap"
+                        style={{ top:6, left:2 }}>{slotToTime(i)}</span>
+                    )}
+                    {isHalf && (
+                      <span className="absolute text-[9px] whitespace-nowrap" style={{ top:8, left:2, color:"#B8949C" }}>
+                        {slotToTime(i).replace(" AM","").replace(" PM","")}
+                      </span>
+                    )}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Staff rows */}
-        {STAFF.map((s, si) => {
+          {/* ── Staff rows card — fills remaining height ── */}
+          <div className="card-luxury flex flex-col" style={{ flex:"1 1 0", minHeight:0 }}>
+          {STAFF.map((s, si) => {
           const rowAppts   = dayAppts.filter(a => a.staffId === s.id);
           const dragMin    = drag?.staffId === s.id ? Math.min(drag.start, drag.end) : null;
           const dragMax    = drag?.staffId === s.id ? Math.max(drag.start, drag.end) : null;
@@ -523,10 +528,10 @@ export default function AppointmentsPage() {
           const moveMin    = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot : null;
           const moveMax    = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot + movingAppt.durationSlots - 1 : null;
           return (
-            <div key={s.id} className="flex" style={{ borderBottom: si < STAFF.length-1 ? "1px solid #C5A8AE" : undefined }}>
-              {/* Staff label — sticky left */}
+            <div key={s.id} className="flex" style={{ flex:"1 1 0", minHeight:64, borderBottom: si < STAFF.length-1 ? "1px solid #C5A8AE" : undefined }}>
+              {/* Staff label */}
               <div className="sticky left-0 z-10 bg-white flex-shrink-0 flex items-center gap-2.5 px-3"
-                style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, height:ROW_H, borderRight:"2px solid #C5A8AE" }}>
+                style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, borderRight:"2px solid #C5A8AE" }}>
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm"
                   style={{ background:s.grad }}>
                   {s.name.split(" ").map((n:string)=>n[0]).join("")}
@@ -540,8 +545,8 @@ export default function AppointmentsPage() {
                 </div>
               </div>
 
-              {/* Time cells — absolute-positioned in a fixed-width container */}
-              <div className="relative flex-shrink-0" style={{ width: totalSlots * SLOT_W, height: ROW_H }}>
+              {/* Time cells — fills row height */}
+              <div className="relative flex-shrink-0" style={{ width: totalSlots * SLOT_W, height:"100%" }}>
                 {/* Grid cells */}
                 {Array.from({ length: totalSlots }, (_, i) => {
                   const occupied     = rowAppts.some(a => i >= a.startSlot && i < a.startSlot + a.durationSlots);
@@ -553,7 +558,7 @@ export default function AppointmentsPage() {
                         inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : copiedAppt ? "hover:bg-primary-100" : "hover:bg-rose-50"
                       )}
                       style={{
-                        left: i * SLOT_W, width: SLOT_W, height: ROW_H,
+                        left: i * SLOT_W, width: SLOT_W, height: "100%",
                         cursor: occupied ? "default" : copiedAppt ? "copy" : "crosshair",
                         borderLeft: borderForSlot(i),
                       }}
@@ -672,8 +677,11 @@ export default function AppointmentsPage() {
               </div>
             </div>
           );
-        })}
-      </div>
+          })}
+          </div>{/* end card-luxury */}
+          </div>{/* end minWidth inner */}
+        </div>{/* end overflow-x-auto */}
+      </div>{/* end outer */}
 
       {/* ── BOOKING MODAL ── */}
       {bookModal && (() => {
