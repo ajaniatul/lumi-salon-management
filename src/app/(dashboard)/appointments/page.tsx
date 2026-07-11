@@ -481,7 +481,7 @@ export default function AppointmentsPage() {
           <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-50 border border-primary-200">
             <ClipboardPaste className="w-3.5 h-3.5 text-primary-600" />
             <span className="text-xs text-primary-700">
-              Copied <strong>{copiedAppt.customer}</strong> — click an empty slot to paste
+              Copied <strong>{copiedAppt.customer}</strong> — right-click an empty slot to paste
             </span>
             <button onClick={() => setCopiedAppt(null)} className="text-xs text-primary-500 hover:text-primary-700 underline">
               Clear
@@ -782,7 +782,7 @@ export default function AppointmentsPage() {
                 serviceIds: appt.services?.map(sv => sv.id) ?? [],
                 notes: appt.notes, durationSlots: appt.durationSlots,
               });
-              toast.success(`Copied ${appt.customer} — click an empty slot to paste`);
+              toast.success(`Copied ${appt.customer} — right-click an empty slot to paste`);
               setContextMenu(null);
             },
           },
@@ -871,7 +871,7 @@ export default function AppointmentsPage() {
               </p>
             </div>
             <div className="py-1">
-              {copiedAppt && (
+              {copiedAppt ? (
                 <button
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-white font-semibold hover:opacity-90 transition-colors"
                   style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}
@@ -880,7 +880,13 @@ export default function AppointmentsPage() {
                   <ClipboardPaste className="w-3.5 h-3.5" />
                   Paste — {copiedAppt.customer}
                 </button>
+              ) : (
+                <div className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-muted-foreground opacity-50 cursor-not-allowed select-none">
+                  <ClipboardPaste className="w-3.5 h-3.5" />
+                  Paste <span className="ml-auto text-[10px]">Nothing copied</span>
+                </div>
               )}
+              <div className="my-1 border-t border-ivory-100" />
               <button
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-foreground hover:bg-ivory-50 transition-colors"
                 onClick={() => {

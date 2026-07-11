@@ -155,11 +155,12 @@ export async function POST(request: NextRequest) {
       },
       include: {
         customer: { select: { name: true, phone: true, customerId: true } },
+        services: { include: { service: { select: { name: true, gstRate: true } } } },
       },
     });
     return NextResponse.json({ success: true, data: toUI(created) }, { status: 201 });
-  } catch (e) {
+  } catch (e: any) {
     console.error("[APPOINTMENTS POST]", e);
-    return NextResponse.json({ success: false, error: "Failed to create appointment" }, { status: 500 });
+    return NextResponse.json({ success: false, error: e?.message ?? "Failed to create appointment" }, { status: 500 });
   }
 }
