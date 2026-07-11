@@ -49,6 +49,8 @@ function toUI(inv: any) {
     influencerNote: isInfluencer ? (meta.collabNote ?? "") : "",
     discountAmt:    Number(inv.discountAmount),
     description:    meta.description ?? "",
+    stylist:        inv.appointment?.staff?.name ?? null,
+    stylistRole:    inv.appointment?.staff?.role ?? null,
   };
 }
 
@@ -61,9 +63,10 @@ export async function GET() {
     const invoices = await prisma.invoice.findMany({
       orderBy: { createdAt: "desc" },
       include: {
-        customer: { select: { name: true, phone: true } },
-        items:    { include: { product: { select: { hsnCode: true } } } },
-        payments: { select: { method: true, amount: true } },
+        customer:    { select: { name: true, phone: true } },
+        items:       { include: { product: { select: { hsnCode: true } } } },
+        payments:    { select: { method: true, amount: true } },
+        appointment: { include: { staff: { select: { name: true, role: true } } } },
       },
     });
     return NextResponse.json({ success: true, data: invoices.map(toUI) });

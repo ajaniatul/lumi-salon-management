@@ -30,6 +30,7 @@ type InvoiceType = {
   total: number; paid: number; due: number; method: string;
   status: string; loyalty: { earned: number; redeemed: number };
   discount: string; influencerNote: string; discountAmt?: number; description?: string;
+  stylist?: string | null; stylistRole?: string | null;
 };
 type CartLine = { name: string; type: "Service"|"Product"; code: string; unitPrice: number; qty: number; dbId: string };
 
@@ -63,6 +64,8 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
     date:         inv.date,
     customer:     inv.customer,
     phone:        inv.phone,
+    stylist:      inv.stylist ?? undefined,
+    stylistRole:  inv.stylistRole ?? undefined,
     items:        lineItems.map(it => ({ description: it.name, type: it.type, hsnCode: it.code, amount: it.amount })),
     subtotal:     inv.subtotal,
     discountAmt:  inv.discountAmt || undefined,
@@ -124,9 +127,18 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
               <p className="text-xs text-muted-foreground">{inv.phone}</p>
               {inv.discount && <p className="text-xs text-emerald-600 mt-0.5">{inv.discount} applied</p>}
             </div>
-            <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-0.5">Payment</p>
-              <p className="text-xs font-semibold text-foreground">{inv.method}</p>
+            <div className="text-right space-y-2">
+              {inv.stylist && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-0.5">Attended By</p>
+                  <p className="text-xs font-bold text-foreground">{inv.stylist}</p>
+                  {inv.stylistRole && <p className="text-[10px] text-muted-foreground">{inv.stylistRole}</p>}
+                </div>
+              )}
+              <div>
+                <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-0.5">Payment</p>
+                <p className="text-xs font-semibold text-foreground">{inv.method}</p>
+              </div>
             </div>
           </div>
           <div>
