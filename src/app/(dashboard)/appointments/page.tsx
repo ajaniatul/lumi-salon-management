@@ -1293,7 +1293,7 @@ export default function AppointmentsPage() {
         const halfGst  = gstRate / 2;
         const cgst     = Math.round(discountedBase * halfGst / 100);
         const sgst     = Math.round(discountedBase * halfGst / 100);
-        const total    = discountedBase + cgst + sgst;
+        const total    = Math.round(discountedBase + cgst + sgst);
         const points   = Math.floor(total / 100);
         const dur      = billingAppt.durationSlots * SLOT_MINS;
         const dateStr  = selectedDate.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" });
@@ -1838,10 +1838,10 @@ export default function AppointmentsPage() {
           cgst:          Math.round(dBase2*hGst2/100),
           sgst:          Math.round(dBase2*hGst2/100),
           halfGst:       hGst2,
-          total:         dBase2+2*Math.round(dBase2*hGst2/100),
+          total:         Math.round(dBase2+2*Math.round(dBase2*hGst2/100)),
           payMethod:     payMethod,
           status:        "PAID",
-          loyaltyPoints: Math.floor((dBase2+2*Math.round(dBase2*hGst2/100))/100),
+          loyaltyPoints: Math.floor(Math.round(dBase2+2*Math.round(dBase2*hGst2/100))/100),
           brandName:    settings?.salonName,
           brandTagline: settings?.tagline,
           brandAddress: settings?.address,
