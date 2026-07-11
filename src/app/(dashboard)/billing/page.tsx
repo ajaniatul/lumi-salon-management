@@ -41,12 +41,11 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
   onRecordPayment?: (dbId: string, amount: number, method: string) => Promise<void>;
   settings?: any;
 }) {
-  const [showA4,      setShowA4]      = useState(true);
   const [showPayForm, setShowPayForm] = useState(false);
   const [payAmt,      setPayAmt]      = useState(String(inv.due));
   const [payMethod,   setPayMethod]   = useState("Cash");
   const [saving,      setSaving]      = useState(false);
-  const st = STATUS[inv.status as keyof typeof STATUS];
+
   const itemCount = inv.services.length + inv.products.length;
   const amtEach   = Math.round(inv.subtotal / Math.max(itemCount, 1));
 
@@ -89,174 +88,66 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
 
   return (
     <>
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background:"rgba(20,12,14,0.82)", backdropFilter:"blur(4px)" }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl">
-        <div className="p-5" style={{ background:"linear-gradient(135deg,#2D1B1F,#1A0F12)" }}>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              {settings?.logo && (
-                <img src={settings.logo} className="w-10 h-10 object-contain rounded-lg bg-white/10 p-0.5" alt="Logo" />
-              )}
-              <div>
-                <p className="text-white font-display font-bold text-base">{settings?.salonName || "Lumi"}</p>
-                <p className="text-[10px] mt-0.5" style={{ color:"#9A7A80" }}>
-                  GSTIN: {settings?.gstin || "27AABCE1234F1Z5"} · {settings?.address || "Bandra West, Mumbai"}
-                </p>
-              </div>
-            </div>
-            <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background:"rgba(255,255,255,0.1)", color:"#fff" }}>
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="mt-4 flex items-end justify-between">
-            <div>
-              <p className="text-xs font-semibold" style={{ color:"#9A7A80" }}>INVOICE</p>
-              <p className="text-xl font-bold text-white">{inv.id}</p>
-              <p className="text-xs mt-0.5" style={{ color:"#9A7A80" }}>{inv.date}</p>
-            </div>
-            <span className={cn("badge text-xs", st?.cls)}>{st?.label}</span>
-          </div>
-        </div>
-        <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-0.5">Bill To</p>
-              <p className="text-sm font-bold text-foreground">{inv.customer}</p>
-              <p className="text-xs text-muted-foreground">{inv.phone}</p>
-              {inv.discount && <p className="text-xs text-emerald-600 mt-0.5">{inv.discount} applied</p>}
-            </div>
-            <div className="text-right space-y-2">
-              {inv.stylist && (
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-0.5">Attended By</p>
-                  <p className="text-xs font-bold text-foreground">{inv.stylist}</p>
-                  {inv.stylistRole && <p className="text-[10px] text-muted-foreground">{inv.stylistRole}</p>}
-                </div>
-              )}
-              <div>
-                <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-0.5">Payment</p>
-                <p className="text-xs font-semibold text-foreground">{inv.method}</p>
-              </div>
-            </div>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-2">Services & Products</p>
-            <div className="rounded-xl border border-ivory-200 overflow-hidden">
-              {lineItems.map((item, idx, arr) => (
-                <div key={idx} className={cn("flex items-center justify-between px-3 py-2.5", idx < arr.length-1 ? "border-b border-ivory-100" : "")}>
-                  <div>
-                    <p className="text-sm text-foreground">{item.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{item.type} · {item.type==="Service"?"SAC":"HSN"} {item.code}</p>
-                  </div>
-                  <span className="text-sm font-semibold text-foreground">Rs.{item.amount.toLocaleString("en-IN")}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="bg-ivory-50 rounded-xl p-4 border border-ivory-200 space-y-2">
-            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Subtotal</span><span>Rs.{inv.subtotal.toLocaleString("en-IN")}</span></div>
-            {(inv.discountAmt ?? 0) > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-emerald-600">Discount{inv.discount ? ` (${inv.discount})` : ""}</span>
-                <span className="text-emerald-600 font-semibold">−Rs.{(inv.discountAmt ?? 0).toLocaleString("en-IN")}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm"><span className="text-muted-foreground">CGST @ {halfGst}%</span><span>Rs.{inv.cgst.toFixed(2)}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-muted-foreground">SGST @ {halfGst}%</span><span>Rs.{inv.sgst.toFixed(2)}</span></div>
-            <div className="border-t border-ivory-300 pt-2 flex justify-between font-bold text-base">
-              <span>Grand Total</span><span style={{ color:"#B76E79" }}>Rs.{inv.total.toLocaleString("en-IN")}</span>
-            </div>
-            <div className="flex justify-between text-sm"><span className="text-muted-foreground">Paid</span><span className="text-emerald-600 font-semibold">Rs.{inv.paid.toLocaleString("en-IN")}</span></div>
-            {inv.due > 0 && (
-              <div className="flex justify-between text-sm font-bold">
-                <span className="text-red-500">Balance Due</span><span className="text-red-500">Rs.{inv.due.toLocaleString("en-IN")}</span>
-              </div>
-            )}
-          </div>
-          {inv.status === "INFLUENCER" ? (
-            <div className="bg-violet-50 rounded-xl p-3 border border-violet-200 space-y-1">
-              <p className="text-[10px] font-bold text-violet-700 uppercase tracking-wide">Influencer Collab — Barter Deal</p>
-              {inv.influencerNote && <p className="text-xs text-violet-600">{inv.influencerNote}</p>}
-              <p className="text-xs text-violet-500">Barter value: Rs.{inv.total.toLocaleString("en-IN")} · No cash collected</p>
-            </div>
-          ) : (
-            <div className="bg-primary-50 rounded-xl p-3 border border-primary-100 flex gap-6 text-xs">
-              <span className="text-foreground">Points earned: <strong>+{inv.loyalty.earned}</strong></span>
-              {inv.loyalty.redeemed > 0 && <span className="text-foreground">Redeemed: <strong>-{inv.loyalty.redeemed}</strong></span>}
-            </div>
-          )}
-          {inv.description && (
-            <div className="bg-ivory-50 rounded-xl p-3 border border-ivory-200">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Notes</p>
-              <p className="text-xs text-foreground">{inv.description}</p>
-            </div>
-          )}
-          <div className="flex gap-2 pt-1 flex-wrap">
-            <button onClick={() => setShowA4(true)} className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5"><Printer className="w-3.5 h-3.5" /> Print / Save PDF</button>
-            <button onClick={() => { const w = window.open("","_blank","width=900,height=1200"); if(w){w.document.write(generateInvoiceHTML(a4Data));w.document.close();} }}
-              className="btn-outline text-xs py-2 px-4 flex items-center gap-1.5"><Download className="w-3.5 h-3.5" /> Download PDF</button>
-            <button onClick={() => {
-              const ph = inv.phone.replace(/\D/g,"");
-              const msg = encodeURIComponent(`Hi ${inv.customer}, your invoice ${inv.id} for Rs.${inv.total.toLocaleString("en-IN")} from Lumi is ready. Thank you for visiting us!`);
-              window.open(`https://wa.me/91${ph}?text=${msg}`,"_blank");
-            }} className="text-xs py-2 px-4 rounded-xl border border-emerald-300 text-emerald-600 font-medium hover:bg-emerald-50">WhatsApp</button>
-            {inv.due > 0 && inv.status !== "INFLUENCER" && !showPayForm && (
-              <button onClick={() => setShowPayForm(true)} className="text-xs py-2 px-4 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600">Record Payment</button>
-            )}
-          </div>
-          {showPayForm && (
-            <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200 space-y-3">
-              <p className="text-xs font-bold text-emerald-700">Record Payment — Due: Rs.{inv.due.toLocaleString("en-IN")}</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[10px] font-semibold text-foreground block mb-1">Amount (Rs.)</label>
-                  <input type="number" value={payAmt} onChange={e => setPayAmt(e.target.value)} max={inv.due}
-                    className="w-full px-3 py-1.5 rounded-xl border border-ivory-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-foreground block mb-1">Method</label>
-                  <select value={payMethod} onChange={e => setPayMethod(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-xl border border-ivory-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white">
-                    {["Cash","UPI","Card","Card + Cash","UPI + Cash"].map(m => <option key={m}>{m}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setShowPayForm(false)} className="flex-1 text-xs py-1.5 rounded-xl border border-ivory-300 text-muted-foreground hover:bg-ivory-100">Cancel</button>
-                <button disabled={saving} onClick={async () => {
-                  const amt = Math.min(Number(payAmt)||0, inv.due);
-                  if (amt > 0 && onRecordPayment && inv.dbId) {
-                    setSaving(true);
-                    await onRecordPayment(inv.dbId, amt, payMethod);
-                    setSaving(false);
-                    setShowPayForm(false);
-                    onClose();
-                  }
-                }} className="flex-1 text-xs py-1.5 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 disabled:opacity-50 flex items-center justify-center gap-1">
-                  {saving && <Loader2 className="w-3 h-3 animate-spin" />} Confirm Payment
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-    {showA4 && (
+      {/* A4 invoice — shown directly, no card modal */}
       <InvoiceA4
         data={a4Data}
         onClose={onClose}
         actions={inv.due > 0 && inv.status !== "INFLUENCER" ? (
           <button
-            onClick={() => { setShowA4(false); setShowPayForm(true); }}
+            onClick={() => setShowPayForm(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90"
             style={{ background:"linear-gradient(135deg,#10B981,#059669)" }}>
             Record Payment
           </button>
         ) : undefined}
       />
-    )}
+
+      {/* Payment form — floats above the A4 view */}
+      {showPayForm && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4"
+          style={{ background:"rgba(0,0,0,0.5)" }}
+          onClick={e => { if (e.target === e.currentTarget) setShowPayForm(false); }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+            onClick={e => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-ivory-200 flex items-center justify-between">
+              <p className="text-sm font-bold text-foreground">Record Payment</p>
+              <button onClick={() => setShowPayForm(false)} className="w-7 h-7 rounded-full bg-ivory-100 flex items-center justify-center hover:bg-ivory-200">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-muted-foreground">Balance due: <strong className="text-red-500">Rs.{inv.due.toLocaleString("en-IN")}</strong></p>
+              <div>
+                <label className="text-xs font-semibold text-foreground block mb-1">Amount (Rs.)</label>
+                <input type="number" value={payAmt} onChange={e => setPayAmt(e.target.value)} max={inv.due}
+                  className="w-full px-3 py-2 rounded-xl border border-ivory-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground block mb-1">Payment Method</label>
+                <select value={payMethod} onChange={e => setPayMethod(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-ivory-300 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 bg-white">
+                  {["Cash","UPI","Card","Card + Cash","UPI + Cash"].map(m => <option key={m}>{m}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2 px-5 py-4 border-t border-ivory-200 bg-ivory-50">
+              <button onClick={() => setShowPayForm(false)} className="flex-1 btn-outline text-xs py-2">Cancel</button>
+              <button disabled={saving} onClick={async () => {
+                const amt = Math.min(Number(payAmt) || 0, inv.due);
+                if (amt > 0 && onRecordPayment && inv.dbId) {
+                  setSaving(true);
+                  await onRecordPayment(inv.dbId, amt, payMethod);
+                  setSaving(false);
+                  setShowPayForm(false);
+                  onClose();
+                }
+              }} className="flex-1 text-xs py-2 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 disabled:opacity-50 flex items-center justify-center gap-1">
+                {saving && <Loader2 className="w-3 h-3 animate-spin" />} Confirm Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
