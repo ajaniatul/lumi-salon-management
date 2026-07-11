@@ -569,17 +569,16 @@ export default function AppointmentsPage() {
                   return (
                     <div key={i}
                       className={cn("absolute top-0 transition-colors",
-                        inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : copiedAppt ? "hover:bg-primary-100" : "hover:bg-rose-50"
+                        inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : "hover:bg-rose-50"
                       )}
                       style={{
                         left: i * SLOT_W, width: SLOT_W, height: "100%",
-                        cursor: occupied ? "default" : copiedAppt ? "copy" : "crosshair",
+                        cursor: occupied ? "default" : "crosshair",
                         borderLeft: borderForSlot(i),
                       }}
                       onMouseDown={e => {
                         e.preventDefault();
                         if (occupied) return;
-                        if (copiedAppt) { pasteAppt(s.id, i); return; }
                         onCellDown(s.id, i);
                       }}
                       onMouseEnter={() => { onCellEnter(s.id, i); if (!occupied) setHoverCell({ staffId: s.id, slot: i }); }}
