@@ -7,8 +7,10 @@ import { useHeaderAction } from "@/components/layout/HeaderActionContext";
 import toast from "react-hot-toast";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const SLOT_H     = 17;          // px per 5-min slot  (17 × 12 = 204px/hour)
-const SLOT_MINS  = 5;
+const SLOT_W       = 14;         // px per 5-min slot horizontal (14 × 12 = 168px/hour)
+const SLOT_MINS    = 5;
+const ROW_H        = 88;         // px per staff row
+const STAFF_COL_W  = 168;        // px for the sticky staff label column
 
 function parseHour(timeStr: string, defaultHour: number): number {
   if (!timeStr) return defaultHour;
@@ -236,7 +238,7 @@ export default function AppointmentsPage() {
     const onMove = (e: MouseEvent) => {
       if (!resizing.current) return;
       const { id, startSlot, origEnd, startY, maxEnd } = resizing.current;
-      const deltaSlots = Math.round((e.clientY - startY) / SLOT_H);
+      const deltaSlots = Math.round((e.clientX - startY) / SLOT_W);
       const endSlot = Math.min(maxEnd, Math.max(startSlot + 1, origEnd + deltaSlots));
       setResizePreview({ id, endSlot });
     };
@@ -476,19 +478,57 @@ export default function AppointmentsPage() {
         )}
       </div>
 
-      {/* ── Scheduler grid ── */}
+      {/* ── Scheduler grid — time across top, staff down left ── */}
       <div
         className="card-luxury overflow-auto"
         style={{ minHeight:0, flex:"1 1 0" }}
         onMouseLeave={() => { if (dragging.current) { dragging.current = false; dragStaffRef.current = null; dragRef.current = null; setDrag(null); } }}
       >
-        {/* Sticky header */}
-        <div className="sticky top-0 z-30 flex bg-white">
-          <div className="w-16 flex-shrink-0 bg-ivory-50" style={{ borderRight:"2px solid #C5A8AE" }} />
-          {STAFF.map(s => (
-            <div key={s.id} className="flex-1 min-w-[155px] px-3 py-3 bg-ivory-50" style={{ borderRight:"1px solid #C5A8AE" }}>
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm" style={{ background:s.grad }}>
+        {/* Sticky top header: corner + time ruler */}
+        <div className="sticky top-0 z-30 flex bg-white" style={{ borderBottom:"2px solid #C5A8AE" }}>
+          {/* Corner cell */}
+          <div className="flex-shrink-0 bg-ivory-50 flex items-end pb-1 pl-2"
+            style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, borderRight:"2px solid #C5A8AE", height:36 }}>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Staff / Time</span>
+          </div>
+          {/* Time slots - only label on hour marks */}
+          <div className="relative flex-shrink-0" style={{ width: totalSlots * SLOT_W, height:36 }}>
+            {Array.from({ length: totalSlots }, (_, i) => {
+              const isHour = i % 12 === 0;
+              const isHalf = i % 6  === 0 && !isHour;
+              return (
+                <div key={i} className="absolute top-0 bottom-0"
+                  style={{ left: i * SLOT_W, width: SLOT_W, borderLeft: borderForSlot(i) }}>
+                  {isHour && (
+                    <span className="absolute text-[10px] font-semibold text-muted-foreground whitespace-nowrap"
+                      style={{ top:10, left:2 }}>{slotToTime(i)}</span>
+                  )}
+                  {isHalf && (
+                    <span className="absolute text-[9px] whitespace-nowrap" style={{ top:14, left:2, color:"#B8949C" }}>
+                      {slotToTime(i).replace(" AM","").replace(" PM","")}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Staff rows */}
+        {STAFF.map((s, si) => {
+          const rowAppts   = dayAppts.filter(a => a.staffId === s.id);
+          const dragMin    = drag?.staffId === s.id ? Math.min(drag.start, drag.end) : null;
+          const dragMax    = drag?.staffId === s.id ? Math.max(drag.start, drag.end) : null;
+          const movingAppt = movingApptId ? appts.find(a => a.id === movingApptId) : null;
+          const moveMin    = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot : null;
+          const moveMax    = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot + movingAppt.durationSlots - 1 : null;
+          return (
+            <div key={s.id} className="flex" style={{ borderBottom: si < STAFF.length-1 ? "1px solid #C5A8AE" : undefined }}>
+              {/* Staff label — sticky left */}
+              <div className="sticky left-0 z-10 bg-white flex-shrink-0 flex items-center gap-2.5 px-3"
+                style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, height:ROW_H, borderRight:"2px solid #C5A8AE" }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm"
+                  style={{ background:s.grad }}>
                   {s.name.split(" ").map((n:string)=>n[0]).join("")}
                 </div>
                 <div className="min-w-0">
@@ -499,51 +539,23 @@ export default function AppointmentsPage() {
                   </p>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Grid body */}
-        <div className="flex">
-          {/* Time gutter */}
-          <div className="w-16 flex-shrink-0 sticky left-0 z-10 bg-white" style={{ borderRight:"2px solid #C5A8AE" }}>
-            {Array.from({ length: totalSlots }, (_, i) => {
-              const isHour = i % 12 === 0;
-              const isHalf = i % 6  === 0 && !isHour;
-              return (
-                <div key={i}
-                  className="flex items-start justify-end pr-2 pt-0.5"
-                  style={{ height:SLOT_H, borderBottom:borderForSlot(i) }}
-                >
-                  {isHour && <span className="text-[10px] font-semibold text-muted-foreground leading-none">{slotToTime(i)}</span>}
-                  {isHalf && <span className="text-[9px] leading-none" style={{ color:"#B8949C" }}>{slotToTime(i).replace(" AM","").replace(" PM","")}</span>}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Staff columns */}
-          {STAFF.map(s => {
-            const colAppts = dayAppts.filter(a => a.staffId === s.id);
-            const dragMin  = drag?.staffId === s.id ? Math.min(drag.start, drag.end) : null;
-            const dragMax  = drag?.staffId === s.id ? Math.max(drag.start, drag.end) : null;
-            const movingAppt = movingApptId ? appts.find(a => a.id === movingApptId) : null;
-            const moveMin = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot : null;
-            const moveMax = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot + movingAppt.durationSlots - 1 : null;
-            return (
-              <div key={s.id} className="flex-1 min-w-[155px] relative" style={{ borderRight:"1px solid #C5A8AE" }}>
-                {/* Slot cells */}
+              {/* Time cells — absolute-positioned in a fixed-width container */}
+              <div className="relative flex-shrink-0" style={{ width: totalSlots * SLOT_W, height: ROW_H }}>
+                {/* Grid cells */}
                 {Array.from({ length: totalSlots }, (_, i) => {
-                  const occupied = colAppts.some(a => i >= a.startSlot && i < a.startSlot + a.durationSlots);
-                  const inDrag   = dragMin !== null && dragMax !== null && i >= dragMin && i <= dragMax;
+                  const occupied     = rowAppts.some(a => i >= a.startSlot && i < a.startSlot + a.durationSlots);
+                  const inDrag       = dragMin !== null && dragMax !== null && i >= dragMin && i <= dragMax;
                   const inMoveTarget = moveMin !== null && moveMax !== null && i >= moveMin && i <= moveMax;
                   return (
                     <div key={i}
-                      className={cn("transition-colors", inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : copiedAppt ? "hover:bg-primary-100" : "hover:bg-rose-50")}
+                      className={cn("absolute top-0 transition-colors",
+                        inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : copiedAppt ? "hover:bg-primary-100" : "hover:bg-rose-50"
+                      )}
                       style={{
-                        height: SLOT_H,
+                        left: i * SLOT_W, width: SLOT_W, height: ROW_H,
                         cursor: occupied ? "default" : copiedAppt ? "copy" : "crosshair",
-                        borderBottom: borderForSlot(i),
+                        borderLeft: borderForSlot(i),
                       }}
                       onMouseDown={e => {
                         e.preventDefault();
@@ -556,8 +568,7 @@ export default function AppointmentsPage() {
                       onDrop={e => {
                         e.preventDefault();
                         if (movingApptId) moveAppt(movingApptId, s.id, i);
-                        setMovingApptId(null);
-                        setMoveTarget(null);
+                        setMovingApptId(null); setMoveTarget(null);
                       }}
                     />
                   );
@@ -565,24 +576,22 @@ export default function AppointmentsPage() {
 
                 {/* Drag preview */}
                 {dragMin !== null && dragMax !== null && (
-                  <div className="absolute inset-x-1 pointer-events-none rounded-lg z-10"
+                  <div className="absolute inset-y-1 pointer-events-none rounded-lg z-10"
                     style={{
-                      top:    dragMin * SLOT_H + 2,
-                      height: (dragMax - dragMin + 1) * SLOT_H - 4,
+                      left:  dragMin * SLOT_W + 2,
+                      width: (dragMax - dragMin + 1) * SLOT_W - 4,
                       background: `${s.color}18`,
                       border: `2px dashed ${s.color}`,
-                    }}
-                  >
-                    <p className="text-[10px] font-bold p-1.5" style={{ color:s.color }}>
+                    }}>
+                    <p className="text-[10px] font-bold p-1.5 whitespace-nowrap" style={{ color:s.color }}>
                       {slotToTime(dragMin)} → {slotToTime(dragMax + 1)}
-                      <br />
-                      <span className="font-normal opacity-70">{(dragMax - dragMin + 1) * SLOT_MINS} min</span>
+                      &nbsp;<span className="font-normal opacity-70">{(dragMax - dragMin + 1) * SLOT_MINS}m</span>
                     </p>
                   </div>
                 )}
 
                 {/* Appointment blocks */}
-                {colAppts.map(appt => {
+                {rowAppts.map(appt => {
                   const isCompleted  = appt.status === "COMPLETED";
                   const isCancelled  = appt.status === "CANCELLED";
                   const isInProgress = appt.status === "IN_PROGRESS";
@@ -596,15 +605,15 @@ export default function AppointmentsPage() {
                       onDragStart={e => { if (isMovable) { setMovingApptId(appt.id); e.dataTransfer.effectAllowed = "move"; } }}
                       onDragEnd={() => { setMovingApptId(null); setMoveTarget(null); }}
                       className={cn(
-                        "absolute inset-x-1 rounded-lg overflow-hidden z-20 cursor-pointer transition-all duration-150",
-                        !isResizing ? "hover:inset-x-0 hover:z-30 hover:shadow-xl" : "z-30",
+                        "absolute inset-y-1 rounded-lg overflow-hidden z-20 cursor-pointer transition-all duration-150",
+                        !isResizing ? "hover:inset-y-0 hover:z-30 hover:shadow-xl" : "z-30",
                         isMovable ? "active:cursor-grabbing" : "",
                         isCancelled || isCompleted ? "opacity-55" : "",
                         movingApptId === appt.id ? "opacity-30" : ""
                       )}
                       style={{
-                        top:    appt.startSlot * SLOT_H + 2,
-                        height: durationSlots * SLOT_H - 4,
+                        left:  appt.startSlot * SLOT_W + 2,
+                        width: durationSlots * SLOT_W - 4,
                         background: `${STATUS_COLOR[appt.status]}55`,
                         border: `2px solid ${s.color}`,
                       }}
@@ -637,33 +646,33 @@ export default function AppointmentsPage() {
                           </div>
                         )}
                       </div>
+                      {/* Resize handle — right edge */}
                       {isMovable && (
                         <div
                           draggable={false}
                           onMouseDown={e => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            const laterAppts = colAppts.filter(a =>
+                            e.stopPropagation(); e.preventDefault();
+                            const laterAppts = rowAppts.filter(a =>
                               a.id !== appt.id && a.status !== "CANCELLED" && a.startSlot >= appt.startSlot
                             );
                             const maxEnd = laterAppts.length ? Math.min(totalSlots, ...laterAppts.map(a => a.startSlot)) : totalSlots;
                             resizing.current = {
                               id: appt.id, staffId: appt.staffId, startSlot: appt.startSlot,
-                              origEnd: appt.startSlot + appt.durationSlots, startY: e.clientY, maxEnd,
+                              origEnd: appt.startSlot + appt.durationSlots, startY: e.clientX, maxEnd,
                             };
                             setResizePreview({ id: appt.id, endSlot: appt.startSlot + appt.durationSlots });
                           }}
                           onClick={e => e.stopPropagation()}
-                          className="absolute bottom-0 inset-x-0 h-2 cursor-ns-resize hover:bg-black/10"
+                          className="absolute right-0 inset-y-0 w-2 cursor-ew-resize hover:bg-black/10"
                         />
                       )}
                     </div>
                   );
                 })}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* ── BOOKING MODAL ── */}
