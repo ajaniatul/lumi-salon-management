@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { InvoiceA4, InvoiceData, generateInvoiceHTML } from "@/components/InvoiceA4";
-import { ChevronLeft, ChevronRight, X, UserPlus, Users, Receipt, Banknote, CreditCard, Smartphone, Loader2, Copy, ClipboardPaste } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, UserPlus, Users, Receipt, Banknote, CreditCard, Smartphone, Loader2, Copy, ClipboardPaste, Eye, Clock, Play, CheckCircle, UserX, XCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/components/layout/HeaderActionContext";
 import toast from "react-hot-toast";
@@ -61,7 +61,7 @@ const TIER_CHIP: Record<string,string> = {
   PLATINUM:"bg-primary-100 text-primary-600 border-primary-200",
 };
 
-type Status = "CONFIRMED"|"IN_PROGRESS"|"COMPLETED"|"WAITING"|"CANCELLED";
+type Status = "CONFIRMED"|"WAITING"|"IN_PROGRESS"|"COMPLETED"|"NO_SHOW"|"CANCELLED";
 type ApptService = { id:string; name:string; price:number; gstRate:number };
 type Appt = {
   id:string; staffId:string; customer:string; phone:string; customerCode?:string|null;
@@ -72,9 +72,10 @@ type Appt = {
 
 const STATUS_META: Record<Status,{label:string;badge:string}> = {
   CONFIRMED:   { label:"Confirmed",   badge:"bg-blue-100 text-blue-700 border border-blue-200" },
+  WAITING:     { label:"Waiting",     badge:"bg-amber-100 text-amber-700 border border-amber-200" },
   IN_PROGRESS: { label:"In Progress", badge:"bg-emerald-100 text-emerald-700 border border-emerald-200" },
   COMPLETED:   { label:"Completed",   badge:"bg-gray-100 text-gray-500 border border-gray-200" },
-  WAITING:     { label:"Waiting",     badge:"bg-amber-100 text-amber-700 border border-amber-200" },
+  NO_SHOW:     { label:"No Show",     badge:"bg-orange-100 text-orange-600 border border-orange-200" },
   CANCELLED:   { label:"Cancelled",   badge:"bg-red-100 text-red-500 border border-red-200" },
 };
 
@@ -82,9 +83,10 @@ const STATUS_META: Record<Status,{label:string;badge:string}> = {
 // is readable at a glance on the calendar; the block's border carries the stylist color.
 const STATUS_COLOR: Record<Status,string> = {
   CONFIRMED:   "#3B82F6",
+  WAITING:     "#F59E0B",
   IN_PROGRESS: "#10B981",
   COMPLETED:   "#9CA3AF",
-  WAITING:     "#F59E0B",
+  NO_SHOW:     "#F97316",
   CANCELLED:   "#EF4444",
 };
 
@@ -121,6 +123,7 @@ export default function AppointmentsPage() {
   const [resizePreview, setResizePreview] = useState<{id:string; endSlot:number} | null>(null);
   const resizing = useRef<{id:string; staffId:string; startSlot:number; origEnd:number; startY:number; maxEnd:number} | null>(null);
   const [copiedAppt, setCopiedAppt] = useState<{customerCode:string; customer:string; phone:string; serviceIds:string[]; notes?:string; durationSlots:number} | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x:number; y:number; appt:Appt } | null>(null);
 
   // Derived scheduler hours configuration from settings
   const dayStart = settings?.openingTime ? parseHour(settings.openingTime, 10) : 10;
@@ -333,11 +336,13 @@ export default function AppointmentsPage() {
   const resizeApptRef = useRef(resizeAppt);
   useEffect(() => { resizeApptRef.current = resizeAppt; });
 
-  // Clear the copied appointment on Escape.
+  // Clear copied appointment + context menu on Escape / outside click.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setCopiedAppt(null); };
+    const onKey   = (e: KeyboardEvent) => { if (e.key === "Escape") { setCopiedAppt(null); setContextMenu(null); } };
+    const onClick = () => setContextMenu(null);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("click",   onClick);
+    return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("click", onClick); };
   }, []);
 
   // Paste a copied appointment onto another stylist's (or the same stylist's) empty slot —
@@ -623,6 +628,7 @@ export default function AppointmentsPage() {
                         border: `2px solid ${s.color}`,
                       }}
                       onClick={() => setDetailAppt(appt)}
+                      onContextMenu={e => { e.preventDefault(); e.stopPropagation(); setContextMenu({ x: e.clientX, y: e.clientY, appt }); }}
                     >
                       <div className="p-1.5 h-full flex flex-col gap-0.5 overflow-hidden">
                         <p className="text-[11px] font-bold leading-tight truncate" style={{ color:isCompleted?"#7A6870":s.color }}>
@@ -682,6 +688,137 @@ export default function AppointmentsPage() {
           </div>{/* end minWidth inner */}
         </div>{/* end overflow-x-auto */}
       </div>{/* end outer */}
+
+      {/* ── RIGHT-CLICK CONTEXT MENU ── */}
+      {contextMenu && (() => {
+        const { x, y, appt } = contextMenu;
+        const s = STAFF.find(st => st.id === appt.staffId);
+        const isDone    = appt.status === "COMPLETED";
+        const isCancelled = appt.status === "CANCELLED" || appt.status === "NO_SHOW";
+        const isActive  = !isDone && !isCancelled;
+        // Flip left if too close to right edge
+        const menuW = 220;
+        const menuH = 340;
+        const left  = x + menuW > window.innerWidth  ? x - menuW : x;
+        const top   = y + menuH > window.innerHeight ? y - menuH : y;
+
+        type MenuItem = { icon: React.ReactNode; label: string; action: () => void; danger?: boolean; disabled?: boolean; color?: string };
+        type Sep = "sep";
+        const items: (MenuItem | Sep)[] = [
+          {
+            icon: <Eye className="w-3.5 h-3.5" />, label: "View Details",
+            action: () => { setDetailAppt(appt); setContextMenu(null); },
+          },
+          "sep",
+          {
+            icon: <Clock className="w-3.5 h-3.5" />, label: "Mark as Waiting",
+            action: () => { changeStatus(appt.id, "WAITING"); setContextMenu(null); },
+            disabled: appt.status === "WAITING" || isDone || isCancelled,
+          },
+          {
+            icon: <Play className="w-3.5 h-3.5" />, label: "Start (In Progress)",
+            action: () => { changeStatus(appt.id, "IN_PROGRESS"); setContextMenu(null); },
+            disabled: appt.status === "IN_PROGRESS" || isDone || isCancelled,
+            color: "#10B981",
+          },
+          {
+            icon: <CheckCircle className="w-3.5 h-3.5" />, label: "Mark Complete",
+            action: () => { changeStatus(appt.id, "COMPLETED"); setContextMenu(null); },
+            disabled: isDone || isCancelled,
+            color: "#6B7280",
+          },
+          "sep",
+          {
+            icon: <UserX className="w-3.5 h-3.5" />, label: "No Show",
+            action: () => { changeStatus(appt.id, "NO_SHOW"); setContextMenu(null); },
+            disabled: appt.status === "NO_SHOW" || isDone,
+            danger: true,
+          },
+          {
+            icon: <XCircle className="w-3.5 h-3.5" />, label: "Cancel Appointment",
+            action: () => { changeStatus(appt.id, "CANCELLED"); setContextMenu(null); },
+            disabled: isCancelled || isDone,
+            danger: true,
+          },
+          "sep",
+          {
+            icon: <Copy className="w-3.5 h-3.5" />, label: "Copy Appointment",
+            action: () => {
+              setCopiedAppt({
+                customerCode: appt.customerCode || "",
+                customer: appt.customer, phone: appt.phone,
+                serviceIds: appt.services?.map(sv => sv.id) ?? [],
+                notes: appt.notes, durationSlots: appt.durationSlots,
+              });
+              toast.success(`Copied ${appt.customer} — click an empty slot to paste`);
+              setContextMenu(null);
+            },
+          },
+          {
+            icon: <Receipt className="w-3.5 h-3.5" />, label: "Bill Customer",
+            action: () => { setBillingAppt(appt); setContextMenu(null); },
+            disabled: !!appt.invoiceNumber,
+            color: "#B76E79",
+          },
+          "sep",
+          {
+            icon: <Trash2 className="w-3.5 h-3.5" />, label: "Delete",
+            action: () => { deleteAppt(appt.id); setContextMenu(null); },
+            danger: true,
+          },
+        ];
+
+        return (
+          <div
+            className="fixed z-[200] bg-white rounded-xl shadow-2xl border border-ivory-200 py-1 overflow-hidden"
+            style={{ left, top, width: menuW, minWidth: menuW }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-3 py-2 border-b border-ivory-100" style={{ background:"#FDF6F7" }}>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                  style={{ background: s?.grad }}>
+                  {s?.name.split(" ").map((n:string)=>n[0]).join("") || "?"}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-foreground truncate">{appt.customer}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{appt.service}</p>
+                </div>
+                <span className={cn("ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-semibold border flex-shrink-0", STATUS_META[appt.status]?.badge)}>
+                  {STATUS_META[appt.status]?.label}
+                </span>
+              </div>
+            </div>
+            {/* Items */}
+            <div className="py-1">
+              {items.map((item, i) =>
+                item === "sep" ? (
+                  <div key={i} className="my-1 border-t border-ivory-100" />
+                ) : (
+                  <button
+                    key={i}
+                    disabled={item.disabled}
+                    onClick={item.action}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left transition-colors",
+                      item.disabled
+                        ? "opacity-35 cursor-not-allowed"
+                        : item.danger
+                          ? "text-red-600 hover:bg-red-50"
+                          : "text-foreground hover:bg-ivory-50"
+                    )}
+                    style={!item.disabled && item.color ? { color: item.color } : undefined}
+                  >
+                    <span className="flex-shrink-0">{item.icon}</span>
+                    {item.label}
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── BOOKING MODAL ── */}
       {bookModal && (() => {
