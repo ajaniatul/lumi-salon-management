@@ -41,7 +41,7 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
   onRecordPayment?: (dbId: string, amount: number, method: string) => Promise<void>;
   settings?: any;
 }) {
-  const [showA4,      setShowA4]      = useState(false);
+  const [showA4,      setShowA4]      = useState(true);
   const [showPayForm, setShowPayForm] = useState(false);
   const [payAmt,      setPayAmt]      = useState(String(inv.due));
   const [payMethod,   setPayMethod]   = useState("Cash");
@@ -243,7 +243,20 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
         </div>
       </div>
     </div>
-    {showA4 && <InvoiceA4 data={a4Data} onClose={() => setShowA4(false)} />}
+    {showA4 && (
+      <InvoiceA4
+        data={a4Data}
+        onClose={onClose}
+        actions={inv.due > 0 && inv.status !== "INFLUENCER" ? (
+          <button
+            onClick={() => { setShowA4(false); setShowPayForm(true); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90"
+            style={{ background:"linear-gradient(135deg,#10B981,#059669)" }}>
+            Record Payment
+          </button>
+        ) : undefined}
+      />
+    )}
     </>
   );
 }

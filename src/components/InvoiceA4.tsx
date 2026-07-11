@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { X, Printer, ExternalLink } from "lucide-react";
 
 // ─── Shared data type ────────────────────────────────────────────────────────
@@ -217,7 +218,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
 }
 
 // ─── In-app A4 viewer overlay ─────────────────────────────────────────────────
-export function InvoiceA4({ data, onClose }: { data: InvoiceData; onClose: () => void }) {
+export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClose: () => void; actions?: React.ReactNode }) {
   const sColor = data.status==="PAID" ? "#059669" : data.status==="PARTIAL" ? "#2563EB" : data.status==="INFLUENCER" ? "#7C3AED" : "#DC2626";
   const sBg    = data.status==="PAID" ? "#D1FAE5"  : data.status==="PARTIAL" ? "#DBEAFE" : data.status==="INFLUENCER" ? "#EDE9FE" : "#FEE2E2";
   const sLabel = data.status==="PAID" ? "PAID" : data.status==="PARTIAL" ? "PARTIAL" : data.status==="INFLUENCER" ? "BARTER" : "PENDING";
@@ -262,6 +263,7 @@ export function InvoiceA4({ data, onClose }: { data: InvoiceData; onClose: () =>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {actions}
           <button onClick={openTab}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
             <ExternalLink className="w-3.5 h-3.5" /> Open in new tab
