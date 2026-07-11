@@ -481,7 +481,7 @@ export default function AppointmentsPage() {
           <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-50 border border-primary-200">
             <ClipboardPaste className="w-3.5 h-3.5 text-primary-600" />
             <span className="text-xs text-primary-700">
-              Copied <strong>{copiedAppt.customer}</strong> — right-click an empty slot to paste
+              Copied <strong>{copiedAppt.customer}</strong> — click any empty slot to paste
             </span>
             <button onClick={() => setCopiedAppt(null)} className="text-xs text-primary-500 hover:text-primary-700 underline">
               Clear
@@ -573,21 +573,17 @@ export default function AppointmentsPage() {
                       )}
                       style={{
                         left: i * SLOT_W, width: SLOT_W, height: "100%",
-                        cursor: occupied ? "default" : "crosshair",
+                        cursor: occupied ? "default" : copiedAppt ? "copy" : "crosshair",
                         borderLeft: borderForSlot(i),
                       }}
                       onMouseDown={e => {
                         e.preventDefault();
                         if (occupied) return;
+                        if (copiedAppt) { pasteAppt(s.id, i); return; }
                         onCellDown(s.id, i);
                       }}
                       onMouseEnter={() => { onCellEnter(s.id, i); if (!occupied) setHoverCell({ staffId: s.id, slot: i }); }}
                       onMouseLeave={() => setHoverCell(null)}
-                      onContextMenu={e => {
-                        if (occupied) return;
-                        e.preventDefault(); e.stopPropagation();
-                        setCellContextMenu({ x: e.clientX, y: e.clientY, staffId: s.id, slot: i });
-                      }}
                       onDragOver={e => { if (movingApptId) { e.preventDefault(); setMoveTarget({ staffId: s.id, slot: i }); } }}
                       onDrop={e => {
                         e.preventDefault();
@@ -782,7 +778,7 @@ export default function AppointmentsPage() {
                 serviceIds: appt.services?.map(sv => sv.id) ?? [],
                 notes: appt.notes, durationSlots: appt.durationSlots,
               });
-              toast.success(`Copied ${appt.customer} — right-click an empty slot to paste`);
+              toast.success(`Copied ${appt.customer} — click any empty slot to paste`);
               setContextMenu(null);
             },
           },
@@ -852,56 +848,6 @@ export default function AppointmentsPage() {
         );
       })()}
 
-      {/* ── CELL RIGHT-CLICK MENU (empty slot) ── */}
-      {cellContextMenu && (() => {
-        const { x, y, staffId, slot } = cellContextMenu;
-        const s = STAFF.find(st => st.id === staffId);
-        const menuW = 220;
-        const left  = x + menuW > window.innerWidth ? x - menuW : x;
-        const top   = y + 120 > window.innerHeight  ? y - 120   : y;
-        return (
-          <div
-            className="fixed z-[200] bg-white rounded-xl shadow-2xl border border-ivory-200 py-1 overflow-hidden"
-            style={{ left, top, width: menuW }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="px-3 py-2 border-b border-ivory-100" style={{ background:"#FDF6F7" }}>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                {s?.name} · {slotToTime(slot)}
-              </p>
-            </div>
-            <div className="py-1">
-              {copiedAppt ? (
-                <button
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-white font-semibold hover:opacity-90 transition-colors"
-                  style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}
-                  onClick={() => { pasteAppt(staffId, slot); setCellContextMenu(null); }}
-                >
-                  <ClipboardPaste className="w-3.5 h-3.5" />
-                  Paste — {copiedAppt.customer}
-                </button>
-              ) : (
-                <div className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-muted-foreground opacity-50 cursor-not-allowed select-none">
-                  <ClipboardPaste className="w-3.5 h-3.5" />
-                  Paste <span className="ml-auto text-[10px]">Nothing copied</span>
-                </div>
-              )}
-              <div className="my-1 border-t border-ivory-100" />
-              <button
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-foreground hover:bg-ivory-50 transition-colors"
-                onClick={() => {
-                  setBookModal({ staffId, startSlot: slot, endSlot: slot + 12 });
-                  setForm({ ...defaultForm, fromSlot: slot, toSlot: slot + 12 });
-                  setCellContextMenu(null);
-                }}
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                New Appointment Here
-              </button>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* ── BOOKING MODAL ── */}
       {bookModal && (() => {
