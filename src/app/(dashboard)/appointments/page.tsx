@@ -123,6 +123,7 @@ export default function AppointmentsPage() {
   const [resizePreview, setResizePreview] = useState<{id:string; endSlot:number} | null>(null);
   const resizing = useRef<{id:string; staffId:string; startSlot:number; origEnd:number; startY:number; maxEnd:number} | null>(null);
   const [copiedAppt, setCopiedAppt] = useState<{customerCode:string|null; customer:string; phone:string; serviceIds:string[]; notes?:string; durationSlots:number} | null>(null);
+  const [pasteConfirm, setPasteConfirm] = useState<{ staffId:string; slot:number; staffName:string } | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x:number; y:number; appt:Appt } | null>(null);
   const [cellContextMenu, setCellContextMenu] = useState<{ x:number; y:number; staffId:string; slot:number } | null>(null);
   const [hoverCell, setHoverCell] = useState<{ staffId:string; slot:number } | null>(null);
@@ -579,7 +580,7 @@ export default function AppointmentsPage() {
                       onMouseDown={e => {
                         e.preventDefault();
                         if (occupied) return;
-                        if (copiedAppt) { pasteAppt(s.id, i); return; }
+                        if (copiedAppt) { setPasteConfirm({ staffId: s.id, slot: i, staffName: s.name }); return; }
                         onCellDown(s.id, i);
                       }}
                       onMouseEnter={() => { onCellEnter(s.id, i); if (!occupied) setHoverCell({ staffId: s.id, slot: i }); }}
@@ -848,6 +849,53 @@ export default function AppointmentsPage() {
         );
       })()}
 
+
+      {/* ── PASTE CONFIRMATION ── */}
+      {pasteConfirm && copiedAppt && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background:"rgba(45,27,31,0.45)" }}
+          onClick={() => setPasteConfirm(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+            onClick={e => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-ivory-100" style={{ background:"linear-gradient(135deg,#FDF6F7,#FBF0F1)" }}>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                  style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                  <ClipboardPaste className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Paste Appointment?</p>
+                  <p className="text-[11px] text-muted-foreground">This will create a new booking</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-5 py-4 space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Customer</span>
+                <span className="font-semibold text-foreground">{copiedAppt.customer}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Stylist</span>
+                <span className="font-semibold text-foreground">{pasteConfirm.staffName}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Time</span>
+                <span className="font-semibold text-foreground">{slotToTime(pasteConfirm.slot)}</span>
+              </div>
+            </div>
+            <div className="px-5 pb-5 flex gap-2">
+              <button
+                className="flex-1 py-2.5 rounded-xl border border-ivory-300 text-xs font-semibold text-muted-foreground hover:bg-ivory-50 transition-colors"
+                onClick={() => setPasteConfirm(null)}
+              >Cancel</button>
+              <button
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-colors hover:opacity-90"
+                style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}
+                onClick={() => { pasteAppt(pasteConfirm.staffId, pasteConfirm.slot); setPasteConfirm(null); }}
+              >Paste Here</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── BOOKING MODAL ── */}
       {bookModal && (() => {
