@@ -129,9 +129,15 @@ export async function POST(request: NextRequest) {
     // ── Appointment number ──
     const dayStart = new Date(y, mo - 1, d, 0, 0, 0, 0);
     const dayEnd = new Date(y, mo - 1, d + 1, 0, 0, 0, 0);
-    const countToday = await prisma.appointment.count({ where: { startTime: { gte: dayStart, lt: dayEnd } } });
     const ymd = `${y}${String(mo).padStart(2, "0")}${String(d).padStart(2, "0")}`;
-    const appointmentNo = `APT-${ymd}-${String(countToday + 1).padStart(3, "0")}`;
+    // Use MAX existing number for the day so deletions don't cause reuse collisions
+    const lastToday = await prisma.appointment.findFirst({
+      where: { appointmentNo: { startsWith: `APT-${ymd}-` } },
+      orderBy: { appointmentNo: "desc" },
+      select: { appointmentNo: true },
+    });
+    const lastSeq = lastToday ? parseInt(lastToday.appointmentNo.split("-").pop() ?? "0", 10) : 0;
+    const appointmentNo = `APT-${ymd}-${String(lastSeq + 1).padStart(3, "0")}`;
 
     const created = await prisma.appointment.create({
       data: {
@@ -149,7 +155,6 @@ export async function POST(request: NextRequest) {
       },
       include: {
         customer: { select: { name: true, phone: true, customerId: true } },
-        services: { include: { service: { select: { name: true, gstRate: true } } } },
       },
     });
     return NextResponse.json({ success: true, data: toUI(created) }, { status: 201 });

@@ -29,8 +29,8 @@ enum AppointmentStatus {
   WAITING
   IN_PROGRESS
   COMPLETED
-  CANCELLED
   NO_SHOW
+  CANCELLED
 }
 
 enum PaymentMethod {
