@@ -371,6 +371,7 @@ export default function AppointmentsPage() {
       const j = await res.json();
       if (!j.success) { toast.error(j.error || "Could not paste appointment."); return; }
       setAppts(a => [...a, j.data]);
+      setCopiedAppt(null);
       toast.success(`Pasted ${copiedAppt.customer}`);
     } catch {
       toast.error("Network error. Please try again.");
