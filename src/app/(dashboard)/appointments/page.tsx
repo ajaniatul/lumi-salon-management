@@ -122,7 +122,7 @@ export default function AppointmentsPage() {
   const [moveTarget,   setMoveTarget]   = useState<{staffId:string; slot:number} | null>(null);
   const [resizePreview, setResizePreview] = useState<{id:string; endSlot:number} | null>(null);
   const resizing = useRef<{id:string; staffId:string; startSlot:number; origEnd:number; startY:number; maxEnd:number} | null>(null);
-  const [copiedAppt, setCopiedAppt] = useState<{customerCode:string; customer:string; phone:string; serviceIds:string[]; notes?:string; durationSlots:number} | null>(null);
+  const [copiedAppt, setCopiedAppt] = useState<{customerCode:string|null; customer:string; phone:string; serviceIds:string[]; notes?:string; durationSlots:number} | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x:number; y:number; appt:Appt } | null>(null);
   const [cellContextMenu, setCellContextMenu] = useState<{ x:number; y:number; staffId:string; slot:number } | null>(null);
   const [hoverCell, setHoverCell] = useState<{ staffId:string; slot:number } | null>(null);
@@ -352,15 +352,21 @@ export default function AppointmentsPage() {
   const pasteAppt = async (staffId: string, startSlot: number) => {
     if (!copiedAppt) return;
     const endSlot = startSlot + copiedAppt.durationSlots;
+    // API needs either customerCode (existing) OR newCustomer (walk-in) — never an empty string
+    const body: Record<string, unknown> = {
+      date: curKey, staffId, startSlot, endSlot,
+      serviceIds: copiedAppt.serviceIds.length ? copiedAppt.serviceIds : undefined,
+      notes: copiedAppt.notes,
+    };
+    if (copiedAppt.customerCode) {
+      body.customerCode = copiedAppt.customerCode;
+    } else {
+      body.newCustomer = { name: copiedAppt.customer, phone: copiedAppt.phone, email: "" };
+    }
     try {
       const res = await fetch("/api/appointments", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          date: curKey, staffId, startSlot, endSlot,
-          serviceIds: copiedAppt.serviceIds,
-          customerCode: copiedAppt.customerCode,
-          notes: copiedAppt.notes,
-        }),
+        body: JSON.stringify(body),
       });
       const j = await res.json();
       if (!j.success) { toast.error(j.error || "Could not paste appointment."); return; }
@@ -771,7 +777,7 @@ export default function AppointmentsPage() {
             icon: <Copy className="w-3.5 h-3.5" />, label: "Copy Appointment",
             action: () => {
               setCopiedAppt({
-                customerCode: appt.customerCode || "",
+                customerCode: appt.customerCode || null,
                 customer: appt.customer, phone: appt.phone,
                 serviceIds: appt.services?.map(sv => sv.id) ?? [],
                 notes: appt.notes, durationSlots: appt.durationSlots,
