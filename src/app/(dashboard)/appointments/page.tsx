@@ -500,21 +500,21 @@ export default function AppointmentsPage() {
               {Array.from({ length: totalSlots }, (_, i) => {
                 const isHour = i % 12 === 0;
                 const isHalf = i % 6  === 0 && !isHour;
-                return (
-                  <div key={i} className="absolute top-0 bottom-0"
-                    style={{ left: i * SLOT_W, width: SLOT_W, borderLeft: borderForSlot(i) }}>
+                return isHour || isHalf ? (
+                  <div key={i} className="absolute top-0 bottom-0 overflow-visible"
+                    style={{ left: i * SLOT_W, width: 0, borderLeft: isHour ? "1.5px solid #B8949C" : "1px dashed #D4B8BC" }}>
                     {isHour && (
                       <span className="absolute text-[10px] font-semibold text-muted-foreground whitespace-nowrap"
-                        style={{ top:6, left:2 }}>{slotToTime(i)}</span>
+                        style={{ top:6, left:3 }}>{slotToTime(i)}</span>
                     )}
                     {isHalf && (
-                      <span className="absolute text-[9px] whitespace-nowrap" style={{ top:8, left:2, color:"#B8949C" }}>
+                      <span className="absolute text-[9px] whitespace-nowrap" style={{ top:8, left:3, color:"#B8949C" }}>
                         {slotToTime(i).replace(" AM","").replace(" PM","")}
                       </span>
                     )}
-                </div>
-              );
-            })}
+                  </div>
+                ) : null;
+              })}
           </div>
         </div>
 
