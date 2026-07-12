@@ -114,6 +114,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Customer not found." }, { status: 404 });
     }
 
+    // Idempotency: if an invoice already exists for this appointment, return it
+    if (appointmentId) {
+      const existing = await prisma.invoice.findUnique({
+        where: { appointmentId },
+        include: {
+          customer:    { select: { name: true, phone: true } },
+          items:       { include: { product: { select: { hsnCode: true } } } },
+          payments:    { select: { method: true, amount: true } },
+          appointment: { include: { staff: { select: { name: true, role: true } } } },
+        },
+      });
+      if (existing) {
+        return NextResponse.json({ success: true, data: toUI(existing) }, { status: 200 });
+      }
+    }
+
     // Invoice number
     const count = await prisma.invoice.count();
     const year  = new Date().getFullYear();
@@ -179,9 +195,10 @@ export async function POST(request: NextRequest) {
         } : {}),
       },
       include: {
-        customer: { select: { name: true, phone: true } },
-        items:    { include: { product: { select: { hsnCode: true } } } },
-        payments: { select: { method: true, amount: true } },
+        customer:    { select: { name: true, phone: true } },
+        items:       { include: { product: { select: { hsnCode: true } } } },
+        payments:    { select: { method: true, amount: true } },
+        appointment: { include: { staff: { select: { name: true, role: true } } } },
       },
     });
 
@@ -197,7 +214,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: toUI(created) }, { status: 201 });
   } catch (e: any) {
-    console.error("[INVOICES POST]", e);
+    console.error("[INVOICES POST] code:", e?.code, "msg:", e?.message, e);
+    // P2002 = unique constraint (e.g. appointmentId already has an invoice)
+    if (e?.code === "P2002") {
+      const field = e?.meta?.target?.[0] ?? "field";
+      return NextResponse.json({ success: false, error: `Duplicate invoice: ${field} already billed` }, { status: 409 });
+    }
+    // P2003 = foreign key constraint (e.g. serviceId not found)
+    if (e?.code === "P2003") {
+      return NextResponse.json({ success: false, error: `Data reference error: ${e?.meta?.field_name ?? e.message}` }, { status: 422 });
+    }
     return NextResponse.json({ success: false, error: e?.message ?? "Failed to create invoice" }, { status: 500 });
   }
 }
