@@ -29,7 +29,7 @@ function toUI(inv: any) {
 
   return {
     id:             inv.invoiceNumber,
-    dbId:           inv.id,               // UUID for payment recording
+    dbId:           inv.id,
     date:           new Date(inv.createdAt).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }),
     customer:       inv.customer?.name ?? "",
     phone:          inv.customer?.phone  ?? "",
@@ -81,19 +81,21 @@ export async function POST(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
+  let step = "parse";
   try {
+    step = "parse";
     const body = await request.json();
     const {
-      customerId,       // "CUS-0001" string
-      appointmentId,    // optional — links this invoice back to the appointment it was billed from
-      items,            // [{ type, dbId, name, unitPrice, qty, gstRate }]
+      customerId,
+      appointmentId,
+      items,
       discountAmt = 0,
       discountNote = "",
       gstRate = 18,
       cgst,
       sgst,
       total,
-      rawSubtotal,      // pre-discount subtotal
+      rawSubtotal,
       paidAmt,
       methodLabel = "-",
       description = "",
@@ -105,7 +107,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Customer and at least one item are required." }, { status: 400 });
     }
 
-    // Resolve customer
+    step = "find-customer";
     const customer = await prisma.customer.findUnique({
       where: { customerId },
       select: { id: true },
@@ -115,6 +117,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Idempotency: if an invoice already exists for this appointment, return it
+    step = "idempotency";
     if (appointmentId) {
       const existing = await prisma.invoice.findUnique({
         where: { appointmentId },
@@ -130,7 +133,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Invoice number
+    step = "compute";
     const count = await prisma.invoice.count();
     const year  = new Date().getFullYear();
     const invoiceNumber = `INV-${year}-${String(count + 1).padStart(4, "0")}`;
@@ -144,7 +147,6 @@ export async function POST(request: NextRequest) {
                      :                     "PENDING";
     const loyalty    = isInfluencer ? 0 : Math.floor(total / 100);
 
-    // Pack extra metadata into notes as JSON
     const notesJson = JSON.stringify({
       description,
       discountNote,
@@ -153,6 +155,7 @@ export async function POST(request: NextRequest) {
       methodLabel,
     });
 
+    step = "create-invoice";
     const created = await prisma.invoice.create({
       data: {
         invoiceNumber,
@@ -202,29 +205,32 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Update customer totals
-    await prisma.customer.update({
-      where: { id: customer.id },
-      data: {
-        totalVisits:  { increment: 1 },
-        totalSpend:   { increment: total },
-        loyaltyPoints: { increment: loyalty },
-      },
-    });
+    // Update customer totals — non-fatal
+    step = "update-customer";
+    try {
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          totalVisits:   { increment: 1 },
+          totalSpend:    { increment: total },
+          loyaltyPoints: { increment: loyalty },
+        },
+      });
+    } catch (updateErr: any) {
+      console.error("[INVOICES POST] customer update failed (non-fatal):", updateErr?.message);
+    }
 
     return NextResponse.json({ success: true, data: toUI(created) }, { status: 201 });
   } catch (e: any) {
-    console.error("[INVOICES POST] code:", e?.code, "msg:", e?.message, e);
-    // P2002 = unique constraint (e.g. appointmentId already has an invoice)
+    console.error("[INVOICES POST] failed at step:", step, "| code:", e?.code, "| msg:", e?.message, e);
     if (e?.code === "P2002") {
       const field = e?.meta?.target?.[0] ?? "field";
       return NextResponse.json({ success: false, error: `Duplicate invoice: ${field} already billed` }, { status: 409 });
     }
-    // P2003 = foreign key constraint (e.g. serviceId not found)
     if (e?.code === "P2003") {
-      return NextResponse.json({ success: false, error: `Data reference error: ${e?.meta?.field_name ?? e.message}` }, { status: 422 });
+      return NextResponse.json({ success: false, error: `Data error at ${step}: ${e?.meta?.field_name ?? e.message}` }, { status: 422 });
     }
-    return NextResponse.json({ success: false, error: e?.message ?? "Failed to create invoice" }, { status: 500 });
+    return NextResponse.json({ success: false, error: `Error at [${step}]: ${e?.message ?? "unknown"}` }, { status: 500 });
   }
 }
 
