@@ -196,9 +196,9 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, data: toUI(created) }, { status: 201 });
-  } catch (e) {
+  } catch (e: any) {
     console.error("[INVOICES POST]", e);
-    return NextResponse.json({ success: false, error: "Failed to create invoice" }, { status: 500 });
+    return NextResponse.json({ success: false, error: e?.message ?? "Failed to create invoice" }, { status: 500 });
   }
 }
 
