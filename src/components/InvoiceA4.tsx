@@ -206,8 +206,6 @@ export function generateInvoiceHTML(d: InvoiceData): string {
       For queries, reach us at ${d.brandPhone || "022-12345678"} or ${d.brandEmail || "hello@lumisalon.in"}
     </div>
   </div>
-  <div style="padding:10px 44px;text-align:center;border-top:1px solid #EDD0D4;">
-    <span style="font-size:8px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:#C4A0A8;">Powered by Beauvé</span>
   </div>
 </div>
 </body>
@@ -415,9 +413,6 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
               This is a computer-generated invoice and does not require a signature.<br />
               For queries, reach us at {data.brandPhone || "022-12345678"} or {data.brandEmail || "hello@lumisalon.in"}
             </p>
-          </div>
-          <div style={{ padding:"10px 44px", textAlign:"center" as const, borderTop:"1px solid #EDD0D4" }}>
-            <span style={{ fontSize:"8px", fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase" as const, color:"#C4A0A8" }}>Powered by Beauve</span>
           </div>
         </div>
       </div>
