@@ -9,8 +9,8 @@ type UIStatus = DBStatus | "CASUAL_LEAVE" | "WEEKLY_OFF";
 interface DayRecord {
   date:      string;
   status:    DBStatus;
-  clockIn:   string | null;
-  clockOut:  string | null;
+  clockIn:   string | null;  // "HH:MM" 24-hour
+  clockOut:  string | null;  // "HH:MM" 24-hour
   workHours: number | null;
   notes:     string | null;
 }
@@ -23,8 +23,15 @@ interface StaffRow {
   records:     DayRecord[];
 }
 
+interface TimeForm {
+  status:   DBStatus;
+  notes?:   string;
+  checkIn:  string;  // "HH:MM"
+  checkOut: string;  // "HH:MM"
+}
+
 const STATUS_META: Record<UIStatus, { label: string; short: string; color: string; bg: string }> = {
-  PRESENT:      { label: "Present",      short: "P",     color: "#059669", bg: "#D1FAE5" },
+  PRESENT:      { label: "Regular",      short: "Reg",   color: "#059669", bg: "#D1FAE5" },
   ABSENT:       { label: "Absent",       short: "A",     color: "#DC2626", bg: "#FEE2E2" },
   HALF_DAY:     { label: "Half Day",     short: "H",     color: "#2563EB", bg: "#DBEAFE" },
   LATE:         { label: "Late",         short: "Late",  color: "#D97706", bg: "#FEF3C7" },
@@ -33,6 +40,9 @@ const STATUS_META: Record<UIStatus, { label: string; short: string; color: strin
   WEEKLY_OFF:   { label: "Weekly Off",   short: "W/O",   color: "#6B7280", bg: "#F3F4F6" },
 };
 
+// Statuses that show Check In / Check Out time inputs
+const TIME_STATUSES = new Set<DBStatus>(["PRESENT", "HALF_DAY", "LATE"]);
+
 // Derive the display status (merges DB status + notes)
 function uiStatus(rec: DayRecord): UIStatus {
   if (rec.status === "ON_LEAVE" && rec.notes === "CASUAL_LEAVE") return "CASUAL_LEAVE";
@@ -40,13 +50,30 @@ function uiStatus(rec: DayRecord): UIStatus {
   return rec.status;
 }
 
-const MARK_ACTIONS: { label: string; dbStatus: DBStatus; notes?: string; action?: string; cls: string }[] = [
-  { label: "Check In",     dbStatus: "PRESENT",  action: "clock_in", cls: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100" },
-  { label: "Half Day",     dbStatus: "HALF_DAY",                      cls: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" },
-  { label: "Late",         dbStatus: "LATE",                          cls: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" },
-  { label: "Casual Leave", dbStatus: "ON_LEAVE",  notes: "CASUAL_LEAVE", cls: "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100" },
-  { label: "Weekly Off",   dbStatus: "ABSENT",    notes: "WEEKLY_OFF",   cls: "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100" },
-  { label: "Absent",       dbStatus: "ABSENT",                        cls: "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" },
+// Format "HH:MM" → "10:30 AM" for display
+function fmt24(t: string | null): string {
+  if (!t) return "—";
+  const [hStr, mStr] = t.split(":");
+  const h = parseInt(hStr);
+  const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
+  return `${h12}:${mStr} ${h >= 12 ? "PM" : "AM"}`;
+}
+
+interface StatusAction {
+  label:    string;
+  dbStatus: DBStatus;
+  notes?:   string;
+  needsTime: boolean;
+  cls:      string;
+}
+
+const STATUS_ACTIONS: StatusAction[] = [
+  { label: "Regular",      dbStatus: "PRESENT",  needsTime: true,  cls: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100" },
+  { label: "Half Day",     dbStatus: "HALF_DAY", needsTime: true,  cls: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" },
+  { label: "Late",         dbStatus: "LATE",     needsTime: true,  cls: "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" },
+  { label: "Casual Leave", dbStatus: "ON_LEAVE", notes: "CASUAL_LEAVE", needsTime: false, cls: "bg-pink-50 text-pink-700 border-pink-200 hover:bg-pink-100" },
+  { label: "Weekly Off",   dbStatus: "ABSENT",   notes: "WEEKLY_OFF",   needsTime: false, cls: "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100" },
+  { label: "Absent",       dbStatus: "ABSENT",   needsTime: false, cls: "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" },
 ];
 
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -59,13 +86,15 @@ function todayISO() {
 
 export default function AttendancePage() {
   const now = new Date();
-  const [month,   setMonth]   = useState(now.getMonth() + 1);
-  const [year,    setYear]    = useState(now.getFullYear());
-  const [staff,   setStaff]   = useState<StaffRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving,  setSaving]  = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [tab,     setTab]     = useState<"today" | "month">("today");
+  const [month,     setMonth]     = useState(now.getMonth() + 1);
+  const [year,      setYear]      = useState(now.getFullYear());
+  const [staff,     setStaff]     = useState<StaffRow[]>([]);
+  const [loading,   setLoading]   = useState(true);
+  const [saving,    setSaving]    = useState<string | null>(null);
+  const [isAdmin,   setIsAdmin]   = useState(false);
+  const [tab,       setTab]       = useState<"today" | "month">("today");
+  // Per-staff open time forms (keyed by dbId)
+  const [openTimes, setOpenTimes] = useState<Record<string, TimeForm>>({});
 
   const today = todayISO();
 
@@ -98,29 +127,66 @@ export default function AttendancePage() {
     else setMonth(m => m + 1);
   };
 
-  const mark = async (staffDbId: string, dbStatus: DBStatus, notes?: string, action?: string) => {
+  // Post status only (Casual Leave / Weekly Off / Absent)
+  const markStatus = async (staffDbId: string, dbStatus: DBStatus, notes?: string) => {
     if (!isAdmin) return;
-    const key = `${staffDbId}-${notes ?? action ?? dbStatus}`;
+    const key = `${staffDbId}-${notes ?? dbStatus}`;
     setSaving(key);
     try {
       const res = await fetch("/api/attendance", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ staffDbId, date: today, status: dbStatus, notes, action }),
+        body:    JSON.stringify({ staffDbId, date: today, status: dbStatus, notes }),
       });
       const j = await res.json();
       if (j.success) {
         setStaff(prev => prev.map(s => {
           if (s.dbId !== staffDbId) return s;
-          const without = s.records.filter(r => r.date !== today);
-          return { ...s, records: [...without, j.data] };
+          return { ...s, records: [...s.records.filter(r => r.date !== today), j.data] };
         }));
+        setOpenTimes(prev => { const n = { ...prev }; delete n[staffDbId]; return n; });
       }
     } catch {}
     setSaving(null);
   };
 
-  // ── summary counts for today (using UI status so CL / W/O show separately)
+  // Post status + manual times (Regular / Half Day / Late)
+  const saveWithTime = async (staffDbId: string, fallbackRec?: DayRecord) => {
+    if (!isAdmin) return;
+    const tf       = openTimes[staffDbId];
+    const status   = tf?.status   ?? fallbackRec?.status   ?? ("PRESENT" as DBStatus);
+    const notes    = tf?.notes    ?? fallbackRec?.notes    ?? undefined;
+    const checkIn  = tf?.checkIn  ?? fallbackRec?.clockIn  ?? "";
+    const checkOut = tf?.checkOut ?? fallbackRec?.clockOut ?? "";
+
+    const key = `${staffDbId}-save`;
+    setSaving(key);
+    try {
+      const res = await fetch("/api/attendance", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          staffDbId,
+          date:     today,
+          status,
+          notes,
+          clockIn:  checkIn  || undefined,
+          clockOut: checkOut || undefined,
+        }),
+      });
+      const j = await res.json();
+      if (j.success) {
+        setStaff(prev => prev.map(s => {
+          if (s.dbId !== staffDbId) return s;
+          return { ...s, records: [...s.records.filter(r => r.date !== today), j.data] };
+        }));
+        setOpenTimes(prev => { const n = { ...prev }; delete n[staffDbId]; return n; });
+      }
+    } catch {}
+    setSaving(null);
+  };
+
+  // ── summary counts for today
   const todayCounts = staff.reduce((acc, s) => {
     const rec = s.records.find(r => r.date === today);
     const st  = rec ? uiStatus(rec) : "NOT_MARKED";
@@ -128,20 +194,19 @@ export default function AttendancePage() {
     return acc;
   }, {} as Record<string, number>);
 
-  // ── monthly stats per staff (using uiStatus for CL / W/O distinction)
+  // ── monthly stats per staff
   const monthStats = (s: StaffRow) => {
     const ui = s.records.map(r => uiStatus(r));
     return {
-      present:      ui.filter(u => u === "PRESENT").length,
-      late:         ui.filter(u => u === "LATE").length,
-      halfDay:      ui.filter(u => u === "HALF_DAY").length,
-      casualLeave:  ui.filter(u => u === "CASUAL_LEAVE").length,
-      weeklyOff:    ui.filter(u => u === "WEEKLY_OFF").length,
-      absent:       ui.filter(u => u === "ABSENT").length,
+      regular:     ui.filter(u => u === "PRESENT").length,
+      late:        ui.filter(u => u === "LATE").length,
+      halfDay:     ui.filter(u => u === "HALF_DAY").length,
+      casualLeave: ui.filter(u => u === "CASUAL_LEAVE").length,
+      weeklyOff:   ui.filter(u => u === "WEEKLY_OFF").length,
+      absent:      ui.filter(u => u === "ABSENT").length,
     };
   };
 
-  // ── days in month for calendar
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDOW    = new Date(year, month - 1, 1).getDay();
 
@@ -192,9 +257,9 @@ export default function AttendancePage() {
               <div className="flex flex-wrap gap-2">
                 {[
                   { label: "Not Marked",   count: todayCounts.NOT_MARKED   ?? 0, color: "#9CA3AF", bg: "#F3F4F6" },
-                  { label: "Present",      count: todayCounts.PRESENT      ?? 0, color: "#059669", bg: "#D1FAE5" },
-                  { label: "Late",         count: todayCounts.LATE         ?? 0, color: "#D97706", bg: "#FEF3C7" },
+                  { label: "Regular",      count: todayCounts.PRESENT      ?? 0, color: "#059669", bg: "#D1FAE5" },
                   { label: "Half Day",     count: todayCounts.HALF_DAY     ?? 0, color: "#2563EB", bg: "#DBEAFE" },
+                  { label: "Late",         count: todayCounts.LATE         ?? 0, color: "#D97706", bg: "#FEF3C7" },
                   { label: "Casual Leave", count: todayCounts.CASUAL_LEAVE ?? 0, color: "#DB2777", bg: "#FCE7F3" },
                   { label: "Weekly Off",   count: todayCounts.WEEKLY_OFF   ?? 0, color: "#6B7280", bg: "#F3F4F6" },
                   { label: "Absent",       count: todayCounts.ABSENT       ?? 0, color: "#DC2626", bg: "#FEE2E2" },
@@ -223,11 +288,27 @@ export default function AttendancePage() {
                   </thead>
                   <tbody>
                     {staff.map(s => {
-                      const rec     = s.records.find(r => r.date === today);
-                      const ui      = rec ? uiStatus(rec) : null;
-                      const meta    = ui ? STATUS_META[ui] : null;
+                      const rec  = s.records.find(r => r.date === today);
+                      const ui   = rec ? uiStatus(rec) : null;
+                      const meta = ui ? STATUS_META[ui] : null;
+                      const tf   = openTimes[s.dbId];
+
+                      // Show time form when: user opened it (tf), or current status already needs time
+                      const showTimeForm = tf != null || (rec != null && TIME_STATUSES.has(rec.status));
+                      const timeCheckIn  = tf?.checkIn  ?? rec?.clockIn  ?? "";
+                      const timeCheckOut = tf?.checkOut ?? rec?.clockOut ?? "";
+                      const timeStatus   = tf?.status   ?? rec?.status   ?? ("PRESENT" as DBStatus);
+                      const timeNotes    = tf?.notes    ?? rec?.notes    ?? undefined;
+
+                      // Determine which button is active, accounting for open time form
+                      const activeUI: UIStatus | null = tf
+                        ? (tf.notes === "CASUAL_LEAVE" ? "CASUAL_LEAVE"
+                          : tf.notes === "WEEKLY_OFF"  ? "WEEKLY_OFF"
+                          : tf.status as UIStatus)
+                        : ui;
+
                       return (
-                        <tr key={s.id} className="border-t border-ivory-100 hover:bg-ivory-50 transition-colors">
+                        <tr key={s.id} className="border-t border-ivory-100 hover:bg-ivory-50 transition-colors align-top">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
@@ -253,8 +334,9 @@ export default function AttendancePage() {
                           <td className="py-3 px-4">
                             {rec?.clockIn ? (
                               <div className="text-xs text-muted-foreground space-y-0.5">
-                                <p>In: <span className="font-medium text-foreground">{rec.clockIn}</span></p>
-                                {rec.workHours && <p className="text-[10px]">{rec.workHours}h worked</p>}
+                                <p>In: <span className="font-medium text-foreground">{fmt24(rec.clockIn)}</span></p>
+                                {rec.clockOut && <p>Out: <span className="font-medium text-foreground">{fmt24(rec.clockOut)}</span></p>}
+                                {rec.workHours != null && <p className="text-[10px]">{rec.workHours.toFixed(1)}h worked</p>}
                               </div>
                             ) : (
                               <p className="text-xs text-muted-foreground">—</p>
@@ -262,26 +344,92 @@ export default function AttendancePage() {
                           </td>
                           {isAdmin && (
                             <td className="py-3 px-4">
-                              <div className="flex flex-wrap gap-1.5 justify-center">
-                                {MARK_ACTIONS.map(a => {
-                                  const key     = `${s.dbId}-${a.notes ?? a.action ?? a.dbStatus}`;
-                                  const isBusy  = saving === key;
-                                  const isActive = ui === (a.notes === "CASUAL_LEAVE" ? "CASUAL_LEAVE"
-                                                        : a.notes === "WEEKLY_OFF"    ? "WEEKLY_OFF"
-                                                        : a.action === "clock_in"     ? "PRESENT"
-                                                        : a.dbStatus);
-                                  return (
-                                    <button key={a.label} disabled={isBusy}
-                                      onClick={() => mark(s.dbId, a.dbStatus, a.notes, a.action)}
-                                      className={cn(
-                                        "text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all disabled:opacity-50",
-                                        a.cls,
-                                        isActive && "ring-2 ring-offset-1 ring-current font-bold"
-                                      )}>
-                                      {isBusy ? "…" : a.label}
+                              <div className="space-y-2">
+                                {/* Status buttons */}
+                                <div className="flex flex-wrap gap-1.5 justify-center">
+                                  {STATUS_ACTIONS.map(a => {
+                                    const isActive =
+                                      a.notes === "CASUAL_LEAVE" ? activeUI === "CASUAL_LEAVE"
+                                      : a.notes === "WEEKLY_OFF"  ? activeUI === "WEEKLY_OFF"
+                                      : a.dbStatus === "ABSENT" && !a.notes ? activeUI === "ABSENT"
+                                      : activeUI === (a.dbStatus as UIStatus);
+                                    const isBusy = saving === `${s.dbId}-${a.notes ?? a.dbStatus}`;
+                                    return (
+                                      <button key={a.label}
+                                        disabled={!!saving && saving.startsWith(s.dbId)}
+                                        onClick={() => {
+                                          if (a.needsTime) {
+                                            // Open time form — pre-fill from existing record
+                                            setOpenTimes(prev => ({
+                                              ...prev,
+                                              [s.dbId]: {
+                                                status:   a.dbStatus,
+                                                notes:    a.notes,
+                                                checkIn:  prev[s.dbId]?.checkIn  ?? rec?.clockIn  ?? "",
+                                                checkOut: prev[s.dbId]?.checkOut ?? rec?.clockOut ?? "",
+                                              },
+                                            }));
+                                          } else {
+                                            markStatus(s.dbId, a.dbStatus, a.notes);
+                                          }
+                                        }}
+                                        className={cn(
+                                          "text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all disabled:opacity-50",
+                                          a.cls,
+                                          isActive && "ring-2 ring-offset-1 ring-current font-bold"
+                                        )}>
+                                        {isBusy ? "…" : a.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Time inputs — visible for Regular / Half Day / Late */}
+                                {showTimeForm && (
+                                  <div className="flex items-end gap-2 bg-ivory-50 rounded-lg p-2 border border-ivory-200">
+                                    <div className="flex-1">
+                                      <label className="block text-[10px] text-muted-foreground mb-0.5">Check In</label>
+                                      <input
+                                        type="time"
+                                        value={timeCheckIn}
+                                        onChange={e => setOpenTimes(prev => ({
+                                          ...prev,
+                                          [s.dbId]: {
+                                            status:   prev[s.dbId]?.status   ?? timeStatus,
+                                            notes:    prev[s.dbId]?.notes    ?? timeNotes,
+                                            checkIn:  e.target.value,
+                                            checkOut: prev[s.dbId]?.checkOut ?? rec?.clockOut ?? "",
+                                          },
+                                        }))}
+                                        className="text-xs border border-ivory-200 rounded px-1.5 py-1 w-full focus:outline-none focus:ring-1 focus:ring-pink-300"
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <label className="block text-[10px] text-muted-foreground mb-0.5">Check Out</label>
+                                      <input
+                                        type="time"
+                                        value={timeCheckOut}
+                                        onChange={e => setOpenTimes(prev => ({
+                                          ...prev,
+                                          [s.dbId]: {
+                                            status:   prev[s.dbId]?.status  ?? timeStatus,
+                                            notes:    prev[s.dbId]?.notes   ?? timeNotes,
+                                            checkIn:  prev[s.dbId]?.checkIn ?? rec?.clockIn ?? "",
+                                            checkOut: e.target.value,
+                                          },
+                                        }))}
+                                        className="text-xs border border-ivory-200 rounded px-1.5 py-1 w-full focus:outline-none focus:ring-1 focus:ring-pink-300"
+                                      />
+                                    </div>
+                                    <button
+                                      onClick={() => saveWithTime(s.dbId, rec)}
+                                      disabled={saving === `${s.dbId}-save`}
+                                      className="text-[11px] px-3 py-1 rounded-lg font-semibold text-white transition-all disabled:opacity-50 whitespace-nowrap"
+                                      style={{ background: "#B76E79" }}>
+                                      {saving === `${s.dbId}-save` ? "…" : "Save"}
                                     </button>
-                                  );
-                                })}
+                                  </div>
+                                )}
                               </div>
                             </td>
                           )}
@@ -301,7 +449,7 @@ export default function AttendancePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {staff.map(s => {
                   const stats    = monthStats(s);
-                  const worked   = stats.present + stats.late + stats.halfDay;
+                  const worked   = stats.regular + stats.late + stats.halfDay;
                   const workDays = daysInMonth - stats.weeklyOff;
                   const pct      = Math.round((worked / Math.max(workDays, 1)) * 100);
                   return (
@@ -322,7 +470,7 @@ export default function AttendancePage() {
                       </div>
                       <div className="grid grid-cols-6 gap-1 text-center">
                         {[
-                          { label: "Present", val: stats.present,     color: "#059669" },
+                          { label: "Regular", val: stats.regular,     color: "#059669" },
                           { label: "Late",    val: stats.late,        color: "#D97706" },
                           { label: "Half",    val: stats.halfDay,     color: "#2563EB" },
                           { label: "CL",      val: stats.casualLeave, color: "#DB2777" },
@@ -362,7 +510,9 @@ export default function AttendancePage() {
                         const d    = i + 1;
                         const date = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
                         const rec  = byDate[date];
-                        const meta = rec ? STATUS_META[rec.status] : null;
+                        // Use uiStatus so CASUAL_LEAVE / WEEKLY_OFF show correct colours
+                        const ui   = rec ? uiStatus(rec) : null;
+                        const meta = ui ? STATUS_META[ui] : null;
                         const isToday = date === today;
                         return (
                           <div key={date}
@@ -376,7 +526,7 @@ export default function AttendancePage() {
                       })}
                     </div>
                     <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-ivory-200">
-                      {Object.entries(STATUS_META).map(([k, v]) => (
+                      {Object.entries(STATUS_META).filter(([k]) => k !== "ON_LEAVE").map(([k, v]) => (
                         <div key={k} className="flex items-center gap-1">
                           <div className="w-3 h-3 rounded-sm" style={{ background: v.bg, border: `1px solid ${v.color}44` }} />
                           <p className="text-[10px] text-muted-foreground">{v.label}</p>
