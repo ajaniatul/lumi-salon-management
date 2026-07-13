@@ -50,7 +50,7 @@ function toUI(inv: any) {
     discountAmt:    Number(inv.discountAmount),
     description:    meta.description ?? "",
     stylist:        inv.appointment?.staff?.name ?? null,
-    stylistRole:    inv.appointment?.staff?.role ?? null,
+    stylistRole:    inv.appointment?.staff?.designation ?? null,
   };
 }
 
@@ -66,7 +66,7 @@ export async function GET() {
         customer:    { select: { name: true, phone: true } },
         items:       { include: { product: { select: { hsnCode: true } } } },
         payments:    { select: { method: true, amount: true } },
-        appointment: { include: { staff: { select: { name: true, role: true } } } },
+        appointment: { include: { staff: { select: { name: true, designation: true } } } },
       },
     });
     return NextResponse.json({ success: true, data: invoices.map(toUI) });
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
           customer:    { select: { name: true, phone: true } },
           items:       { include: { product: { select: { hsnCode: true } } } },
           payments:    { select: { method: true, amount: true } },
-          appointment: { include: { staff: { select: { name: true, role: true } } } },
+          appointment: { include: { staff: { select: { name: true, designation: true } } } },
         },
       });
       if (existing) {
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
         customer:    { select: { name: true, phone: true } },
         items:       { include: { product: { select: { hsnCode: true } } } },
         payments:    { select: { method: true, amount: true } },
-        appointment: { include: { staff: { select: { name: true, role: true } } } },
+        appointment: { include: { staff: { select: { name: true, designation: true } } } },
       },
     });
 
