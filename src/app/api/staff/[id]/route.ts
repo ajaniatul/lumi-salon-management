@@ -141,25 +141,35 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-// PATCH /api/staff/[id] — update the manager-set performance rating
+// PATCH /api/staff/[id] — update rating or toggle isActive
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { rating } = await req.json();
-    const num = Number(rating);
-    if (Number.isNaN(num) || num < 0 || num > 5) {
-      return NextResponse.json({ success: false, error: "Rating must be between 0 and 5." }, { status: 400 });
-    }
-
+    const body = await req.json();
     const staff = await prisma.staff.findFirst({ where: { OR: [{ employeeId: params.id }, { id: params.id }] } });
     if (!staff) return NextResponse.json({ success: false, error: "Staff not found." }, { status: 404 });
 
-    const updated = await prisma.staff.update({ where: { id: staff.id }, data: { rating: num } });
-    return NextResponse.json({ success: true, data: { rating: Number(updated.rating) } });
+    // Toggle active status
+    if (typeof body.isActive === "boolean") {
+      const updated = await prisma.staff.update({ where: { id: staff.id }, data: { isActive: body.isActive } });
+      return NextResponse.json({ success: true, data: { isActive: updated.isActive } });
+    }
+
+    // Update rating
+    if (body.rating !== undefined) {
+      const num = Number(body.rating);
+      if (Number.isNaN(num) || num < 0 || num > 5) {
+        return NextResponse.json({ success: false, error: "Rating must be between 0 and 5." }, { status: 400 });
+      }
+      const updated = await prisma.staff.update({ where: { id: staff.id }, data: { rating: num } });
+      return NextResponse.json({ success: true, data: { rating: Number(updated.rating) } });
+    }
+
+    return NextResponse.json({ success: false, error: "Nothing to update." }, { status: 400 });
   } catch (e) {
     console.error("[STAFF PATCH]", e);
-    return NextResponse.json({ success: false, error: "Failed to update rating." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update staff." }, { status: 500 });
   }
 }

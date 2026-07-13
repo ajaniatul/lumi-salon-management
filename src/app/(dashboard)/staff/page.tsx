@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Phone, Mail, X, Loader2, Search } from "lucide-react";
+import { Plus, Phone, Mail, X, Loader2, Search, ToggleLeft, ToggleRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 type StaffMember = {
   id: string; dbId: string; name: string; initials: string;
@@ -36,6 +37,7 @@ export default function StaffPage() {
   const [staff,      setStaff]      = useState<StaffMember[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [query,      setQuery]      = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL"|"ACTIVE"|"INACTIVE">("ALL");
   const [showModal,  setShowModal]  = useState(false);
   const [form,       setForm]       = useState(DEFAULT_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -43,7 +45,7 @@ export default function StaffPage() {
 
   const load = () => {
     setLoading(true);
-    fetch("/api/staff")
+    fetch("/api/staff?all=true")
       .then(r => r.json())
       .then(j => { if (j.success) setStaff(j.data); })
       .catch(() => {})
@@ -85,11 +87,29 @@ export default function StaffPage() {
     }
   };
 
-  const filtered = staff.filter(s =>
-    s.name.toLowerCase().includes(query.toLowerCase()) ||
-    s.designation.toLowerCase().includes(query.toLowerCase()) ||
-    s.phone.includes(query)
-  );
+  const toggleActive = async (s: StaffMember, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newVal = !s.isActive;
+    setStaff(prev => prev.map(m => m.id === s.id ? { ...m, isActive: newVal } : m));
+    try {
+      const res = await fetch(`/api/staff/${s.id}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ isActive: newVal }),
+      });
+      const j = await res.json();
+      if (!j.success) { setStaff(prev => prev.map(m => m.id === s.id ? { ...m, isActive: !newVal } : m)); toast.error("Failed to update status"); }
+      else toast.success(`${s.name} marked ${newVal ? "active" : "inactive"}`);
+    } catch { setStaff(prev => prev.map(m => m.id === s.id ? { ...m, isActive: !newVal } : m)); toast.error("Network error"); }
+  };
+
+  const filtered = staff
+    .filter(s => statusFilter === "ALL" ? true : statusFilter === "ACTIVE" ? s.isActive : !s.isActive)
+    .filter(s =>
+      s.name.toLowerCase().includes(query.toLowerCase()) ||
+      s.designation.toLowerCase().includes(query.toLowerCase()) ||
+      s.phone.includes(query)
+    );
 
   const active = staff.filter(s => s.isActive).length;
   const totalRevenue = staff.reduce((sum, s) => sum + s.thisMonth.revenue, 0);
@@ -116,11 +136,24 @@ export default function StaffPage() {
 
       {/* ── Toolbar ── */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-          <input value={query} onChange={e => setQuery(e.target.value)}
-            placeholder="Search by name, role or phone…"
-            className="pl-9 pr-3 py-2 rounded-xl border border-ivory-300 text-sm text-foreground bg-white focus:outline-none focus:ring-2 focus:ring-primary-300 w-64" />
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <input value={query} onChange={e => setQuery(e.target.value)}
+              placeholder="Search by name, role or phone…"
+              className="pl-9 pr-3 py-2 rounded-xl border border-ivory-300 text-sm text-foreground bg-white focus:outline-none focus:ring-2 focus:ring-primary-300 w-56" />
+          </div>
+          <div className="flex rounded-xl border border-ivory-300 overflow-hidden">
+            {(["ALL","ACTIVE","INACTIVE"] as const).map(f => (
+              <button key={f} onClick={() => setStatusFilter(f)}
+                className={cn("px-3 py-2 text-xs font-semibold transition-all",
+                  statusFilter === f ? "text-white" : "bg-white text-muted-foreground hover:bg-ivory-50"
+                )}
+                style={statusFilter === f ? { background: f === "INACTIVE" ? "#6B7280" : "#B76E79" } : {}}>
+                {f === "ALL" ? "All" : f === "ACTIVE" ? "Active" : "Inactive"}
+              </button>
+            ))}
+          </div>
         </div>
         <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2 w-fit text-sm py-2 px-4">
           <Plus className="w-4 h-4" /> Add Staff
@@ -189,9 +222,18 @@ export default function StaffPage() {
               </div>
 
               <div className="mt-3 pt-3 border-t border-ivory-200 flex items-center justify-between">
-                <span className={cn("badge text-[9px]", s.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500")}>
+                <button
+                  onClick={e => toggleActive(s, e)}
+                  className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all border",
+                    s.isActive
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                      : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
+                  )}>
+                  {s.isActive
+                    ? <ToggleRight className="w-3.5 h-3.5" />
+                    : <ToggleLeft  className="w-3.5 h-3.5" />}
                   {s.isActive ? "Active" : "Inactive"}
-                </span>
+                </button>
                 <span className="text-[10px] text-primary-600 font-semibold group-hover:underline">View profile →</span>
               </div>
             </button>

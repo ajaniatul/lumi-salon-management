@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Crown, TrendingUp, Users, ChevronRight, X, Cake, Loader2 } from "lucide-react";
+import { Search, Crown, TrendingUp, Users, ChevronRight, X, Cake, Loader2, ToggleLeft, ToggleRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/components/layout/HeaderActionContext";
@@ -9,6 +9,7 @@ import { useHeaderAction } from "@/components/layout/HeaderActionContext";
 type Customer = {
   id: string; name: string; phone: string; email: string;
   visits: number; totalSpent: string; lastVisit: string;
+  isActive?: boolean;
   membership: string | null; birthday: string; tags: string[];
 };
 
@@ -21,15 +22,17 @@ const TIER_STYLE: Record<string, { pill: string; grad: string }> = {
 const iCls = "w-full px-3 py-2 rounded-xl border border-ivory-300 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 bg-white";
 const DEFAULT_FORM = { name:"", phone:"", email:"", gender:"", dob:"" };
 
-function CustomerCard({ c, onClick }: { c: Customer; onClick: () => void }) {
+function CustomerCard({ c, onClick, onToggle }: { c: Customer; onClick: () => void; onToggle: (e: React.MouseEvent) => void }) {
   const tier = c.membership ? TIER_STYLE[c.membership] : null;
+  const isActive = c.isActive !== false;
   return (
     <button onClick={onClick}
-      className="w-full text-left bg-white border border-ivory-200 rounded-2xl p-4 hover:border-primary-300 hover:shadow-card-hover transition-all group">
+      className={cn("w-full text-left bg-white border rounded-2xl p-4 hover:border-primary-300 hover:shadow-card-hover transition-all group",
+        isActive ? "border-ivory-200" : "border-gray-200 opacity-60")}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-            style={{ background: tier?.grad ?? "linear-gradient(135deg,#B76E79,#C4956A)" }}>
+            style={{ background: isActive ? (tier?.grad ?? "linear-gradient(135deg,#B76E79,#C4956A)") : "#9CA3AF" }}>
             {c.name.split(" ").map(n => n[0]).join("").slice(0,2)}
           </div>
           <div>
@@ -59,6 +62,19 @@ function CustomerCard({ c, onClick }: { c: Customer; onClick: () => void }) {
           </span>
         )}
       </div>
+      <div className="mt-2 pt-2 border-t border-ivory-100 flex items-center justify-between">
+        <button
+          onClick={onToggle}
+          className={cn("flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold transition-all border",
+            isActive
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+              : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
+          )}>
+          {isActive ? <ToggleRight className="w-3.5 h-3.5" /> : <ToggleLeft className="w-3.5 h-3.5" />}
+          {isActive ? "Active" : "Inactive"}
+        </button>
+        <span className="text-[10px] text-primary-600 font-semibold group-hover:underline">View →</span>
+      </div>
     </button>
   );
 }
@@ -71,6 +87,7 @@ export default function CustomersPage() {
   const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"ALL"|"ACTIVE"|"INACTIVE">("ALL");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [err, setErr] = useState("");
@@ -82,7 +99,7 @@ export default function CustomersPage() {
     let active = true;
     (async () => {
       try {
-        const res = await fetch("/api/customers");
+        const res = await fetch("/api/customers?all=true");
         const json = await res.json();
         if (!active) return;
         if (json.success) setCustomers(json.data);
@@ -104,18 +121,33 @@ export default function CustomersPage() {
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
 
+  const toggleActive = async (c: Customer, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newVal = c.isActive === false ? true : false;
+    setCustomers(prev => prev.map(x => x.id === c.id ? { ...x, isActive: newVal } : x));
+    try {
+      const res = await fetch(`/api/customers/${c.id}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ isActive: newVal }),
+      });
+      const j = await res.json();
+      if (!j.success) { setCustomers(prev => prev.map(x => x.id === c.id ? { ...x, isActive: !newVal } : x)); toast.error("Failed to update status"); }
+      else toast.success(`${c.name} marked ${newVal ? "active" : "inactive"}`);
+    } catch { setCustomers(prev => prev.map(x => x.id === c.id ? { ...x, isActive: !newVal } : x)); toast.error("Network error"); }
+  };
+
   const q = search.trim().toLowerCase();
-  const results = q
-    ? customers.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.phone.includes(q) ||
-        c.email.toLowerCase().includes(q)
-      )
-    : [];
 
   const isSearching = q.length > 0;
   const showList    = isSearching || showAll;
-  const displayList = isSearching ? results : customers;
+  const statusFiltered = customers.filter(c =>
+    statusFilter === "ALL" ? true : statusFilter === "ACTIVE" ? c.isActive !== false : c.isActive === false
+  );
+  const results     = q ? statusFiltered.filter(c =>
+    c.name.toLowerCase().includes(q) || c.phone.includes(q) || c.email.toLowerCase().includes(q)
+  ) : [];
+  const displayList = isSearching ? results : statusFiltered;
 
   // ── Real stats from live data ──
   const memberCount = customers.filter(c => c.membership).length;
@@ -167,21 +199,34 @@ export default function CustomersPage() {
         ))}
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-        <input
-          ref={inputRef}
-          value={search}
-          onChange={e => { setSearch(e.target.value); setShowAll(false); }}
-          placeholder="Search by name, phone or email..."
-          className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-ivory-300 bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm shadow-sm"
-        />
-        {search && (
-          <button onClick={() => { setSearch(""); setShowAll(false); inputRef.current?.focus(); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-ivory-100 transition-colors">
-            <X className="w-4 h-4 text-muted-foreground" />
-          </button>
-        )}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+          <input
+            ref={inputRef}
+            value={search}
+            onChange={e => { setSearch(e.target.value); setShowAll(false); }}
+            placeholder="Search by name, phone or email..."
+            className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-ivory-300 bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all text-sm shadow-sm"
+          />
+          {search && (
+            <button onClick={() => { setSearch(""); setShowAll(false); inputRef.current?.focus(); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-ivory-100 transition-colors">
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+        <div className="flex rounded-xl border border-ivory-300 overflow-hidden self-start sm:self-center">
+          {(["ALL","ACTIVE","INACTIVE"] as const).map(f => (
+            <button key={f} onClick={() => { setStatusFilter(f); setShowAll(true); }}
+              className={cn("px-3 py-2.5 text-xs font-semibold transition-all",
+                statusFilter === f ? "text-white" : "bg-white text-muted-foreground hover:bg-ivory-50"
+              )}
+              style={statusFilter === f ? { background: f === "INACTIVE" ? "#6B7280" : "#B76E79" } : {}}>
+              {f === "ALL" ? "All" : f === "ACTIVE" ? "Active" : "Inactive"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -213,7 +258,7 @@ export default function CustomersPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {displayList.map(c => (
-                <CustomerCard key={c.id} c={c} onClick={() => router.push(`/customers/${c.id}`)} />
+                <CustomerCard key={c.id} c={c} onClick={() => router.push(`/customers/${c.id}`)} onToggle={e => toggleActive(c, e)} />
               ))}
             </div>
           )}

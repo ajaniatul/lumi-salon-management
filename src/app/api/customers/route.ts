@@ -14,6 +14,7 @@ function toUI(c: any) {
     name: c.name,
     phone: c.phone,
     email: c.email ?? "",
+    isActive: c.isActive,
     visits: c.totalVisits,
     totalSpent: Number(c.totalSpend).toLocaleString("en-IN"),
     lastVisit: lastInvoice
@@ -40,8 +41,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: [{ id: c.id, name: c.name, phone: c.phone }] });
     }
 
+    const showAll = req.nextUrl.searchParams.get("all") === "true";
     const customers = await prisma.customer.findMany({
-      where: { isActive: true },
+      where: showAll ? {} : { isActive: true },
       orderBy: { createdAt: "desc" },
       include: {
         membership: { include: { membership: { select: { tier: true } } } },

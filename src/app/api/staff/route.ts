@@ -3,17 +3,18 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
-// GET /api/staff — all active staff (list + pickers)
-export async function GET() {
+// GET /api/staff — active staff by default; ?all=true returns everyone
+export async function GET(request: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   try {
+    const showAll = request.nextUrl.searchParams.get("all") === "true";
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const staff = await prisma.staff.findMany({
-      where: { isActive: true },
+      where: showAll ? {} : { isActive: true },
       orderBy: { employeeId: "asc" },
       include: {
         commissionSettings: { where: { isActive: true }, take: 1 },

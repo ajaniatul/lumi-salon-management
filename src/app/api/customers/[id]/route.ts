@@ -171,6 +171,18 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   try {
     const body = await request.json();
+
+    // Toggle active status
+    if (typeof body.isActive === "boolean") {
+      const updated = await prisma.customer.updateMany({
+        where: { OR: [{ customerId: params.id }, { id: params.id }] },
+        data:  { isActive: body.isActive },
+      });
+      if (updated.count === 0) return NextResponse.json({ success: false, error: "Customer not found." }, { status: 404 });
+      return NextResponse.json({ success: true, data: { isActive: body.isActive } });
+    }
+
+    // Update notes
     const { allergies, preferences, general } = body ?? {};
     const notesJson = JSON.stringify({ allergies: allergies ?? "", preferences: preferences ?? "", general: general ?? "" });
 
@@ -185,6 +197,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[CUSTOMER PATCH]", e);
-    return NextResponse.json({ success: false, error: "Failed to update notes." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Failed to update customer." }, { status: 500 });
   }
 }
