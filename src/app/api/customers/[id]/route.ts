@@ -48,11 +48,6 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
             payments: { select: { method: true, amount: true, notes: true } },
           },
         },
-        loyaltyTransactions: {
-          orderBy: { createdAt: "desc" },
-          take: 20,
-          select: { points: true, type: true, description: true, createdAt: true },
-        },
         packages: {
           include: {
             package: { include: { services: true } },
@@ -121,12 +116,6 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       };
     });
 
-    const loyalty = customer.loyaltyTransactions.map(t => ({
-      date:  new Date(t.createdAt).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }),
-      desc:  t.description ?? t.type,
-      pts:   t.points,
-    }));
-
     const packages = customer.packages.map(cp => ({
       name:    cp.package.name,
       total:   cp.package.services.reduce((sum, s) => sum + s.sessions, 0) || 1,
@@ -156,8 +145,6 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
         visits:           customer.totalVisits,
         totalSpent:       Number(customer.totalSpend),
         lastVisit:        appts.find(a => a.status === "COMPLETED")?.date ?? "Never",
-        loyaltyPoints:    customer.loyaltyPoints,
-        pointsValue:      Math.floor(customer.loyaltyPoints * 0.5),
         membership:       tierLabel,
         membershipExpiry: customer.membership?.expiryDate
           ? new Date(customer.membership.expiryDate).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" })
@@ -168,7 +155,6 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
         notes:            notesData,
         appts,
         invoices,
-        loyalty,
         packages,
       },
     });

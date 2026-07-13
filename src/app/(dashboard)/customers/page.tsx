@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Crown, TrendingUp, Users, Star, ChevronRight, X, Cake, Loader2 } from "lucide-react";
+import { Search, Crown, TrendingUp, Users, ChevronRight, X, Cake, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/components/layout/HeaderActionContext";
@@ -9,7 +9,7 @@ import { useHeaderAction } from "@/components/layout/HeaderActionContext";
 type Customer = {
   id: string; name: string; phone: string; email: string;
   visits: number; totalSpent: string; lastVisit: string;
-  loyaltyPoints: number; membership: string | null; birthday: string; tags: string[];
+  membership: string | null; birthday: string; tags: string[];
 };
 
 const TIER_STYLE: Record<string, { pill: string; grad: string }> = {
@@ -44,8 +44,6 @@ function CustomerCard({ c, onClick }: { c: Customer; onClick: () => void }) {
           <span>{c.visits} visits</span>
           <span>·</span>
           <span>Rs.{c.totalSpent}</span>
-          <span>·</span>
-          <span>{c.loyaltyPoints} pts</span>
         </div>
         {c.membership && (
           <span className={cn("text-[9px] px-2 py-0.5 rounded-full font-bold border", tier?.pill)}>
@@ -121,7 +119,6 @@ export default function CustomersPage() {
 
   // ── Real stats from live data ──
   const memberCount = customers.filter(c => c.membership).length;
-  const totalPoints = customers.reduce((s, c) => s + (c.loyaltyPoints || 0), 0);
   const avgSpend = customers.length
     ? Math.round(customers.reduce((s, c) => s + (Number(String(c.totalSpent).replace(/,/g, "")) || 0), 0) / customers.length)
     : 0;
@@ -153,10 +150,9 @@ export default function CustomersPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label:"Total",      value:customers.length.toString(),       sub:"customers",       icon:Users,       color:"#6366F1" },
-          { label:"Members",    value:memberCount.toString(),            sub:"Silver to Plat",  icon:Crown,       color:"#F59E0B" },
-          { label:"Loyalty pts",value:totalPoints.toLocaleString("en-IN"),sub:"outstanding",    icon:Star,        color:"#10B981" },
-          { label:"Avg spend",  value:`Rs.${avgSpend.toLocaleString("en-IN")}`, sub:"per customer", icon:TrendingUp, color:"#B76E79" },
+          { label:"Total",      value:customers.length.toString(),              sub:"customers",       icon:Users,       color:"#6366F1" },
+          { label:"Members",    value:memberCount.toString(),                   sub:"Silver to Plat",  icon:Crown,       color:"#F59E0B" },
+          { label:"Avg spend",  value:`Rs.${avgSpend.toLocaleString("en-IN")}`, sub:"per customer",    icon:TrendingUp,  color:"#B76E79" },
         ].map(s => (
           <div key={s.label} className="card-luxury p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"

@@ -44,7 +44,6 @@ function toUI(inv: any) {
     due:            Number(inv.dueAmount),
     method:         methodLabel,
     status,
-    loyalty:        { earned: inv.loyaltyEarned, redeemed: inv.loyaltyUsed },
     discount:       meta.discountNote ?? "",
     influencerNote: isInfluencer ? (meta.collabNote ?? "") : "",
     discountAmt:    Number(inv.discountAmount),
@@ -151,8 +150,6 @@ export async function POST(request: NextRequest) {
                      : paidFinal >= total ? "PAID"
                      : paidFinal > 0     ? "PARTIAL"
                      :                     "PENDING";
-    const loyalty    = isInfluencer ? 0 : Math.floor(total / 100);
-
     const notesJson = JSON.stringify({
       description,
       discountNote,
@@ -177,7 +174,6 @@ export async function POST(request: NextRequest) {
         paidAmount:    paidFinal,
         dueAmount:     dueFinal,
         paymentStatus: payStatus as any,
-        loyaltyEarned: loyalty,
         notes:         notesJson,
         items: {
           create: items.map((it: any) => ({
@@ -219,7 +215,6 @@ export async function POST(request: NextRequest) {
         data: {
           totalVisits:   { increment: 1 },
           totalSpend:    { increment: total },
-          loyaltyPoints: { increment: loyalty },
         },
       });
     } catch (updateErr: any) {

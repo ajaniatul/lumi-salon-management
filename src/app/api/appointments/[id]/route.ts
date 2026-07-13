@@ -86,7 +86,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
 // DELETE /api/appointments/[id] — remove a booking (and its service links).
 // If the appointment was already billed, reverses the invoice: deletes it and
-// rolls back the visit/spend/loyalty totals it added to the customer.
+// rolls back the visit/spend totals it added to the customer.
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -104,15 +104,14 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
 
         const customer = await tx.customer.findUnique({
           where: { id: inv.customerId },
-          select: { totalVisits: true, totalSpend: true, loyaltyPoints: true },
+          select: { totalVisits: true, totalSpend: true },
         });
         if (customer) {
           await tx.customer.update({
             where: { id: inv.customerId },
             data: {
-              totalVisits:   Math.max(0, customer.totalVisits - 1),
-              totalSpend:    Math.max(0, Number(customer.totalSpend) - Number(inv.totalAmount)),
-              loyaltyPoints: Math.max(0, customer.loyaltyPoints - inv.loyaltyEarned),
+              totalVisits: Math.max(0, customer.totalVisits - 1),
+              totalSpend:  Math.max(0, Number(customer.totalSpend) - Number(inv.totalAmount)),
             },
           });
         }

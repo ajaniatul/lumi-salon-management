@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { InvoiceA4, InvoiceData } from "@/components/InvoiceA4";
 import {
-  ArrowLeft, Phone, Mail, Calendar, Star, Crown, Heart, Gift,
+  ArrowLeft, Phone, Mail, Calendar, Crown, Heart, Gift,
   FileText, Package, StickyNote, ClipboardList, Edit3, Save, X,
   CheckCircle, Clock, AlertCircle, Receipt, Printer, ChevronRight, Loader2,
 } from "lucide-react";
@@ -24,7 +24,7 @@ type Inv = {
   discount: string; discountAmt: number;
 };
 type Pkg = { name: string; total: number; used: number; expiry: string; price: number; status: string };
-type LoyaltyEntry = { date: string; desc: string; pts: number };
+
 type Notes = { allergies: string; preferences: string; general: string };
 
 type CustomerProfile = {
@@ -32,10 +32,9 @@ type CustomerProfile = {
   phone: string; email: string; gender: string; dob: string;
   anniversary: string | null; memberSince: string;
   visits: number; totalSpent: number; lastVisit: string;
-  loyaltyPoints: number; pointsValue: number;
   membership: string | null; membershipExpiry: string | null; membershipDiscount: number;
   tags: string[]; notes: Notes;
-  appts: Appt[]; invoices: Inv[]; loyalty: LoyaltyEntry[]; packages: Pkg[];
+  appts: Appt[]; invoices: Inv[]; packages: Pkg[];
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -224,7 +223,6 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
             {[
               { label:"Total Visits",   value: customer.visits,                                              sub:`Last: ${customer.lastVisit}`,              color:"#B76E79" },
               { label:"Total Spent",    value:`Rs.${customer.totalSpent.toLocaleString("en-IN")}`,           sub:"Lifetime revenue",                          color:"#047857" },
-              { label:"Loyalty Points", value: customer.loyaltyPoints,                                       sub:`Worth Rs.${customer.pointsValue}`,          color:"#B45309" },
               { label:"Membership",     value: customer.membership ?? "None",                                sub: customer.membershipExpiry ? `Expires ${customer.membershipExpiry}` : "No active plan", color:"#7C3AED" },
             ].map(k => (
               <div key={k.label} className="rounded-xl p-3 border border-ivory-200" style={{ background:`${k.color}08` }}>
@@ -480,7 +478,6 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
                       cgst: inv.cgst, sgst: inv.sgst, halfGst,
                       total: inv.total, payMethod: inv.method === "-" ? "Pending" : inv.method,
                       status: inv.status as any,
-                      loyaltyPoints: Math.floor(inv.total / 100),
                     })} className="p-1.5 rounded-lg hover:bg-ivory-100 transition-colors">
                       <Printer className="w-4 h-4 text-muted-foreground" />
                     </button>
@@ -629,41 +626,6 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
             )}
           </div>
 
-          {/* Loyalty points */}
-          <div className="card-luxury p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Loyalty Points</p>
-                <p className="text-2xl font-display font-bold text-foreground mt-1">
-                  {customer.loyaltyPoints} <span className="text-sm font-normal text-muted-foreground">pts</span>
-                </p>
-                <p className="text-xs text-muted-foreground">Worth Rs.{customer.pointsValue} (0.5 Rs/pt)</p>
-              </div>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                style={{ background:"linear-gradient(135deg,#B45309,#FCD34D)" }}>
-                <Star className="w-7 h-7 text-white" />
-              </div>
-            </div>
-            {customer.loyalty.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-foreground mb-2">Recent transactions</p>
-                {customer.loyalty.map((l, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-ivory-100 last:border-0">
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{l.desc}</p>
-                      <p className="text-[10px] text-muted-foreground">{l.date}</p>
-                    </div>
-                    <span className={cn("text-sm font-bold", l.pts >= 0 ? "text-emerald-600" : "text-red-500")}>
-                      {l.pts >= 0 ? "+" : ""}{l.pts} pts
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {customer.loyalty.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">No loyalty transactions yet.</p>
-            )}
-          </div>
         </div>
       )}
 

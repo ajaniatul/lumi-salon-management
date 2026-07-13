@@ -19,7 +19,6 @@ function toUI(c: any) {
     lastVisit: lastInvoice
       ? new Date(lastInvoice).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
       : c.totalVisits > 0 ? "Recently" : "Never",
-    loyaltyPoints: c.loyaltyPoints,
     membership: titleTier,
     birthday: c.dateOfBirth
       ? new Date(c.dateOfBirth).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })

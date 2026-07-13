@@ -1294,7 +1294,6 @@ export default function AppointmentsPage() {
         const cgst     = discountedBase * halfGst / 100;
         const sgst     = discountedBase * halfGst / 100;
         const total    = Math.round(discountedBase + cgst + sgst);
-        const points   = Math.floor(total / 100);
         const dur      = billingAppt.durationSlots * SLOT_MINS;
         const dateStr  = selectedDate.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" });
 
@@ -1519,10 +1518,6 @@ export default function AppointmentsPage() {
                           <span className="text-xs font-bold text-emerald-700">Rs.{total.toLocaleString("en-IN")}</span>
                         </div>
 
-                        {/* Loyalty */}
-                        <p className="text-[9px] text-center" style={{ color:"#C4956A" }}>
-                          {points} loyalty points credited to {billingAppt.customer.split(" ")[0]}
-                        </p>
                       </div>
 
                       {/* Footer */}
@@ -1787,13 +1782,6 @@ export default function AppointmentsPage() {
                       </div>
                     )}
 
-                    {/* Loyalty */}
-                    <div className="flex items-center gap-2 p-2.5 rounded-xl"
-                      style={{ background:"#FBF6F0", border:"1px solid #EACFB0" }}>
-                      <span className="text-amber-500 text-sm">*</span>
-                      <p className="text-xs text-amber-700">Customer earns <strong>{points} loyalty points</strong> (1 pt per Rs.100)</p>
-                    </div>
-
                     {/* Confirm */}
                     <button disabled={!cardValid} onClick={doProcess}
                       className="w-full py-3 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1841,7 +1829,6 @@ export default function AppointmentsPage() {
           total:         Math.round(dBase2+2*(dBase2*hGst2/100)),
           payMethod:     payMethod,
           status:        "PAID",
-          loyaltyPoints: Math.floor(Math.round(dBase2+2*(dBase2*hGst2/100))/100),
           brandName:    settings?.salonName,
           brandTagline: settings?.tagline,
           brandAddress: settings?.address,

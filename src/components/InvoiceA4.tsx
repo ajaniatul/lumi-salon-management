@@ -32,7 +32,6 @@ export interface InvoiceData {
   total:         number;
   payMethod:     string;
   status:        "PAID" | "PARTIAL" | "PENDING" | "INFLUENCER";
-  loyaltyPoints?:number;
   brandName?:    string;
   brandTagline?: string;
   brandAddress?: string;
@@ -124,7 +123,6 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   .grand-total td:last-child{text-align:right;}
   .pay-badge{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding:12px 18px;background:#D1FAE5;border:1px solid #A7F3D0;border-radius:10px;}
   .pay-badge span{font-size:12px;font-weight:700;color:#065F46;}
-  .loyalty{text-align:center;margin-top:16px;font-size:11px;color:#C4956A;font-weight:600;}
   .ftr{background:#FCF5F6;border-top:1px solid #EDD0D4;padding:18px 44px;text-align:center;}
   .ftr-title{font-size:13px;font-weight:800;color:#B76E79;margin-bottom:6px;}
   .ftr-sub{font-size:9.5px;color:#9A7A80;line-height:1.7;}
@@ -198,7 +196,6 @@ export function generateInvoiceHTML(d: InvoiceData): string {
       <span>&#8377;${d.total.toLocaleString("en-IN")}</span>
     </div>
 
-    ${d.loyaltyPoints ? `<div class="loyalty">&#10022; ${d.loyaltyPoints} loyalty points credited to ${d.customer.split(" ")[0]}'s account</div>` : ""}
     ${d.notes ? `<div style="margin-top:14px;padding:10px 14px;background:#FCF5F6;border-radius:8px;border-left:3px solid #B76E79;font-size:11px;color:#5A3A40;line-height:1.6;"><span style="font-weight:700;text-transform:uppercase;letter-spacing:0.08em;font-size:9px;color:#9A7A80;display:block;margin-bottom:3px;">Notes</span>${d.notes}</div>` : ""}
   </div>
 
@@ -403,11 +400,6 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
               <span style={{ fontSize:"12px", fontWeight:700, color:"#065F46" }}>₹{data.total.toLocaleString("en-IN")}</span>
             </div>
 
-            {data.loyaltyPoints && data.loyaltyPoints > 0 && (
-              <p style={{ textAlign:"center", marginTop:"16px", fontSize:"11px", color:"#C4956A", fontWeight:600 }}>
-                ✦ {data.loyaltyPoints} loyalty points credited to {data.customer.split(" ")[0]}&apos;s account
-              </p>
-            )}
             {data.notes && (
               <div style={{ marginTop:"14px", padding:"10px 14px", background:"#FCF5F6", borderRadius:"8px", borderLeft:"3px solid #B76E79" }}>
                 <span style={{ fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.08em", fontSize:"9px", color:"#9A7A80", display:"block", marginBottom:"3px" }}>Notes</span>

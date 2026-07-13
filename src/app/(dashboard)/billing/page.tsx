@@ -28,7 +28,7 @@ type InvoiceType = {
   services: InvService[]; products: InvProduct[];
   items?: InvLine[]; subtotal: number; cgst: number; sgst: number;
   total: number; paid: number; due: number; method: string;
-  status: string; loyalty: { earned: number; redeemed: number };
+  status: string;
   discount: string; influencerNote: string; discountAmt?: number; description?: string;
   stylist?: string | null; stylistRole?: string | null;
 };
@@ -76,7 +76,6 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
     total:        inv.total,
     payMethod:    inv.method === "-" ? "Pending" : inv.method,
     status:       inv.status as "PAID"|"PARTIAL"|"PENDING"|"INFLUENCER",
-    loyaltyPoints: inv.loyalty.earned,
     brandName:    settings?.salonName,
     brandTagline: settings?.tagline,
     brandAddress: settings?.address,

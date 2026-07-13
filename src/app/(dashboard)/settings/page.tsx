@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Save, Building, Clock, Bell, Shield, Percent, Star, Users, Trash2, UserPlus, Power, X, Tag, Plus } from "lucide-react";
+import { Save, Building, Clock, Bell, Shield, Percent, Users, Trash2, UserPlus, Power, X, Tag, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,6 @@ const SECTIONS = [
   { id:"hours",      label:"Business Hours",   icon:Clock,    desc:"Opening/closing times per day" },
   { id:"categories", label:"Categories",       icon:Tag,      desc:"Service & product category lists" },
   { id:"gst",        label:"GST & Billing",    icon:Percent,  desc:"Tax rates, invoice format, GSTIN" },
-  { id:"loyalty",    label:"Loyalty Program",  icon:Star,     desc:"Points earn/redeem rules" },
   { id:"notifications", label:"Notifications", icon:Bell,     desc:"WhatsApp, SMS and email triggers" },
   { id:"roles",      label:"Roles & Access",   icon:Shield,   desc:"Staff permissions per role" },
   { id:"users",      label:"User Accounts",    icon:Users,    desc:"Add and manage staff login profiles" },
@@ -20,10 +19,9 @@ const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sun
 const INIT_NOTIFICATIONS = [
   { trigger:"Appointment Confirmed", channel:"WhatsApp", enabled:true, timing:"Immediately", desc:"Sends booking confirmation with stylist name, time and service details" },
   { trigger:"Appointment Reminder", channel:"WhatsApp + SMS", enabled:true, timing:"2 hours before", desc:"Reminds customer of upcoming appointment and cancel/reschedule link" },
-  { trigger:"Invoice Sent", channel:"WhatsApp", enabled:true, timing:"After checkout", desc:"Sends PDF invoice with GST breakdown and loyalty points balance" },
-  { trigger:"Birthday Greeting", channel:"WhatsApp", enabled:true, timing:"Morning of birthday", desc:"Personalised birthday message with 50 bonus points and a special offer" },
-  { trigger:"Anniversary Greeting", channel:"WhatsApp", enabled:false, timing:"Morning of anniversary", desc:"Wedding anniversary message with 30 bonus points — requires date in customer profile" },
-  { trigger:"Loyalty Points Expiry", channel:"SMS", enabled:true, timing:"7 days before expiry", desc:"Warns customers if their points will expire" },
+  { trigger:"Invoice Sent", channel:"WhatsApp", enabled:true, timing:"After checkout", desc:"Sends PDF invoice with GST breakdown" },
+  { trigger:"Birthday Greeting", channel:"WhatsApp", enabled:true, timing:"Morning of birthday", desc:"Personalised birthday message with a special offer" },
+  { trigger:"Anniversary Greeting", channel:"WhatsApp", enabled:false, timing:"Morning of anniversary", desc:"Wedding anniversary message — requires date in customer profile" },
   { trigger:"Membership Renewal Reminder", channel:"WhatsApp + Email", enabled:true, timing:"15 days before expiry", desc:"Nudges customer to renew with renewal link and benefits summary" },
 ];
 
@@ -470,35 +468,6 @@ export default function SettingsPage() {
                 <strong>Note:</strong> Both CGST and SGST appear as separate line items on every invoice. The salon&apos;s GSTIN is auto-printed on all receipts. Input Tax Credit (ITC) on purchases is tracked separately in the Purchases module.
               </div>
               <button onClick={() => toast.success("GST & billing settings saved")} className="btn-primary text-sm flex items-center gap-2"><Save className="w-4 h-4" /> Save GST Settings</button>
-            </div>
-          )}
-
-          {active === "loyalty" && (
-            <div className="card-luxury p-5 space-y-5">
-              <div>
-                <h3 className="text-base font-bold text-foreground">Loyalty Program Rules</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Define how customers earn and redeem loyalty points. Points are automatically tracked on every invoice.</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { label:"Points Earned per ₹100 Spent", value:"1 point", hint:"A customer who spends ₹2,000 earns 20 points" },
-                  { label:"Minimum Redemption Threshold", value:"100 points", hint:"Customers must accumulate 100 points before redeeming" },
-                  { label:"Value per Redeemable Point", value:"₹1", hint:"100 points = ₹100 discount on next visit" },
-                  { label:"Max Redemption per Invoice", value:"20% of bill", hint:"Customer can't redeem more than 20% of invoice value" },
-                  { label:"Birthday Bonus Points", value:"50 points", hint:"Awarded automatically on customer's birthday" },
-                  { label:"Anniversary Bonus Points", value:"30 points", hint:"Awarded on wedding anniversary if date is saved" },
-                ].map(f => (
-                  <div key={f.label}>
-                    <label className="text-xs font-semibold text-foreground mb-1 block">{f.label}</label>
-                    <input className="input-luxury text-sm w-full" defaultValue={f.value} />
-                    <p className="text-[10px] text-muted-foreground mt-1">{f.hint}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-xs text-amber-700">
-                <strong>How it works:</strong> Points are earned on every invoice after GST. Points cannot be earned when redeeming points (i.e., no points on the portion paid by points). Membership discounts and loyalty point redemptions can be combined on the same invoice.
-              </div>
-              <button onClick={() => toast.success("Loyalty rules saved")} className="btn-primary text-sm flex items-center gap-2"><Save className="w-4 h-4" /> Save Loyalty Rules</button>
             </div>
           )}
 

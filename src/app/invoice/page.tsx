@@ -25,7 +25,6 @@ const DEMO: InvoiceData = {
   total:         2500,
   payMethod:     "UPI",
   status:        "PAID",
-  loyaltyPoints: 25,
 };
 
 function InvoiceViewer() {
@@ -169,11 +168,6 @@ function InvoiceViewer() {
               <span style={{ fontSize:"12px", fontWeight:700, color:"#065F46" }}>Rs.{data.total.toLocaleString("en-IN")}</span>
             </div>
 
-            {data.loyaltyPoints && (
-              <p style={{ textAlign:"center" as const, marginTop:"16px", fontSize:"11px", color:"#C4956A", fontWeight:600 }}>
-                ✦ {data.loyaltyPoints} loyalty points credited to {data.customer.split(" ")[0]}&apos;s account
-              </p>
-            )}
           </div>
 
           {/* Footer */}
