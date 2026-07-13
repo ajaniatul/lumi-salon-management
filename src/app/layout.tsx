@@ -17,13 +17,12 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: {
-    default: "Lumi · Beauvé",
-    template: "%s | Beauvé",
+    default: "Lumi",
+    template: "%s | Lumi",
   },
   description:
-    "Lumi salon powered by Beauvé — premium salon management for appointments, billing, inventory, and analytics.",
-  keywords: ["salon", "management", "appointments", "billing", "beauty", "Beauvé", "Lumi"],
-  authors: [{ name: "Beauvé" }],
+    "Lumi — premium salon management for appointments, billing, inventory, and analytics.",
+  keywords: ["salon", "management", "appointments", "billing", "beauty", "Lumi"],
 };
 
 export const viewport: Viewport = {
