@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { InvoiceA4, InvoiceData, generateInvoiceHTML } from "@/components/InvoiceA4";
-import { ChevronLeft, ChevronRight, X, UserPlus, Users, Receipt, Banknote, CreditCard, Smartphone, Loader2, Copy, ClipboardPaste, Eye, Clock, Play, CheckCircle, UserX, XCircle, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, UserPlus, Users, Receipt, Banknote, CreditCard, Smartphone, Loader2, Copy, ClipboardPaste, Eye, Clock, Play, CheckCircle, UserX, XCircle, Trash2, CalendarDays, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/components/layout/HeaderActionContext";
 import toast from "react-hot-toast";
@@ -112,10 +112,13 @@ export default function AppointmentsPage() {
   const [services,    setServices]    = useState<SvcOpt[]>([]);
   const [loadingDay,  setLoadingDay]  = useState(true);
   const [drag,        setDrag]        = useState<{staffId:string;start:number;end:number}|null>(null);
-  const [bookModal,   setBookModal]   = useState<{staffId:string;startSlot:number;endSlot:number}|null>(null);
+  const [bookModal,   setBookModal]   = useState<{staffId:string;startSlot:number;endSlot:number;editApptId?:string}|null>(null);
   const [detailAppt,  setDetailAppt]  = useState<Appt|null>(null);
   const [form,        setForm]        = useState(defaultForm);
   const [selectedDate,setSelectedDate]= useState(() => new Date());
+  const [showCal,    setShowCal]     = useState(false);
+  const [calMonth,   setCalMonth]    = useState(() => new Date());
+  const calRef = useRef<HTMLDivElement>(null);
   const [billingAppt,  setBillingAppt]  = useState<Appt | null>(null);
   const [settings,     setSettings]     = useState<any>(null);
   const [movingApptId, setMovingApptId] = useState<string | null>(null);
@@ -339,6 +342,16 @@ export default function AppointmentsPage() {
   const resizeApptRef = useRef(resizeAppt);
   useEffect(() => { resizeApptRef.current = resizeAppt; });
 
+  // Close calendar on outside click
+  useEffect(() => {
+    if (!showCal) return;
+    const handler = (e: MouseEvent) => {
+      if (calRef.current && !calRef.current.contains(e.target as Node)) setShowCal(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showCal]);
+
   // Clear copied appointment + context menu on Escape / outside click.
   useEffect(() => {
     const onKey   = (e: KeyboardEvent) => { if (e.key === "Escape") { setCopiedAppt(null); setContextMenu(null); setCellContextMenu(null); } };
@@ -420,6 +433,49 @@ export default function AppointmentsPage() {
   const submitBooking = async () => {
     if (!bookModal || !canSubmit || booking) return;
     setBooking(true);
+
+    // ── EDIT MODE ────────────────────────────────────────────────────────────
+    if (bookModal.editApptId) {
+      try {
+        const res = await fetch(`/api/appointments/${bookModal.editApptId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            staffId:    bookModal.staffId,
+            startSlot:  form.fromSlot,
+            endSlot:    form.toSlot,
+            serviceIds: form.serviceIds,
+            notes:      form.notes,
+          }),
+        });
+        const j = await res.json();
+        if (!res.ok || !j.success) { toast.error(j.error || "Could not update appointment."); setBooking(false); return; }
+        // Optimistic update with new service list
+        const updatedSvcs = form.serviceIds.map(id => {
+          const svc = services.find(s => s.id === id);
+          return { id, name: svc?.name ?? "", price: svc?.price ?? 0, gstRate: 18 };
+        });
+        setAppts(prev => prev.map(a => a.id === bookModal.editApptId ? {
+          ...a,
+          staffId:       bookModal.staffId,
+          startSlot:     form.fromSlot,
+          durationSlots: form.toSlot - form.fromSlot,
+          service:       updatedSvcs[0]?.name ?? a.service,
+          services:      updatedSvcs,
+          notes:         form.notes || undefined,
+        } : a));
+        setBookModal(null);
+        setForm(defaultForm);
+        toast.success("Appointment updated");
+      } catch {
+        toast.error("Network error. Please try again.");
+      } finally {
+        setBooking(false);
+      }
+      return;
+    }
+
+    // ── NEW BOOKING ───────────────────────────────────────────────────────────
     const body: any = {
       date: curKey,
       staffId: bookModal.staffId,
@@ -438,7 +494,7 @@ export default function AppointmentsPage() {
       const j = await res.json();
       if (!res.ok || !j.success) { toast.error(j.error || "Could not book appointment."); setBooking(false); return; }
       setAppts(a => [...a, j.data]);
-      if (form.customerMode === "new") loadCustomers(); // pick up the newly created customer for future searches
+      if (form.customerMode === "new") loadCustomers();
       setBookModal(null);
       setForm(defaultForm);
       toast.success("Appointment booked");
@@ -457,7 +513,93 @@ export default function AppointmentsPage() {
         <button onClick={prevDay} className="p-1.5 rounded-lg border border-ivory-300 hover:bg-ivory-100 transition-colors">
           <ChevronLeft className="w-4 h-4 text-muted-foreground" />
         </button>
-        <span className="text-sm font-semibold text-foreground px-2 whitespace-nowrap">{formatDate(selectedDate)}</span>
+
+        {/* Clickable date → calendar dropdown */}
+        <div className="relative" ref={calRef}>
+          <button
+            onClick={() => { setCalMonth(new Date(selectedDate)); setShowCal(v => !v); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-ivory-300 hover:bg-ivory-100 transition-colors"
+          >
+            <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-sm font-semibold text-foreground whitespace-nowrap">{formatDate(selectedDate)}</span>
+          </button>
+
+          {showCal && (() => {
+            const y = calMonth.getFullYear();
+            const m = calMonth.getMonth();
+            const firstDay = new Date(y, m, 1).getDay(); // 0=Sun
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            const today = new Date();
+            const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+            const selKey   = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`;
+            const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+            const cells: (number | null)[] = [
+              ...Array(firstDay).fill(null),
+              ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+            ];
+            // pad to full rows
+            while (cells.length % 7 !== 0) cells.push(null);
+            return (
+              <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-2xl shadow-2xl border border-ivory-200 p-3 w-64">
+                {/* Month header */}
+                <div className="flex items-center justify-between mb-2">
+                  <button onClick={() => setCalMonth(new Date(y, m - 1, 1))}
+                    className="p-1 rounded-lg hover:bg-ivory-100 transition-colors">
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                  <span className="text-xs font-bold text-foreground">{MONTHS[m]} {y}</span>
+                  <button onClick={() => setCalMonth(new Date(y, m + 1, 1))}
+                    className="p-1 rounded-lg hover:bg-ivory-100 transition-colors">
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+                {/* Day labels */}
+                <div className="grid grid-cols-7 mb-1">
+                  {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d => (
+                    <div key={d} className="text-center text-[9px] font-bold text-muted-foreground py-1">{d}</div>
+                  ))}
+                </div>
+                {/* Day cells */}
+                <div className="grid grid-cols-7 gap-y-0.5">
+                  {cells.map((day, i) => {
+                    if (!day) return <div key={i} />;
+                    const dKey = `${y}-${m}-${day}`;
+                    const isToday = dKey === todayKey;
+                    const isSel   = dKey === selKey;
+                    return (
+                      <button key={i}
+                        onClick={() => {
+                          const d = new Date(y, m, day);
+                          setSelectedDate(d);
+                          setShowCal(false);
+                        }}
+                        className={cn(
+                          "w-full aspect-square rounded-lg text-xs font-semibold transition-colors flex items-center justify-center",
+                          isSel   ? "text-white"                      : "",
+                          isToday && !isSel ? "font-bold"             : "",
+                          !isSel  ? "hover:bg-ivory-100"              : "",
+                        )}
+                        style={isSel ? { background:"#B76E79", color:"#fff" } : isToday ? { color:"#B76E79" } : {}}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Today button */}
+                <div className="mt-2 pt-2 border-t border-ivory-100">
+                  <button
+                    onClick={() => { setSelectedDate(new Date()); setShowCal(false); }}
+                    className="w-full text-xs font-semibold py-1.5 rounded-lg hover:bg-ivory-100 transition-colors text-center"
+                    style={{ color:"#B76E79" }}>
+                    Today
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
         <button onClick={nextDay} className="p-1.5 rounded-lg border border-ivory-300 hover:bg-ivory-100 transition-colors">
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -909,7 +1051,9 @@ export default function AppointmentsPage() {
               <div className="p-5 border-b border-ivory-200 flex-shrink-0" style={{ background:"linear-gradient(135deg,#2D1B1F,#1A0F12)" }}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-white font-display font-bold text-base">New Appointment</p>
+                    <p className="text-white font-display font-bold text-base">
+                      {bookModal.editApptId ? "Edit Appointment" : "New Appointment"}
+                    </p>
                     <div className="flex items-center gap-2 mt-1.5">
                       <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] font-bold" style={{ background:s.grad }}>
                         {s.name.split(" ").map((n:string)=>n[0]).join("")}
@@ -931,9 +1075,24 @@ export default function AppointmentsPage() {
                 {/* ── Customer section ── */}
                 <div>
                   <label className="text-xs font-semibold text-foreground mb-2 block">
-                    Customer <span className="text-red-400">*</span>
+                    Customer {!bookModal.editApptId && <span className="text-red-400">*</span>}
                   </label>
-                  {/* Mode toggle */}
+
+                  {/* Edit mode: show customer as read-only */}
+                  {bookModal.editApptId ? (
+                    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-ivory-50 border border-ivory-200">
+                      <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold"
+                        style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                        {form.customer.split(" ").map(n => n[0]).join("").slice(0,2)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{form.customer}</p>
+                        <p className="text-[10px] text-muted-foreground">{form.phone}</p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground italic flex-shrink-0">locked</span>
+                    </div>
+                  ) : (
+                  <>{/* Mode toggle */}
                   <div className="flex rounded-xl border border-ivory-300 overflow-hidden mb-3">
                     <button
                       className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-colors",
@@ -1061,6 +1220,7 @@ export default function AppointmentsPage() {
                       </button>
                     </div>
                   )}
+                  </>)}
                 </div>
 
                 {/* ── Time picker ── */}
@@ -1148,7 +1308,7 @@ export default function AppointmentsPage() {
                 <button disabled={!canSubmit} onClick={submitBooking}
                   className="w-full py-3 rounded-xl font-bold text-white text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
-                  Book Appointment
+                  {bookModal.editApptId ? "Save Changes" : "Book Appointment"}
                 </button>
                 <button onClick={() => setBookModal(null)}
                   className="w-full py-2 rounded-xl text-sm text-muted-foreground hover:bg-ivory-100 transition-colors">
@@ -1190,9 +1350,24 @@ export default function AppointmentsPage() {
                 </div>
               </div>
               <div className="p-4 space-y-3 flex-1 overflow-y-auto">
+                {/* Services — full-width, all shown */}
+                <div className="bg-ivory-50 rounded-xl p-2.5 border border-ivory-200">
+                  <p className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide mb-1">Services</p>
+                  {detailAppt.services && detailAppt.services.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {detailAppt.services.map(sv => (
+                        <span key={sv.id} className="inline-block text-[11px] font-semibold bg-white border border-ivory-200 px-2 py-0.5 rounded-lg text-foreground">
+                          {sv.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs font-semibold text-foreground">{detailAppt.service}</p>
+                  )}
+                </div>
+                {/* Details grid */}
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label:"Service",  value:detailAppt.service },
                     { label:"Stylist",  value:s.name },
                     { label:"Start",    value:slotToTime(detailAppt.startSlot) },
                     { label:"End",      value:slotToTime(detailAppt.startSlot + detailAppt.durationSlots) },
@@ -1253,6 +1428,35 @@ export default function AppointmentsPage() {
                         if (window.confirm(warning)) deleteAppt(detailAppt.id);
                       }}>
                       Delete Appointment
+                    </button>
+                  )}
+                  {/* Edit — only for active appointments */}
+                  {detailAppt.status !== "COMPLETED" && detailAppt.status !== "CANCELLED" && detailAppt.status !== "NO_SHOW" && (
+                    <button
+                      className="w-full text-sm py-2 rounded-xl font-semibold border border-amber-200 text-amber-600 hover:bg-amber-50 transition-colors flex items-center justify-center gap-1.5"
+                      onClick={() => {
+                        setDetailAppt(null);
+                        setForm({
+                          customerMode: "existing",
+                          customerId:   detailAppt.customerCode ?? "",
+                          customerSearch: detailAppt.customer,
+                          customer:     detailAppt.customer,
+                          phone:        detailAppt.phone,
+                          email:        "",
+                          saveToDb:     true,
+                          serviceIds:   detailAppt.services?.map(sv => sv.id) ?? [],
+                          notes:        detailAppt.notes ?? "",
+                          fromSlot:     detailAppt.startSlot,
+                          toSlot:       detailAppt.startSlot + detailAppt.durationSlots,
+                        });
+                        setBookModal({
+                          staffId:     detailAppt.staffId,
+                          startSlot:   detailAppt.startSlot,
+                          endSlot:     detailAppt.startSlot + detailAppt.durationSlots,
+                          editApptId:  detailAppt.id,
+                        });
+                      }}>
+                      <Pencil className="w-3.5 h-3.5" /> Edit Appointment
                     </button>
                   )}
                   <button className="w-full text-sm py-2 rounded-xl font-semibold border border-primary-200 text-primary-600 hover:bg-primary-50 transition-colors flex items-center justify-center gap-1.5"

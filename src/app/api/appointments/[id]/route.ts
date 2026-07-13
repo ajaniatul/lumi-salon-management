@@ -18,8 +18,12 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { status, staffId, startSlot, endSlot } = await request.json();
+    const { status, staffId, startSlot, endSlot, serviceIds, notes } = await request.json();
     const data: any = {};
+
+    if (notes !== undefined) {
+      data.notes = notes;
+    }
 
     if (status !== undefined) {
       if (!VALID.includes(status)) {
@@ -73,10 +77,32 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       data.duration  = newDuration;
     }
 
-    await prisma.appointment.update({ where: { id: params.id }, data });
-    if (data.duration !== undefined) {
-      await prisma.appointmentService.updateMany({ where: { appointmentId: params.id }, data: { duration: data.duration } });
-    }
+    await prisma.$transaction(async (tx) => {
+      await tx.appointment.update({ where: { id: params.id }, data });
+
+      if (serviceIds !== undefined && Array.isArray(serviceIds) && serviceIds.length > 0) {
+        // Replace services: delete old, insert new
+        const svcs = await tx.service.findMany({ where: { id: { in: serviceIds } } });
+        await tx.appointmentService.deleteMany({ where: { appointmentId: params.id } });
+        await tx.appointmentService.createMany({
+          data: serviceIds.map((sid: string) => {
+            const svc = svcs.find(s => s.id === sid);
+            return {
+              appointmentId: params.id,
+              serviceId:     sid,
+              price:         svc ? Number(svc.price) : 0,
+              duration:      data.duration ?? (svc?.duration ?? 30),
+            };
+          }),
+        });
+      } else if (data.duration !== undefined) {
+        await tx.appointmentService.updateMany({
+          where: { appointmentId: params.id },
+          data:  { duration: data.duration },
+        });
+      }
+    });
+
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[APPOINTMENT PATCH]", e);
