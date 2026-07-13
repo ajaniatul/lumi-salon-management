@@ -134,9 +134,15 @@ export async function POST(request: NextRequest) {
     }
 
     step = "compute";
-    const count = await prisma.invoice.count();
-    const year  = new Date().getFullYear();
-    const invoiceNumber = `INV-${year}-${String(count + 1).padStart(4, "0")}`;
+    const year   = new Date().getFullYear();
+    const prefix = `INV-${year}-`;
+    const lastInv = await prisma.invoice.findFirst({
+      where:   { invoiceNumber: { startsWith: prefix } },
+      orderBy: { invoiceNumber: "desc" },
+      select:  { invoiceNumber: true },
+    });
+    const lastNum     = lastInv ? parseInt(lastInv.invoiceNumber.replace(prefix, ""), 10) : 0;
+    const invoiceNumber = `${prefix}${String(lastNum + 1).padStart(4, "0")}`;
 
     const taxableAmt = (rawSubtotal ?? total) - discountAmt;
     const paidFinal  = isInfluencer ? 0 : (paidAmt != null ? Math.min(Number(paidAmt), total) : total);
