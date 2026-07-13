@@ -246,7 +246,7 @@ export default function BillingPage() {
   const subtotal    = rawSubtotal - discAmt;
   const cgst        = Math.round(subtotal * (gstRate / 2 / 100) * 100) / 100;
   const sgst        = cgst;
-  const total       = subtotal + cgst + sgst;
+  const total       = Math.round(subtotal + cgst + sgst);
   const isInfluencer = method === "Influencer (Barter)";
   const isPending    = method === "Pending";
 
