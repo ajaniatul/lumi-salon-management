@@ -153,19 +153,26 @@ export async function POST(request: NextRequest) {
         status: "CONFIRMED",
         notes: notes?.trim() || null,
         source: "WALK_IN",
-        ...(svcs.length > 0 ? { services: { create: svcs.map((sv, i) => ({
-          serviceId: sv.id,
-          price: packagePrice != null
-            ? (i === 0 ? Number(packagePrice) : 0)
-            : sv.price,
-          duration,
-        })) } } : {}),
       },
       include: {
         customer: { select: { name: true, phone: true, customerId: true } },
         services: { include: { service: { select: { name: true, gstRate: true } } } },
       },
     });
+
+    // Attach services if provided
+    if (svcs.length > 0) {
+      await prisma.appointmentService.createMany({
+        data: svcs.map((sv, i) => ({
+          appointmentId: created.id,
+          serviceId: sv.id,
+          price: packagePrice != null
+            ? (i === 0 ? Number(packagePrice) : 0)
+            : Number(sv.price),
+          duration,
+        })),
+      });
+    }
     return NextResponse.json({ success: true, data: toUI(created) }, { status: 201 });
   } catch (e: any) {
     console.error("[APPOINTMENTS POST]", e);
