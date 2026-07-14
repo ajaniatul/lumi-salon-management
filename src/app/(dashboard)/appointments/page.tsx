@@ -434,7 +434,7 @@ export default function AppointmentsPage() {
   const customerReady = form.customerMode === "existing"
     ? !!form.customerId
     : !!(form.customer.trim() && form.phone.trim());
-  const canSubmit = timeValid && customerReady && form.serviceIds.length > 0;
+  const canSubmit = timeValid && customerReady;
   const [booking, setBooking] = useState(false);
 
   const submitBooking = async () => {

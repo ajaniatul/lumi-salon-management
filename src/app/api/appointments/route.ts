@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { date, staffId, startSlot, endSlot, serviceIds, customerCode, newCustomer, notes, packagePrice } = body ?? {};
 
-    if (!date || !staffId || !Array.isArray(serviceIds) || serviceIds.length === 0 || startSlot == null || endSlot == null || endSlot <= startSlot) {
+    if (!date || !staffId || startSlot == null || endSlot == null || endSlot <= startSlot) {
       return NextResponse.json({ success: false, error: "Missing or invalid booking details." }, { status: 400 });
     }
 
@@ -111,10 +111,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "A customer is required." }, { status: 400 });
     }
 
-    // ── Resolve services ──
-    const uniqueServiceIds = [...new Set(serviceIds)] as string[];
-    const svcs = await prisma.service.findMany({ where: { id: { in: uniqueServiceIds } }, select: { id: true, price: true } });
-    if (svcs.length !== uniqueServiceIds.length) {
+    // ── Resolve services (optional) ──
+    const uniqueServiceIds = Array.isArray(serviceIds) ? [...new Set(serviceIds)] as string[] : [];
+    const svcs = uniqueServiceIds.length > 0
+      ? await prisma.service.findMany({ where: { id: { in: uniqueServiceIds } }, select: { id: true, price: true } })
+      : [];
+    if (uniqueServiceIds.length > 0 && svcs.length !== uniqueServiceIds.length) {
       return NextResponse.json({ success: false, error: "One or more services not found." }, { status: 404 });
     }
 
@@ -151,15 +153,13 @@ export async function POST(request: NextRequest) {
         status: "CONFIRMED",
         notes: notes?.trim() || null,
         source: "WALK_IN",
-        services: { create: svcs.map((sv, i) => ({
+        ...(svcs.length > 0 ? { services: { create: svcs.map((sv, i) => ({
           serviceId: sv.id,
-          // If a package price was passed, distribute it: first service gets the remainder,
-          // rest get 0 — this ensures the invoice total matches the package price exactly.
           price: packagePrice != null
             ? (i === 0 ? Number(packagePrice) : 0)
             : sv.price,
           duration,
-        })) },
+        })) } } : {}),
       },
       include: {
         customer: { select: { name: true, phone: true, customerId: true } },
