@@ -18,7 +18,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { status, staffId, startSlot, endSlot, serviceIds, notes } = await request.json();
+    const { status, staffId, startSlot, endSlot, serviceIds, notes, packagePrice } = await request.json();
     const data: any = {};
 
     if (notes !== undefined) {
@@ -85,12 +85,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         const svcs = await tx.service.findMany({ where: { id: { in: serviceIds } } });
         await tx.appointmentService.deleteMany({ where: { appointmentId: params.id } });
         await tx.appointmentService.createMany({
-          data: serviceIds.map((sid: string) => {
+          data: serviceIds.map((sid: string, i: number) => {
             const svc = svcs.find(s => s.id === sid);
             return {
               appointmentId: params.id,
               serviceId:     sid,
-              price:         svc ? Number(svc.price) : 0,
+              price: packagePrice != null
+                ? (i === 0 ? Number(packagePrice) : 0)
+                : (svc ? Number(svc.price) : 0),
               duration:      data.duration ?? (svc?.duration ?? 30),
             };
           }),

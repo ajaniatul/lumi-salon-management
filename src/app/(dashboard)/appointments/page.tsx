@@ -53,6 +53,7 @@ const STAFF_PALETTE = [
 
 type StaffCol = { id: string; name: string; role: string; color: string; grad: string };
 type SvcOpt   = { id: string; name: string; price: number; duration: number };
+type PkgOpt   = { id: string; name: string; services: string[]; packagePrice: number };
 type Customer = { id: string; name: string; phone: string; email: string; visits: number; tier: string };
 
 const TIER_CHIP: Record<string,string> = {
@@ -99,6 +100,9 @@ const defaultForm = {
   email: "",
   saveToDb: true,
   serviceIds: [] as string[],
+  packageId:    "",
+  packageName:  "",
+  packagePrice: null as number | null,
   notes: "",
   fromSlot: 0,
   toSlot: 1,
@@ -110,6 +114,7 @@ export default function AppointmentsPage() {
   const [customers,   setCustomers]   = useState<Customer[]>([]);
   const [STAFF,       setSTAFF]       = useState<StaffCol[]>([]);
   const [services,    setServices]    = useState<SvcOpt[]>([]);
+  const [packages,    setPackages]    = useState<PkgOpt[]>([]);
   const [loadingDay,  setLoadingDay]  = useState(true);
   const [drag,        setDrag]        = useState<{staffId:string;start:number;end:number}|null>(null);
   const [bookModal,   setBookModal]   = useState<{staffId:string;startSlot:number;endSlot:number;editApptId?:string}|null>(null);
@@ -179,10 +184,11 @@ export default function AppointmentsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [st, sv, set] = await Promise.all([
+        const [st, sv, set, pk] = await Promise.all([
           fetch("/api/staff").then(r => r.json()),
           fetch("/api/services").then(r => r.json()),
           fetch("/api/settings").then(r => r.json()),
+          fetch("/api/packages").then(r => r.json()),
         ]);
         if (st.success) setSTAFF(st.data.map((s: any, i: number) => ({
           id: s.dbId, name: s.name, role: s.designation,
@@ -191,6 +197,7 @@ export default function AppointmentsPage() {
         })));
         if (sv.success) setServices(sv.data.map((s: any) => ({ id: s.id, name: s.name, price: s.price, duration: s.duration })));
         if (set.success) setSettings(set.data);
+        if (pk.success) setPackages(pk.data.map((p: any) => ({ id: p.id, name: p.name, services: p.services, packagePrice: p.packagePrice })));
       } catch {}
       loadCustomers();
     })();
@@ -441,11 +448,14 @@ export default function AppointmentsPage() {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            staffId:    bookModal.staffId,
-            startSlot:  form.fromSlot,
-            endSlot:    form.toSlot,
-            serviceIds: form.serviceIds,
-            notes:      form.notes,
+            staffId:      bookModal.staffId,
+            startSlot:    form.fromSlot,
+            endSlot:      form.toSlot,
+            serviceIds:   form.serviceIds,
+            packagePrice: form.packagePrice ?? undefined,
+            notes:        form.packageName
+              ? `[Package: ${form.packageName}]${form.notes ? ` ${form.notes}` : ""}`
+              : form.notes,
           }),
         });
         const j = await res.json();
@@ -462,7 +472,9 @@ export default function AppointmentsPage() {
           durationSlots: form.toSlot - form.fromSlot,
           service:       updatedSvcs[0]?.name ?? a.service,
           services:      updatedSvcs,
-          notes:         form.notes || undefined,
+          notes: form.packageName
+            ? `[Package: ${form.packageName}]${form.notes ? ` ${form.notes}` : ""}`
+            : form.notes || undefined,
         } : a));
         setBookModal(null);
         setForm(defaultForm);
@@ -481,8 +493,11 @@ export default function AppointmentsPage() {
       staffId: bookModal.staffId,
       startSlot: form.fromSlot,
       endSlot: form.toSlot,
-      serviceIds: form.serviceIds,
-      notes: form.notes,
+      serviceIds:   form.serviceIds,
+      packagePrice: form.packagePrice ?? undefined,
+      notes: form.packageName
+        ? `[Package: ${form.packageName}]${form.notes ? ` ${form.notes}` : ""}`
+        : form.notes,
     };
     if (form.customerMode === "existing" && selectedCustomer) {
       body.customerCode = selectedCustomer.id;
@@ -1258,9 +1273,63 @@ export default function AppointmentsPage() {
                   </select>
                 </div>
 
+                {/* ── Package (optional) ── */}
+                {packages.length > 0 && (
+                  <div>
+                    <label className="text-xs font-semibold text-foreground mb-1 block">
+                      Package <span className="text-[10px] font-normal text-muted-foreground">(optional)</span>
+                    </label>
+                    {form.packageId ? (
+                      <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-violet-50 border border-violet-200">
+                        <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[10px] font-bold text-violet-600">PKG</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-violet-700 truncate">{form.packageName}</p>
+                          <p className="text-[10px] text-violet-500">
+                            Rs.{form.packagePrice?.toLocaleString("en-IN")} bundle · {form.serviceIds.length} service{form.serviceIds.length !== 1 ? "s" : ""} included
+                          </p>
+                        </div>
+                        <button type="button"
+                          onClick={() => setForm(p => ({ ...p, packageId: "", packageName: "", packagePrice: null, serviceIds: [] }))}
+                          className="p-1 rounded-lg hover:bg-violet-100 flex-shrink-0">
+                          <X className="w-3.5 h-3.5 text-violet-500" />
+                        </button>
+                      </div>
+                    ) : (
+                      <select className="input-luxury w-full text-sm" value=""
+                        onChange={e => {
+                          const pkg = packages.find(p => p.id === e.target.value);
+                          if (!pkg) return;
+                          // Match package service names to loaded service IDs
+                          const pkgSvcIds = pkg.services
+                            .map((name: string) => services.find(s => s.name === name)?.id)
+                            .filter(Boolean) as string[];
+                          setForm(p => ({
+                            ...p,
+                            packageId:    pkg.id,
+                            packageName:  pkg.name,
+                            packagePrice: pkg.packagePrice,
+                            serviceIds:   pkgSvcIds,
+                          }));
+                        }}>
+                        <option value="">Select a package...</option>
+                        {packages.map(pkg => (
+                          <option key={pkg.id} value={pkg.id}>
+                            {pkg.name} — Rs.{pkg.packagePrice.toLocaleString("en-IN")}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+
                 {/* ── Services ── */}
                 <div>
-                  <label className="text-xs font-semibold text-foreground mb-1 block">Services <span className="text-red-400">*</span></label>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">
+                    Services <span className="text-red-400">*</span>
+                    {form.packageId && <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">add extras on top of the package</span>}
+                  </label>
                   <select className="input-luxury w-full text-sm" value=""
                     onChange={e => {
                       const id = e.target.value;
@@ -1278,7 +1347,7 @@ export default function AppointmentsPage() {
                         if (!sv) return null;
                         return (
                           <span key={id} className="inline-flex items-center gap-1 text-xs pl-2 pr-1 py-1 rounded-lg bg-primary-50 text-primary-700 border border-primary-200">
-                            {sv.name} · Rs.{sv.price.toLocaleString("en-IN")}
+                            {sv.name}{!form.packageId && ` · Rs.${sv.price.toLocaleString("en-IN")}`}
                             <button type="button"
                               onClick={() => setForm(p => ({ ...p, serviceIds: p.serviceIds.filter(x => x !== id) }))}
                               className="p-0.5 rounded hover:bg-primary-100">
@@ -1288,7 +1357,14 @@ export default function AppointmentsPage() {
                         );
                       })}
                       <p className="text-[10px] text-muted-foreground w-full mt-0.5">
-                        Total: Rs.{form.serviceIds.reduce((sum, id) => sum + (services.find(s => s.id === id)?.price ?? 0), 0).toLocaleString("en-IN")}
+                        {form.packageId
+                          ? `Package: Rs.${form.packagePrice?.toLocaleString("en-IN")}${
+                              form.serviceIds.length > (packages.find(p => p.id === form.packageId)?.services.length ?? 0)
+                                ? ` + extras`
+                                : ""
+                            }`
+                          : `Total: Rs.${form.serviceIds.reduce((sum, id) => sum + (services.find(s => s.id === id)?.price ?? 0), 0).toLocaleString("en-IN")}`
+                        }
                       </p>
                     </div>
                   )}
@@ -1383,12 +1459,27 @@ export default function AppointmentsPage() {
                 <span className={cn("badge text-xs", STATUS_META[detailAppt.status].badge)}>
                   {STATUS_META[detailAppt.status].label}
                 </span>
-                {detailAppt.notes && (
-                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-100">
-                    <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wide mb-1">Stylist Notes</p>
-                    <p className="text-xs text-amber-800 leading-relaxed">{detailAppt.notes}</p>
-                  </div>
-                )}
+                {detailAppt.notes && (() => {
+                  const pkgMatch = detailAppt.notes.match(/^\[Package:\s*([^\]]+)\]([\s\S]*)/);
+                  const pkgName  = pkgMatch?.[1]?.trim();
+                  const restNote = pkgMatch?.[2]?.trim();
+                  return (
+                    <>
+                      {pkgName && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-violet-50 border border-violet-200">
+                          <span className="text-[9px] font-bold bg-violet-200 text-violet-700 px-1.5 py-0.5 rounded-md uppercase tracking-wide flex-shrink-0">PKG</span>
+                          <p className="text-xs font-semibold text-violet-700 truncate">{pkgName}</p>
+                        </div>
+                      )}
+                      {restNote && (
+                        <div className="p-3 rounded-xl bg-amber-50 border border-amber-100">
+                          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wide mb-1">Notes</p>
+                          <p className="text-xs text-amber-800 leading-relaxed">{restNote}</p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
                 <div className="space-y-2 pt-1">
                   {detailAppt.status === "WAITING" && (
                     <button className="w-full text-sm py-2 rounded-xl font-semibold text-white transition-colors"
@@ -1436,6 +1527,12 @@ export default function AppointmentsPage() {
                       className="w-full text-sm py-2 rounded-xl font-semibold border border-amber-200 text-amber-600 hover:bg-amber-50 transition-colors flex items-center justify-center gap-1.5"
                       onClick={() => {
                         setDetailAppt(null);
+                        // Extract package info from notes if present
+                        const editNotes     = detailAppt.notes ?? "";
+                        const pkgEditMatch  = editNotes.match(/^\[Package:\s*([^\]]+)\]([\s\S]*)/);
+                        const editPkgName   = pkgEditMatch?.[1]?.trim() ?? "";
+                        const editUserNotes = pkgEditMatch?.[2]?.trim() ?? editNotes;
+                        const editPkg       = packages.find(p => p.name === editPkgName);
                         setForm({
                           customerMode: "existing",
                           customerId:   detailAppt.customerCode ?? "",
@@ -1445,7 +1542,10 @@ export default function AppointmentsPage() {
                           email:        "",
                           saveToDb:     true,
                           serviceIds:   detailAppt.services?.map(sv => sv.id) ?? [],
-                          notes:        detailAppt.notes ?? "",
+                          packageId:    editPkg?.id ?? "",
+                          packageName:  editPkgName,
+                          packagePrice: editPkg?.packagePrice ?? null,
+                          notes:        editUserNotes,
                           fromSlot:     detailAppt.startSlot,
                           toSlot:       detailAppt.startSlot + detailAppt.durationSlots,
                         });

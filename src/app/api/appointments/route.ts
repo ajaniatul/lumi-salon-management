@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { date, staffId, startSlot, endSlot, serviceIds, customerCode, newCustomer, notes } = body ?? {};
+    const { date, staffId, startSlot, endSlot, serviceIds, customerCode, newCustomer, notes, packagePrice } = body ?? {};
 
     if (!date || !staffId || !Array.isArray(serviceIds) || serviceIds.length === 0 || startSlot == null || endSlot == null || endSlot <= startSlot) {
       return NextResponse.json({ success: false, error: "Missing or invalid booking details." }, { status: 400 });
@@ -151,7 +151,15 @@ export async function POST(request: NextRequest) {
         status: "CONFIRMED",
         notes: notes?.trim() || null,
         source: "WALK_IN",
-        services: { create: svcs.map(sv => ({ serviceId: sv.id, price: sv.price, duration })) },
+        services: { create: svcs.map((sv, i) => ({
+          serviceId: sv.id,
+          // If a package price was passed, distribute it: first service gets the remainder,
+          // rest get 0 — this ensures the invoice total matches the package price exactly.
+          price: packagePrice != null
+            ? (i === 0 ? Number(packagePrice) : 0)
+            : sv.price,
+          duration,
+        })) },
       },
       include: {
         customer: { select: { name: true, phone: true, customerId: true } },
