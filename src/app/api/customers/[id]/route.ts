@@ -182,6 +182,35 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ success: true, data: { isActive: body.isActive } });
     }
 
+    // Update profile fields
+    if (body._profileUpdate) {
+      const { name, phone, email, gender, dob, anniversary, tags } = body;
+      if (!name?.trim() || !phone?.trim()) {
+        return NextResponse.json({ success: false, error: "Name and phone are required." }, { status: 400 });
+      }
+      const updateData: any = {
+        name:        name.trim(),
+        phone:       phone.trim(),
+        email:       email?.trim() || null,
+        gender:      gender || null,
+        tags:        Array.isArray(tags) ? tags : [],
+        dateOfBirth: dob ? new Date(dob) : null,
+        anniversary: anniversary ? new Date(anniversary) : null,
+      };
+      try {
+        await prisma.customer.updateMany({
+          where: { OR: [{ customerId: params.id }, { id: params.id }] },
+          data:  updateData,
+        });
+      } catch (e: any) {
+        if (e?.code === "P2002") {
+          return NextResponse.json({ success: false, error: "That phone number is already used by another customer." }, { status: 409 });
+        }
+        throw e;
+      }
+      return NextResponse.json({ success: true });
+    }
+
     // Update notes
     const { allergies, preferences, general } = body ?? {};
     const notesJson = JSON.stringify({ allergies: allergies ?? "", preferences: preferences ?? "", general: general ?? "" });

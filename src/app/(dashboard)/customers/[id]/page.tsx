@@ -78,6 +78,13 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
   const [notesDraft, setNotesDraft] = useState<Notes>({ allergies:"", preferences:"", general:"" });
   const [savingNotes,setSavingNotes]= useState(false);
 
+  // Profile edit state
+  type ProfileDraft = { name:string; phone:string; email:string; gender:string; dob:string; anniversary:string; tags:string[] };
+  const [editProfile,   setEditProfile]  = useState(false);
+  const [profileDraft,  setProfileDraft] = useState<ProfileDraft>({ name:"", phone:"", email:"", gender:"", dob:"", anniversary:"", tags:[] });
+  const [savingProfile, setSavingProfile]= useState(false);
+  const [newTag,        setNewTag]       = useState("");
+
   // A4 invoice viewer
   const [a4Invoice, setA4Invoice] = useState<InvoiceData | null>(null);
 
@@ -114,6 +121,62 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
       toast.error("Network error");
     } finally {
       setSavingNotes(false);
+    }
+  };
+
+  const openEditProfile = () => {
+    if (!customer) return;
+    // Convert display dates (dd Mon yyyy) back to YYYY-MM-DD for <input type="date">
+    const parseDate = (s: string) => {
+      if (!s) return "";
+      const d = new Date(s);
+      if (isNaN(d.getTime())) return "";
+      return d.toISOString().slice(0, 10);
+    };
+    setProfileDraft({
+      name:        customer.name,
+      phone:       customer.phone,
+      email:       customer.email,
+      gender:      customer.gender,
+      dob:         parseDate(customer.dob),
+      anniversary: parseDate(customer.anniversary ?? ""),
+      tags:        [...customer.tags],
+    });
+    setNewTag("");
+    setEditProfile(true);
+  };
+
+  const saveProfile = async () => {
+    if (!customer) return;
+    setSavingProfile(true);
+    try {
+      const res = await fetch(`/api/customers/${params.id}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ _profileUpdate: true, ...profileDraft }),
+      });
+      const j = await res.json();
+      if (j.success) {
+        setCustomer(c => c ? {
+          ...c,
+          name:        profileDraft.name,
+          phone:       profileDraft.phone,
+          email:       profileDraft.email,
+          gender:      profileDraft.gender,
+          dob:         profileDraft.dob ? new Date(profileDraft.dob).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "",
+          anniversary: profileDraft.anniversary ? new Date(profileDraft.anniversary).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : null,
+          tags:        profileDraft.tags,
+          initials:    profileDraft.name.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase(),
+        } : c);
+        setEditProfile(false);
+        toast.success("Profile updated");
+      } else {
+        toast.error(j.error || "Failed to update profile");
+      }
+    } catch {
+      toast.error("Network error");
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -718,6 +781,96 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
       )}
 
       {a4Invoice && <InvoiceA4 data={a4Invoice} onClose={() => setA4Invoice(null)} />}
+
+      {/* ── Edit Profile Modal ── */}
+      {editProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background:"rgba(0,0,0,0.45)" }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-ivory-200">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-4 h-4" style={{ color:"#B76E79" }} />
+                <h3 className="text-sm font-display font-bold text-foreground">Edit Profile</h3>
+              </div>
+              <button onClick={() => setEditProfile(false)} className="p-1.5 rounded-lg hover:bg-ivory-100 transition-colors">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Full Name</label>
+                <input className={iCls} value={profileDraft.name}
+                  onChange={e => setProfileDraft(p => ({ ...p, name: e.target.value }))} placeholder="Full name" />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Phone</label>
+                <input className={iCls} value={profileDraft.phone} type="tel"
+                  onChange={e => setProfileDraft(p => ({ ...p, phone: e.target.value }))} placeholder="Phone number" />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Email</label>
+                <input className={iCls} value={profileDraft.email} type="email"
+                  onChange={e => setProfileDraft(p => ({ ...p, email: e.target.value }))} placeholder="Email address" />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Gender</label>
+                <select className={iCls} value={profileDraft.gender}
+                  onChange={e => setProfileDraft(p => ({ ...p, gender: e.target.value }))}>
+                  <option value="">— Select —</option>
+                  <option value="Female">Female</option>
+                  <option value="Male">Male</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Date of Birth</label>
+                <input className={iCls} value={profileDraft.dob} type="date"
+                  onChange={e => setProfileDraft(p => ({ ...p, dob: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Anniversary</label>
+                <input className={iCls} value={profileDraft.anniversary} type="date"
+                  onChange={e => setProfileDraft(p => ({ ...p, anniversary: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Tags</label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {profileDraft.tags.map(tag => (
+                    <span key={tag} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-primary-50 text-primary-600 border border-primary-200">
+                      {tag}
+                      <button type="button" onClick={() => setProfileDraft(p => ({ ...p, tags: p.tags.filter(t => t !== tag) }))}>
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input className={iCls + " flex-1"} value={newTag} placeholder="Add tag…"
+                    onChange={e => setNewTag(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && newTag.trim()) { setProfileDraft(p => ({ ...p, tags: [...p.tags, newTag.trim()] })); setNewTag(""); } }} />
+                  <button type="button"
+                    className="px-3 py-2 rounded-xl text-xs font-semibold bg-primary-50 text-primary-600 border border-primary-200 hover:bg-primary-100 transition-colors"
+                    onClick={() => { if (newTag.trim()) { setProfileDraft(p => ({ ...p, tags: [...p.tags, newTag.trim()] })); setNewTag(""); } }}>
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2 px-5 py-4 border-t border-ivory-200">
+              <button onClick={() => setEditProfile(false)}
+                className="flex-1 py-2 rounded-xl border border-ivory-300 text-sm font-semibold text-muted-foreground hover:bg-ivory-50 transition-colors">
+                Cancel
+              </button>
+              <button onClick={saveProfile} disabled={savingProfile || !profileDraft.name.trim() || !profileDraft.phone.trim()}
+                className="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
