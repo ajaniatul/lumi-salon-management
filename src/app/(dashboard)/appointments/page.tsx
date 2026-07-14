@@ -1308,7 +1308,7 @@ export default function AppointmentsPage() {
                 {/* ── Services ── */}
                 <div>
                   <label className="text-xs font-semibold text-foreground mb-1 block">
-                    Services <span className="text-red-400">*</span>
+                    Services
                     {form.packageId && <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">add extras on top of the package</span>}
                   </label>
                   <select className="input-luxury w-full text-sm" value=""
