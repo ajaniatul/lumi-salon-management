@@ -25,12 +25,47 @@ const INIT_NOTIFICATIONS = [
   { trigger:"Membership Renewal Reminder", channel:"WhatsApp + Email", enabled:true, timing:"15 days before expiry", desc:"Nudges customer to renew with renewal link and benefits summary" },
 ];
 
-const ROLE_MODULES: Record<string, string[]> = {
-  "Admin (Owner)":  ["All modules","Settings","Staff payroll","Analytics","P&L reports","Delete records","User management"],
-  "Manager":        ["Appointments","Customers","Billing","Inventory","Staff (view only)","Reports (no P&L)","Memberships"],
-  "Receptionist":   ["Appointments (full)","Customers (view + add)","Billing (view + create)","Memberships (assign only)","Products (view only)"],
-  "Stylist":        ["Own appointments only","Own commission report","Customer notes (limited)","No billing access","No inventory access"],
+const ROLES = [
+  { key: "ADMIN",        label: "Admin (Owner)",  color: "bg-primary-100 text-primary-700 border-primary-200" },
+  { key: "MANAGER",      label: "Manager",        color: "bg-violet-100 text-violet-700 border-violet-200" },
+  { key: "RECEPTIONIST", label: "Receptionist",   color: "bg-teal-100 text-teal-700 border-teal-200" },
+  { key: "STYLIST",      label: "Stylist",        color: "bg-blue-100 text-blue-700 border-blue-200" },
+] as const;
+type RoleKey = typeof ROLES[number]["key"];
+
+const ALL_MODULES = [
+  { id: "dashboard",         label: "Dashboard",                    group: "Core" },
+  { id: "appt_view",         label: "Appointments — View",          group: "Core" },
+  { id: "appt_manage",       label: "Appointments — Create / Edit / Delete", group: "Core" },
+  { id: "customers_view",    label: "Customers — View",             group: "Core" },
+  { id: "customers_manage",  label: "Customers — Add / Edit",       group: "Core" },
+  { id: "billing_view",      label: "Billing & Invoices — View",    group: "Finance" },
+  { id: "billing_manage",    label: "Billing & Invoices — Create / Edit", group: "Finance" },
+  { id: "expenses",          label: "Expenses",                     group: "Finance" },
+  { id: "petty_cash",        label: "Petty Cash Book",              group: "Finance" },
+  { id: "services_view",     label: "Services & Products — View",   group: "Catalogue" },
+  { id: "services_manage",   label: "Services & Products — Add / Edit", group: "Catalogue" },
+  { id: "inventory",         label: "Inventory",                    group: "Catalogue" },
+  { id: "purchases",         label: "Purchases",                    group: "Catalogue" },
+  { id: "staff_view",        label: "Staff — View",                 group: "People" },
+  { id: "staff_manage",      label: "Staff — Add / Edit",           group: "People" },
+  { id: "attendance_view",   label: "Attendance — View All",        group: "People" },
+  { id: "attendance_mark",   label: "Attendance — Mark / Edit",     group: "People" },
+  { id: "commission",        label: "Commission Reports",           group: "People" },
+  { id: "memberships",       label: "Memberships",                  group: "Growth" },
+  { id: "packages",          label: "Packages",                     group: "Growth" },
+  { id: "reports",           label: "Reports & Analytics",          group: "Growth" },
+  { id: "settings",          label: "Settings",                     group: "Admin" },
+  { id: "user_accounts",     label: "User Accounts",                group: "Admin" },
+];
+
+const DEFAULT_PERMISSIONS: Record<RoleKey, string[]> = {
+  ADMIN:        ALL_MODULES.map(m => m.id),
+  MANAGER:      ["dashboard","appt_view","appt_manage","customers_view","customers_manage","billing_view","billing_manage","expenses","services_view","inventory","purchases","staff_view","attendance_view","attendance_mark","commission","memberships","packages","reports"],
+  RECEPTIONIST: ["dashboard","appt_view","appt_manage","customers_view","customers_manage","billing_view","billing_manage","services_view","memberships","packages"],
+  STYLIST:      ["dashboard","appt_view","customers_view","commission"],
 };
+
 const ROLE_COLORS: Record<string,string> = {
   "Admin (Owner)":  "bg-primary-100 text-primary-700 border-primary-200",
   "Manager":        "bg-violet-100 text-violet-700 border-violet-200",
@@ -41,7 +76,30 @@ const ROLE_COLORS: Record<string,string> = {
 export default function SettingsPage() {
   const [active, setActive] = useState("salon");
   const [notifications, setNotifications] = useState(INIT_NOTIFICATIONS);
-  const [editRole, setEditRole] = useState<string|null>(null);
+  const [editRole, setEditRole] = useState<RoleKey|null>(null);
+
+  // Permission state — initialise from localStorage, fall back to defaults
+  const [permissions, setPermissions] = useState<Record<RoleKey, string[]>>(() => {
+    if (typeof window === "undefined") return DEFAULT_PERMISSIONS;
+    try {
+      const saved = localStorage.getItem("rolePermissions");
+      return saved ? JSON.parse(saved) : DEFAULT_PERMISSIONS;
+    } catch { return DEFAULT_PERMISSIONS; }
+  });
+  const [permDraft, setPermDraft] = useState<string[]>([]);
+
+  const openEditRole = (rk: RoleKey) => {
+    setPermDraft([...(permissions[rk] ?? [])]);
+    setEditRole(rk);
+  };
+  const savePermissions = () => {
+    if (!editRole) return;
+    const next = { ...permissions, [editRole]: permDraft };
+    setPermissions(next);
+    localStorage.setItem("rolePermissions", JSON.stringify(next));
+    setEditRole(null);
+    toast.success("Permissions updated");
+  };
   const [notifSaved, setNotifSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -504,25 +562,87 @@ export default function SettingsPage() {
           )}
 
           {active === "roles" && (
-            <div className="card-luxury p-5 space-y-4">
+            <div className="card-luxury p-5 space-y-5">
               <div>
                 <h3 className="text-base font-bold text-foreground">Roles & Access Control</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Each staff role gets specific access permissions. This protects sensitive data like payroll and P&L from junior staff.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Define which modules each role can access. Changes are saved locally and serve as your internal reference.</p>
               </div>
-              <div className="space-y-3">
-                {Object.entries(ROLE_MODULES).map(([role, modules]) => (
-                  <div key={role} className="p-4 rounded-xl border border-ivory-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={cn("badge text-xs border", ROLE_COLORS[role])}>{role}</span>
-                      <button onClick={() => setEditRole(role)} className="text-xs text-primary-600 underline">Edit permissions</button>
+
+              {/* Role cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {ROLES.map(role => {
+                  const perms = permissions[role.key] ?? [];
+                  const groups = ALL_MODULES.reduce((acc, m) => {
+                    if (perms.includes(m.id)) { acc[m.group] = (acc[m.group]||0)+1; }
+                    return acc;
+                  }, {} as Record<string,number>);
+                  return (
+                    <div key={role.key} className="p-4 rounded-xl border border-ivory-200 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-bold border", role.color)}>{role.label}</span>
+                        <button onClick={() => openEditRole(role.key)}
+                          className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1 transition-colors">
+                          <Shield className="w-3 h-3" /> Edit Access
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {Object.entries(groups).map(([grp, cnt]) => (
+                          <span key={grp} className="text-[10px] px-2 py-0.5 rounded-md bg-ivory-100 text-foreground border border-ivory-200 font-medium">
+                            {grp} ({cnt})
+                          </span>
+                        ))}
+                        {Object.keys(groups).length === 0 && (
+                          <span className="text-[10px] text-muted-foreground italic">No access granted</span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{perms.length} of {ALL_MODULES.length} modules enabled</p>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {modules.map(m => (
-                        <span key={m} className="text-[10px] px-2 py-0.5 rounded-md bg-ivory-100 text-foreground border border-ivory-200">{m}</span>
+                  );
+                })}
+              </div>
+
+              {/* Permission matrix table */}
+              <div>
+                <p className="text-xs font-semibold text-foreground mb-2">Full Permission Matrix</p>
+                <div className="overflow-x-auto rounded-xl border border-ivory-200">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-ivory-50 border-b border-ivory-200">
+                        <th className="p-3 text-left text-[10px] font-bold text-muted-foreground uppercase tracking-wide w-48">Module</th>
+                        {ROLES.map(r => (
+                          <th key={r.key} className="p-3 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                            <span className={cn("px-1.5 py-0.5 rounded-md border text-[9px]", r.color)}>{r.label.split(" ")[0]}</span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {["Core","Finance","Catalogue","People","Growth","Admin"].map(group => (
+                        <>
+                          <tr key={`g-${group}`} className="bg-ivory-100/70 border-b border-ivory-200">
+                            <td colSpan={5} className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">{group}</td>
+                          </tr>
+                          {ALL_MODULES.filter(m => m.group === group).map(mod => (
+                            <tr key={mod.id} className="border-b border-ivory-100 hover:bg-ivory-50/50 transition-colors">
+                              <td className="p-3 text-foreground font-medium text-[11px]">{mod.label}</td>
+                              {ROLES.map(r => {
+                                const has = (permissions[r.key] ?? []).includes(mod.id);
+                                return (
+                                  <td key={r.key} className="p-3 text-center">
+                                    <span className={cn("inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold",
+                                      has ? "bg-emerald-100 text-emerald-600" : "bg-red-50 text-red-300")}>
+                                      {has ? "✓" : "✗"}
+                                    </span>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </>
                       ))}
-                    </div>
-                  </div>
-                ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -667,32 +787,58 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {editRole && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              style={{ background:"rgba(20,12,14,0.82)", backdropFilter:"blur(4px)" }}
-              onClick={e => { if(e.target===e.currentTarget) setEditRole(null); }}>
-              <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-ivory-200">
-                  <h3 className="text-sm font-bold text-foreground">Edit Permissions — {editRole}</h3>
-                  <button onClick={() => setEditRole(null)} className="w-7 h-7 rounded-full bg-ivory-100 flex items-center justify-center hover:bg-ivory-200">
-                    <span className="text-xs text-muted-foreground">✕</span>
-                  </button>
-                </div>
-                <div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto">
-                  {ROLE_MODULES[editRole].map((m, i) => (
-                    <div key={i} className="flex items-center gap-2 p-2.5 rounded-xl border border-ivory-200 bg-ivory-50">
-                      <span className="text-emerald-500 text-xs">✓</span>
-                      <p className="text-sm text-foreground">{m}</p>
+          {editRole && (() => {
+            const roleInfo = ROLES.find(r => r.key === editRole)!;
+            const groups = [...new Set(ALL_MODULES.map(m => m.group))];
+            return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                style={{ background:"rgba(20,12,14,0.82)", backdropFilter:"blur(4px)" }}
+                onClick={e => { if(e.target===e.currentTarget) setEditRole(null); }}>
+                <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-ivory-200 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4" style={{ color:"#B76E79" }} />
+                      <h3 className="text-sm font-bold text-foreground">Edit Access — {roleInfo.label}</h3>
                     </div>
-                  ))}
-                  <p className="text-[10px] text-muted-foreground pt-2">Full permission editor coming in v2. Contact your system admin to modify access rights.</p>
-                </div>
-                <div className="px-5 py-4 border-t border-ivory-200 bg-ivory-50">
-                  <button onClick={() => setEditRole(null)} className="w-full btn-primary text-sm py-2">Done</button>
+                    <button onClick={() => setEditRole(null)} className="w-7 h-7 rounded-full bg-ivory-100 flex items-center justify-center hover:bg-ivory-200">
+                      <X className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="overflow-y-auto flex-1">
+                    <div className="px-5 py-3 border-b border-ivory-100 flex items-center justify-between">
+                      <p className="text-[10px] text-muted-foreground">{permDraft.length} of {ALL_MODULES.length} modules enabled</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => setPermDraft(ALL_MODULES.map(m => m.id))} className="text-[10px] text-primary-600 font-semibold hover:underline">All</button>
+                        <button onClick={() => setPermDraft([])} className="text-[10px] text-red-500 font-semibold hover:underline">None</button>
+                      </div>
+                    </div>
+                    {groups.map(group => (
+                      <div key={group}>
+                        <p className="px-5 py-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground bg-ivory-50 border-b border-ivory-100">{group}</p>
+                        {ALL_MODULES.filter(m => m.group === group).map(mod => {
+                          const checked = permDraft.includes(mod.id);
+                          return (
+                            <label key={mod.id} className="flex items-center gap-3 px-5 py-2.5 border-b border-ivory-50 hover:bg-ivory-50 cursor-pointer transition-colors">
+                              <div className={cn("w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                                checked ? "bg-primary-500 border-primary-500" : "border-ivory-300 bg-white")}
+                                onClick={() => setPermDraft(p => checked ? p.filter(x => x !== mod.id) : [...p, mod.id])}>
+                                {checked && <span className="text-white text-[9px] font-bold">✓</span>}
+                              </div>
+                              <span className="text-xs text-foreground">{mod.label}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="px-5 py-4 border-t border-ivory-200 bg-ivory-50 flex gap-2 flex-shrink-0">
+                    <button onClick={() => setEditRole(null)} className="flex-1 btn-outline text-xs py-2.5 rounded-xl font-bold">Cancel</button>
+                    <button onClick={savePermissions} className="flex-1 btn-primary text-xs py-2.5 rounded-xl font-bold">Save Changes</button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           {active === "categories" && (
             <div className="card-luxury p-5 space-y-6">
               <div>
