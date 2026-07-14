@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type DBStatus = "PRESENT" | "ABSENT" | "HALF_DAY" | "LATE" | "ON_LEAVE";
@@ -213,6 +213,62 @@ export default function AttendancePage() {
   const recordsByDate = (s: StaffRow) =>
     Object.fromEntries(s.records.map(r => [r.date, r]));
 
+  const exportCSV = () => {
+    const MONTH_NAMES_FULL = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    let rows: string[][] = [];
+    let filename = "";
+
+    if (tab === "today") {
+      filename = `attendance-today-${today}.csv`;
+      rows.push(["Staff Name", "Designation", "Status", "Check In", "Check Out", "Work Hours", "Notes"]);
+      staff.forEach(s => {
+        const rec = s.records.find(r => r.date === today);
+        const st  = rec ? STATUS_META[uiStatus(rec)].label : "Not Marked";
+        rows.push([
+          s.name,
+          s.designation,
+          st,
+          rec?.clockIn  ? fmt24(rec.clockIn)  : "—",
+          rec?.clockOut ? fmt24(rec.clockOut) : "—",
+          rec?.workHours != null ? `${rec.workHours.toFixed(1)} hrs` : "—",
+          rec?.notes && !["CASUAL_LEAVE","WEEKLY_OFF"].includes(rec.notes) ? rec.notes : "",
+        ]);
+      });
+    } else {
+      filename = `attendance-${MONTH_NAMES_FULL[month-1]}-${year}.csv`;
+      // Header: Staff, Designation, then each day number
+      const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+      rows.push(["Staff Name", "Designation", ...days.map(d => String(d)), "Regular", "Late", "Half Day", "Leave", "Absent", "W/Off"]);
+      staff.forEach(s => {
+        const byDate = recordsByDate(s);
+        const dayCells = days.map(d => {
+          const dateStr = `${year}-${String(month).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+          const rec = byDate[dateStr];
+          return rec ? STATUS_META[uiStatus(rec)].short : "";
+        });
+        const stats = monthStats(s);
+        rows.push([
+          s.name,
+          s.designation,
+          ...dayCells,
+          String(stats.regular),
+          String(stats.late),
+          String(stats.halfDay),
+          String(stats.casualLeave),
+          String(stats.absent),
+          String(stats.weeklyOff),
+        ]);
+      });
+    }
+
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="px-6 space-y-5">
 
@@ -230,16 +286,22 @@ export default function AttendancePage() {
           </button>
         </div>
 
-        <div className="flex gap-1 p-1 bg-ivory-100 rounded-2xl border border-ivory-200">
-          {(["today", "month"] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={cn(
-                "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize",
-                tab === t ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}>
-              {t === "today" ? "Today's Register" : "Monthly Overview"}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 p-1 bg-ivory-100 rounded-2xl border border-ivory-200">
+            {(["today", "month"] as const).map(t => (
+              <button key={t} onClick={() => setTab(t)}
+                className={cn(
+                  "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize",
+                  tab === t ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}>
+                {t === "today" ? "Today's Register" : "Monthly Overview"}
+              </button>
+            ))}
+          </div>
+          <button onClick={exportCSV}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-ivory-300 bg-white hover:bg-ivory-50 transition-colors text-muted-foreground">
+            <Download className="w-3.5 h-3.5" /> Export CSV
+          </button>
         </div>
       </div>
 
