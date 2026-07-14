@@ -238,6 +238,9 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
               <button onClick={() => router.push("/appointments")} className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1">
                 <Calendar className="w-3 h-3" /> Book Appointment
               </button>
+              <button onClick={openEditProfile} className="btn-outline text-xs py-1.5 px-3 flex items-center gap-1">
+                <Edit3 className="w-3 h-3" /> Edit Profile
+              </button>
             </div>
           </div>
 
