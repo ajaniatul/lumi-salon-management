@@ -1213,26 +1213,7 @@ export default function AppointmentsPage() {
                         <input className="input-luxury w-full text-sm" placeholder="email@example.com"
                           value={form.email} onChange={e => setForm(p => ({ ...p, email:e.target.value }))} />
                       </div>
-                      {/* Save to DB toggle */}
-                      <button
-                        className={cn(
-                          "w-full flex items-center gap-2.5 p-3 rounded-xl border text-left transition-all",
-                          form.saveToDb ? "bg-emerald-50 border-emerald-200" : "bg-ivory-50 border-ivory-300"
-                        )}
-                        onClick={() => setForm(p => ({ ...p, saveToDb:!p.saveToDb }))}
-                      >
-                        <div className={cn("w-8 h-5 rounded-full flex-shrink-0 transition-colors relative", form.saveToDb ? "bg-emerald-500" : "bg-gray-300")}>
-                          <div className={cn("absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform", form.saveToDb ? "translate-x-3" : "translate-x-0.5")} />
-                        </div>
-                        <div>
-                          <p className={cn("text-xs font-semibold", form.saveToDb?"text-emerald-700":"text-foreground")}>
-                            {form.saveToDb ? "Save to customer database" : "Don't save to database"}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {form.saveToDb ? "This customer will appear in all future lookups" : "One-time booking — no customer record created"}
-                          </p>
-                        </div>
-                      </button>
+
                     </div>
                   )}
                   </>)}
