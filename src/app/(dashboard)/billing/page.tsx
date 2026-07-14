@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { InvoiceA4, InvoiceData, generateInvoiceHTML } from "@/components/InvoiceA4";
 import CustomerPicker, { type PickedCustomer } from "@/components/CustomerPicker";
 import ItemPicker, { type PickedItem } from "@/components/ItemPicker";
-import { Search, Plus, Minus, Trash2, Download, Printer, Receipt, CheckCircle, AlertTriangle, IndianRupee, X, Loader2 } from "lucide-react";
+import { Search, Plus, Minus, Trash2, Download, Printer, Receipt, CheckCircle, AlertTriangle, IndianRupee, X, Loader2, MessageCircle, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/components/layout/HeaderActionContext";
 import toast from "react-hot-toast";
@@ -49,6 +49,49 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
   const itemCount = inv.services.length + inv.products.length;
   const amtEach   = Math.round(inv.subtotal / Math.max(itemCount, 1));
 
+  // ── WhatsApp / SMS helpers ────────────────────────────────────────────────
+  const buildMessage = () => {
+    const salonName = settings?.salonName ?? "Our Salon";
+    const allItems  = [
+      ...inv.services.map(s => s.name),
+      ...inv.products.map(p => p.name),
+    ];
+    const itemsList = allItems.length > 0 ? allItems.join(", ") : "—";
+    const statusLine = inv.status === "PAID"       ? "✅ Paid"
+                     : inv.status === "PARTIAL"    ? `⏳ Partial (Due: Rs.${inv.due.toLocaleString("en-IN")})`
+                     : inv.status === "INFLUENCER" ? "🤝 Influencer (Barter)"
+                     : `❗ Due: Rs.${inv.due.toLocaleString("en-IN")}`;
+    return (
+      `*${salonName}*\n` +
+      `Invoice: ${inv.id} | ${inv.date}\n\n` +
+      `Hi ${inv.customer},\n` +
+      `Thank you for visiting us! Here is your invoice summary:\n\n` +
+      `🛎 ${itemsList}\n` +
+      `💰 Total: *Rs.${inv.total.toLocaleString("en-IN")}*\n` +
+      `${statusLine}\n\n` +
+      `See you again soon! 💖`
+    );
+  };
+
+  const cleanPhone = (ph: string) => ph.replace(/\D/g, "");
+
+  const sendWhatsApp = () => {
+    const phone = cleanPhone(inv.phone);
+    if (!phone) { toast.error("No phone number on this invoice."); return; }
+    const num  = phone.startsWith("91") ? phone : `91${phone}`;
+    const text = encodeURIComponent(buildMessage());
+    window.open(`https://wa.me/${num}?text=${text}`, "_blank");
+  };
+
+  const sendSMS = () => {
+    const phone = cleanPhone(inv.phone);
+    if (!phone) { toast.error("No phone number on this invoice."); return; }
+    const num  = phone.startsWith("91") ? `+${phone}` : `+91${phone}`;
+    const salonName = settings?.salonName ?? "Our Salon";
+    const shortMsg  = `${salonName} | Invoice ${inv.id} | Rs.${inv.total.toLocaleString("en-IN")} | ${inv.status === "PAID" ? "Paid" : `Due Rs.${inv.due.toLocaleString("en-IN")}`}. Thank you!`;
+    window.open(`sms:${num}?body=${encodeURIComponent(shortMsg)}`, "_self");
+  };
+
   const lineItems: InvLine[] = inv.items && inv.items.length > 0
     ? inv.items
     : [
@@ -91,14 +134,33 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
       <InvoiceA4
         data={a4Data}
         onClose={onClose}
-        actions={inv.due > 0 && inv.status !== "INFLUENCER" ? (
-          <button
-            onClick={() => setShowPayForm(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90"
-            style={{ background:"linear-gradient(135deg,#10B981,#059669)" }}>
-            Record Payment
-          </button>
-        ) : undefined}
+        actions={(
+          <div className="flex items-center gap-1.5">
+            {/* WhatsApp */}
+            <button
+              onClick={sendWhatsApp}
+              title="Send via WhatsApp"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
+              <MessageCircle className="w-3.5 h-3.5" style={{ color:"#25D366" }} /> WhatsApp
+            </button>
+            {/* SMS */}
+            <button
+              onClick={sendSMS}
+              title="Send via SMS"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-white/20 text-white/80 hover:bg-white/10 transition-colors">
+              <MessageSquare className="w-3.5 h-3.5 text-blue-400" /> SMS
+            </button>
+            {/* Record Payment */}
+            {inv.due > 0 && inv.status !== "INFLUENCER" && (
+              <button
+                onClick={() => setShowPayForm(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90"
+                style={{ background:"linear-gradient(135deg,#10B981,#059669)" }}>
+                Record Payment
+              </button>
+            )}
+          </div>
+        )}
       />
 
       {/* Payment form — floats above the A4 view */}
