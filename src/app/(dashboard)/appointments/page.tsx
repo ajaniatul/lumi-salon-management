@@ -2122,6 +2122,7 @@ export default function AppointmentsPage() {
           brandGstin:   settings?.gstin,
           brandPhone:   settings?.phone,
           brandEmail:   settings?.email,
+          brandPhone2:  (settings as any)?.phone2,
           brandLogo:    settings?.logo,
         };
         return <InvoiceA4 key="a4" data={a4Data} onClose={() => setShowA4(false)} />;
