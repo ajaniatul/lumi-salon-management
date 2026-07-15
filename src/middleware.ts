@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth";
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ["/login", "/api/auth/login", "/signup", "/api/auth/signup"];
+const PUBLIC_ROUTES = ["/login", "/api/auth/login", "/signup", "/api/auth/signup", "/invoice", "/api/invoices/view"];
 
 // Routes accessible to all authenticated roles
 const ALL_ROLES_ROUTES = ["/dashboard", "/api/dashboard"];
