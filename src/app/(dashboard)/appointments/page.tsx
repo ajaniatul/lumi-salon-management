@@ -34,10 +34,10 @@ function dateKey(d: Date) {
 // ─── Gridline helpers ─────────────────────────────────────────────────────────
 // With 5-min slots: hour = every 12, half-hour = every 6, quarter = every 3
 function borderForSlot(i: number) {
-  if (i % 12 === 0) return "1.5px solid #B8949C";   // hour
-  if (i % 6  === 0) return "1px solid #DDD0D2";      // half-hour
-  if (i % 3  === 0) return "1px solid #EDE5E7";      // 15-min
-  return "0.5px solid #F5EEEF";                       // 5-min
+  if (i % 12 === 0) return "1.5px solid #BBBBBB";   // hour
+  if (i % 6  === 0) return "1px solid #DDDDDD";      // half-hour
+  if (i % 3  === 0) return "1px solid #EEEEEE";      // 15-min
+  return "0.5px solid #F5F5F5";                       // 5-min
 }
 
 // ─── Static config ──────────────────────────────────────────────────────────
@@ -636,12 +636,12 @@ export default function AppointmentsPage() {
           </div>
         ))}
         {copiedAppt ? (
-          <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-50 border border-primary-200">
-            <ClipboardPaste className="w-3.5 h-3.5 text-primary-600" />
-            <span className="text-xs text-primary-700">
+          <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-300">
+            <ClipboardPaste className="w-3.5 h-3.5 text-gray-600" />
+            <span className="text-xs text-gray-700">
               Copied <strong>{copiedAppt.customer}</strong> — click any empty slot to paste
             </span>
-            <button onClick={() => setCopiedAppt(null)} className="text-xs text-primary-500 hover:text-primary-700 underline">
+            <button onClick={() => setCopiedAppt(null)} className="text-xs text-gray-500 hover:text-gray-700 underline">
               Clear
             </button>
           </div>
@@ -661,10 +661,10 @@ export default function AppointmentsPage() {
           <div className="flex flex-col h-full" style={{ minWidth: STAFF_COL_W + totalSlots * SLOT_W }}>
 
           {/* ── Time ruler — OUTSIDE the card ── */}
-          <div className="flex flex-shrink-0" style={{ height:30, borderBottom:"2px solid #C5A8AE" }}>
+          <div className="flex flex-shrink-0" style={{ height:30, borderBottom:"2px solid #CCCCCC" }}>
             {/* Corner */}
             <div className="flex-shrink-0 flex items-end pb-1 pl-2"
-              style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, borderRight:"2px solid #C5A8AE" }}>
+              style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, borderRight:"2px solid #CCCCCC" }}>
               <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Staff / Time</span>
             </div>
             {/* Time ticks */}
@@ -674,13 +674,13 @@ export default function AppointmentsPage() {
                 const isHalf = i % 6  === 0 && !isHour;
                 return isHour || isHalf ? (
                   <div key={i} className="absolute top-0 bottom-0 overflow-visible"
-                    style={{ left: i * SLOT_W, width: 0, borderLeft: isHour ? "1.5px solid #B8949C" : "1px dashed #D4B8BC" }}>
+                    style={{ left: i * SLOT_W, width: 0, borderLeft: isHour ? "1.5px solid #BBBBBB" : "1px dashed #CCCCCC" }}>
                     {isHour && (
                       <span className="absolute text-[10px] font-semibold text-muted-foreground whitespace-nowrap"
                         style={{ top:6, left:3 }}>{slotToTime(i)}</span>
                     )}
                     {isHalf && (
-                      <span className="absolute text-[9px] whitespace-nowrap" style={{ top:8, left:3, color:"#B8949C" }}>
+                      <span className="absolute text-[9px] whitespace-nowrap" style={{ top:8, left:3, color:"#999999" }}>
                         {slotToTime(i).replace(" AM","").replace(" PM","")}
                       </span>
                     )}
@@ -700,10 +700,10 @@ export default function AppointmentsPage() {
           const moveMin    = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot : null;
           const moveMax    = movingAppt && moveTarget?.staffId === s.id ? moveTarget.slot + movingAppt.durationSlots - 1 : null;
           return (
-            <div key={s.id} className="flex" style={{ flex:"1 1 0", minHeight:64, borderBottom: si < STAFF.length-1 ? "1px solid #C5A8AE" : undefined }}>
+            <div key={s.id} className="flex" style={{ flex:"1 1 0", minHeight:64, borderBottom: si < STAFF.length-1 ? "1px solid #E0E0E0" : undefined }}>
               {/* Staff label */}
               <div className="sticky left-0 z-10 bg-white flex-shrink-0 flex items-center gap-2.5 px-3"
-                style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, borderRight:"2px solid #C5A8AE" }}>
+                style={{ width:STAFF_COL_W, minWidth:STAFF_COL_W, borderRight:"2px solid #CCCCCC" }}>
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm"
                   style={{ background:s.grad }}>
                   {s.name.split(" ").map((n:string)=>n[0]).join("")}
@@ -727,7 +727,7 @@ export default function AppointmentsPage() {
                   return (
                     <div key={i}
                       className={cn("absolute top-0 transition-colors",
-                        inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-primary-100" : occupied ? "" : "hover:bg-rose-50"
+                        inMoveTarget ? "bg-emerald-100" : inDrag ? "bg-gray-200" : occupied ? "" : "hover:bg-gray-100"
                       )}
                       style={{
                         left: i * SLOT_W, width: SLOT_W, height: "100%",
@@ -961,7 +961,7 @@ export default function AppointmentsPage() {
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="px-3 py-2 border-b border-ivory-100" style={{ background:"#FDF6F7" }}>
+            <div className="px-3 py-2 border-b border-ivory-100" style={{ background:"#F5F5F5" }}>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
                   style={{ background: s?.grad }}>
@@ -1009,11 +1009,11 @@ export default function AppointmentsPage() {
 
       {/* ── PASTE CONFIRMATION ── */}
       {pasteConfirm && copiedAppt && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background:"rgba(45,27,31,0.45)" }}
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4" style={{ background:"rgba(0,0,0,0.55)" }}
           onClick={() => setPasteConfirm(null)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
             onClick={e => e.stopPropagation()}>
-            <div className="px-5 py-4 border-b border-ivory-100" style={{ background:"linear-gradient(135deg,#FDF6F7,#FBF0F1)" }}>
+            <div className="px-5 py-4 border-b border-ivory-100" style={{ background:"#F5F5F5" }}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
                   style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
@@ -1073,9 +1073,9 @@ export default function AppointmentsPage() {
                       <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] font-bold" style={{ background:s.grad }}>
                         {s.name.split(" ").map((n:string)=>n[0]).join("")}
                       </div>
-                      <p className="text-xs" style={{ color:"#C4A0A8" }}>
+                      <p className="text-xs" style={{ color:"rgba(255,255,255,0.65)" }}>
                         {s.name} · {timeValid ? `${slotToTime(form.fromSlot)} – ${slotToTime(form.toSlot)}` : "Select time below"}
-                        {timeValid && <span className="ml-1 font-semibold" style={{ color:"#E8C5CB" }}>({dur} min)</span>}
+                        {timeValid && <span className="ml-1 font-semibold" style={{ color:"rgba(255,255,255,0.9)" }}>({dur} min)</span>}
                       </p>
                     </div>
                   </div>
@@ -1146,7 +1146,7 @@ export default function AppointmentsPage() {
                           );
                           return (
                             <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl overflow-hidden"
-                              style={{ boxShadow:"0 8px 30px rgba(183,110,121,0.18)", border:"1px solid #d0d0d0", background:"#fff" }}>
+                              style={{ boxShadow:"0 8px 30px rgba(0,0,0,0.12)", border:"1px solid #d0d0d0", background:"#fff" }}>
                               {matches.length === 0 ? (
                                 <div className="px-4 py-3 text-sm text-center" style={{ color:"#222222" }}>
                                   No customers found
@@ -1162,7 +1162,7 @@ export default function AppointmentsPage() {
                                     background: form.customerId === c.id ? "#fafafa" : "transparent",
                                     borderBottom: "1px solid #f0f0f0",
                                   }}
-                                  onMouseEnter={e => { if (form.customerId !== c.id) (e.currentTarget as HTMLElement).style.background = "#FBF0F2"; }}
+                                  onMouseEnter={e => { if (form.customerId !== c.id) (e.currentTarget as HTMLElement).style.background = "#f0f0f0"; }}
                                   onMouseLeave={e => { if (form.customerId !== c.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                                 >
                                   {/* Avatar */}
@@ -1665,7 +1665,7 @@ export default function AppointmentsPage() {
                       <p className="text-white font-display font-bold text-sm">
                         {payDone ? "Invoice" : "Generate Invoice"}
                       </p>
-                      <p className="text-[10px]" style={{ color:"#C4A0A8" }}>{currentInvNum} - {dateStr}</p>
+                      <p className="text-[10px]" style={{ color:"rgba(255,255,255,0.65)" }}>{currentInvNum} - {dateStr}</p>
                     </div>
                   </div>
                   {!payProcessing && (
@@ -1682,7 +1682,7 @@ export default function AppointmentsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-white">{billingAppt.customer}</p>
-                    <p className="text-[10px]" style={{ color:"#C4A0A8" }}>{billingAppt.phone || "No phone"} - {s.name}</p>
+                    <p className="text-[10px]" style={{ color:"rgba(255,255,255,0.65)" }}>{billingAppt.phone || "No phone"} - {s.name}</p>
                   </div>
                 </div>
               </div>
