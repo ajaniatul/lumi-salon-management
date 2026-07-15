@@ -105,7 +105,7 @@ export default function ItemPicker({ mode, value, onSelect, iCls }: Props) {
                 </div>
                 <p className="text-[10px] text-muted-foreground">{item.sub}</p>
               </div>
-              <span className="text-sm font-bold flex-shrink-0" style={{ color:"#B76E79" }}>
+              <span className="text-sm font-bold flex-shrink-0" style={{ color:"#111111" }}>
                 Rs.{item.price.toLocaleString("en-IN")}
               </span>
             </button>

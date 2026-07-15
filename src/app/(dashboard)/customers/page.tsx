@@ -32,7 +32,7 @@ function CustomerCard({ c, onClick, onToggle }: { c: Customer; onClick: () => vo
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-            style={{ background: isActive ? (tier?.grad ?? "linear-gradient(135deg,#B76E79,#C4956A)") : "#9CA3AF" }}>
+            style={{ background: isActive ? (tier?.grad ?? "linear-gradient(135deg,#111111,#444444)") : "#9CA3AF" }}>
             {c.name.split(" ").map(n => n[0]).join("").slice(0,2)}
           </div>
           <div>
@@ -58,7 +58,7 @@ function CustomerCard({ c, onClick, onToggle }: { c: Customer; onClick: () => vo
         <p className="text-[10px] text-muted-foreground">Last visit: {c.lastVisit}</p>
         {c.birthday && (
           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-            <Cake className="w-3 h-3" style={{ color:"#B76E79" }} /> {c.birthday}
+            <Cake className="w-3 h-3" style={{ color:"#111111" }} /> {c.birthday}
           </span>
         )}
       </div>
@@ -184,7 +184,7 @@ export default function CustomersPage() {
         {[
           { label:"Total",      value:customers.length.toString(),              sub:"customers",       icon:Users,       color:"#6366F1" },
           { label:"Members",    value:memberCount.toString(),                   sub:"Silver to Plat",  icon:Crown,       color:"#F59E0B" },
-          { label:"Avg spend",  value:`Rs.${avgSpend.toLocaleString("en-IN")}`, sub:"per customer",    icon:TrendingUp,  color:"#B76E79" },
+          { label:"Avg spend",  value:`Rs.${avgSpend.toLocaleString("en-IN")}`, sub:"per customer",    icon:TrendingUp,  color:"#111111" },
         ].map(s => (
           <div key={s.label} className="card-luxury p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -222,7 +222,7 @@ export default function CustomersPage() {
               className={cn("px-3 py-2.5 text-xs font-semibold transition-all",
                 statusFilter === f ? "text-white" : "bg-white text-muted-foreground hover:bg-ivory-50"
               )}
-              style={statusFilter === f ? { background: f === "INACTIVE" ? "#6B7280" : "#B76E79" } : {}}>
+              style={statusFilter === f ? { background: f === "INACTIVE" ? "#6B7280" : "#111111" } : {}}>
               {f === "ALL" ? "All" : f === "ACTIVE" ? "Active" : "Inactive"}
             </button>
           ))}
@@ -231,7 +231,7 @@ export default function CustomersPage() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color:"#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color:"#111111" }} />
           <p className="text-sm text-muted-foreground">Loading customers from the database…</p>
         </div>
       ) : loadError ? (
@@ -266,8 +266,8 @@ export default function CustomersPage() {
       ) : (
         <div className="text-center py-10 space-y-4">
           <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
-            style={{ background:"linear-gradient(135deg,#FCF5F6,#F7E8EA)" }}>
-            <Users className="w-7 h-7" style={{ color:"#B76E79" }} />
+            style={{ background:"linear-gradient(135deg,#fafafa,#f0f0f0)" }}>
+            <Users className="w-7 h-7" style={{ color:"#111111" }} />
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Search above to find a customer</p>
@@ -275,7 +275,7 @@ export default function CustomersPage() {
           </div>
           <button onClick={() => setShowAll(true)}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary-200 text-sm font-semibold transition-all hover:bg-primary-50"
-            style={{ color:"#B76E79" }}>
+            style={{ color:"#111111" }}>
             <Users className="w-4 h-4" />
             Browse all {customers.length} customers
             <ChevronRight className="w-4 h-4" />

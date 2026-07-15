@@ -307,7 +307,7 @@ export default function AttendancePage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading attendance…</p>
         </div>
       ) : (
@@ -374,7 +374,7 @@ export default function AttendancePage() {
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                                style={{ background: "linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                                style={{ background: "linear-gradient(135deg,#111111,#444444)" }}>
                                 {s.name.split(" ").map(n => n[0]).join("").slice(0,2)}
                               </div>
                               <div>
@@ -487,7 +487,7 @@ export default function AttendancePage() {
                                       onClick={() => saveWithTime(s.dbId, rec)}
                                       disabled={saving === `${s.dbId}-save`}
                                       className="text-[11px] px-3 py-1 rounded-lg font-semibold text-white transition-all disabled:opacity-50 whitespace-nowrap"
-                                      style={{ background: "#B76E79" }}>
+                                      style={{ background: "#111111" }}>
                                       {saving === `${s.dbId}-save` ? "…" : "Save"}
                                     </button>
                                   </div>
@@ -518,7 +518,7 @@ export default function AttendancePage() {
                     <div key={s.id} className="card-luxury p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                          style={{ background: "linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                          style={{ background: "linear-gradient(135deg,#111111,#444444)" }}>
                           {s.name.split(" ").map(n => n[0]).join("").slice(0,2)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -557,7 +557,7 @@ export default function AttendancePage() {
                   <div key={s.id} className="card-luxury p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                        style={{ background: "linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                        style={{ background: "linear-gradient(135deg,#111111,#444444)" }}>
                         {s.name.split(" ").map(n => n[0]).join("").slice(0,2)}
                       </div>
                       <p className="text-sm font-bold text-foreground">{s.name}</p>

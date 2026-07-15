@@ -62,7 +62,7 @@ export function StatsCard({
       {/* Top row */}
       <div className="flex items-start justify-between">
         <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", iconColor)}>
-          <Icon className="w-5 h-5" style={{ color: "#B76E79" }} />
+          <Icon className="w-5 h-5" style={{ color: "#111111" }} />
         </div>
 
         {change !== undefined && (

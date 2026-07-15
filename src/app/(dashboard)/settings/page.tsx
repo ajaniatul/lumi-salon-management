@@ -797,7 +797,7 @@ export default function SettingsPage() {
                 <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
                   <div className="flex items-center justify-between px-5 py-4 border-b border-ivory-200 flex-shrink-0">
                     <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4" style={{ color:"#B76E79" }} />
+                      <Shield className="w-4 h-4" style={{ color:"#111111" }} />
                       <h3 className="text-sm font-bold text-foreground">Edit Access — {roleInfo.label}</h3>
                     </div>
                     <button onClick={() => setEditRole(null)} className="w-7 h-7 rounded-full bg-ivory-100 flex items-center justify-center hover:bg-ivory-200">

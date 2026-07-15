@@ -64,8 +64,8 @@ export async function GET() {
       else segments.occasional.push(c.id);
     }
     const customerSegments = [
-      { label: "VIP / High-Value", count: segments.vip.length, desc: "Spent ₹20,000+ in the last 6 months.", color: "#B76E79", action: "Send exclusive offer" },
-      { label: "Regular Visitors", count: segments.regular.length, desc: "4+ visits in the last 6 months. Core repeat business.", color: "#C4956A", action: "Loyalty reward" },
+      { label: "VIP / High-Value", count: segments.vip.length, desc: "Spent ₹20,000+ in the last 6 months.", color: "#111111", action: "Send exclusive offer" },
+      { label: "Regular Visitors", count: segments.regular.length, desc: "4+ visits in the last 6 months. Core repeat business.", color: "#444444", action: "Loyalty reward" },
       { label: "Occasional Visitors", count: segments.occasional.length, desc: "Visited recently but infrequently. Growth opportunity.", color: "#6366F1", action: "Re-engage campaign" },
       { label: "At Risk / Churning", count: segments.atRisk.length, desc: "Haven't visited in 45+ days despite a booking history. Needs win-back.", color: "#EF4444", action: "Send comeback offer" },
       { label: "New Customers", count: segments.newCust.length, desc: "Signed up in the past 30 days. Critical onboarding window.", color: "#10B981", action: "Follow up for review" },

@@ -15,7 +15,7 @@ interface TopServicesProps {
 }
 
 // Rose-gold palette for chart slices
-const COLORS = ["#B76E79", "#C4956A", "#D4A0A7", "#DBA98E", "#E8C4C8", "#F0D5BB"];
+const COLORS = ["#111111", "#444444", "#888888", "#DBA98E", "#E8C4C8", "#F0D5BB"];
 
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="bg-white rounded-xl shadow-luxury border border-ivory-300 p-3 text-sm">
         <p className="font-medium text-foreground">{d.name}</p>
         <p className="text-muted-foreground">{d.count} bookings</p>
-        <p className="font-semibold mt-0.5" style={{ color: "#B76E79" }}>
+        <p className="font-semibold mt-0.5" style={{ color: "#111111" }}>
           {formatCurrency(d.revenue)}
         </p>
       </div>

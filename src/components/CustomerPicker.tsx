@@ -105,7 +105,7 @@ export default function CustomerPicker({ value, onChange, placeholder = "Search 
                 <button key={c.id ?? i} onMouseDown={() => select(c)}
                   className="w-full text-left px-3 py-2.5 hover:bg-primary-50 transition-colors flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
-                    style={{ background:"#B76E79" }}>
+                    style={{ background:"#111111" }}>
                     {c.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">

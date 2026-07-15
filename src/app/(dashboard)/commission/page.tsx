@@ -112,7 +112,7 @@ export default function CommissionPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading commissions…</p>
         </div>
       ) : data.length === 0 ? (
@@ -146,7 +146,7 @@ export default function CommissionPage() {
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">{c.appointments} appointments</p>
-                  <p className="text-sm font-bold" style={{ color: "#B76E79" }}>
+                  <p className="text-sm font-bold" style={{ color: "#111111" }}>
                     ₹{c.grossPay.toLocaleString("en-IN")}
                   </p>
                 </div>
@@ -211,7 +211,7 @@ export default function CommissionPage() {
                   )}
                   <div className="border-t border-ivory-300 pt-2 flex justify-between text-sm font-semibold">
                     <span>Total Variable Pay</span>
-                    <span style={{ color: "#B76E79" }}>₹{rec.totalVariable.toLocaleString("en-IN")}</span>
+                    <span style={{ color: "#111111" }}>₹{rec.totalVariable.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
 
@@ -230,7 +230,7 @@ export default function CommissionPage() {
                   </div>
                   <div className="border-t border-ivory-300 pt-2 flex justify-between text-base font-bold">
                     <span>Gross Pay</span>
-                    <span style={{ color: "#B76E79" }}>₹{rec.grossPay.toLocaleString("en-IN")}</span>
+                    <span style={{ color: "#111111" }}>₹{rec.grossPay.toLocaleString("en-IN")}</span>
                   </div>
                   {!rec.isPaid && (
                     <div className="flex justify-between text-sm font-semibold text-red-500">

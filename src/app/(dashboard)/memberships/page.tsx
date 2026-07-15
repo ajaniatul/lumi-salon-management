@@ -21,8 +21,8 @@ type Member = {
 
 const TIER_STYLE: Record<Tier, { color: string; bg: string; border: string; badge: string }> = {
   SILVER:   { color: "#9CA3AF", bg: "bg-gray-50",    border: "border-gray-200",    badge: "bg-gray-100 text-gray-600 border border-gray-200"    },
-  GOLD:     { color: "#C4956A", bg: "bg-amber-50",   border: "border-amber-200",   badge: "bg-amber-100 text-amber-700 border border-amber-200"   },
-  PLATINUM: { color: "#B76E79", bg: "bg-primary-50", border: "border-primary-200", badge: "bg-primary-100 text-primary-700 border border-primary-200" },
+  GOLD:     { color: "#444444", bg: "bg-amber-50",   border: "border-amber-200",   badge: "bg-amber-100 text-amber-700 border border-amber-200"   },
+  PLATINUM: { color: "#111111", bg: "bg-primary-50", border: "border-primary-200", badge: "bg-primary-100 text-primary-700 border border-primary-200" },
 };
 
 const VALIDITY_OPTIONS = [
@@ -294,7 +294,7 @@ export default function MembershipsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading memberships…</p>
         </div>
       ) : (

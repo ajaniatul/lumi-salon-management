@@ -135,7 +135,7 @@ export default function InventoryPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading inventory…</p>
         </div>
       ) : tab === "stock" ? (

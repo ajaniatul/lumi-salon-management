@@ -55,14 +55,14 @@ export function StaffPerformance({ staff, loading = false }: StaffPerformancePro
               <div key={member.name} className="flex items-center gap-3">
                 {/* Rank */}
                 <span className="text-xs font-bold w-4 text-center flex-shrink-0"
-                  style={{ color: i === 0 ? "#B76E79" : "#9CA3AF" }}>
+                  style={{ color: i === 0 ? "#111111" : "#9CA3AF" }}>
                   #{i + 1}
                 </span>
 
                 {/* Avatar */}
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0"
-                  style={{ background: "linear-gradient(135deg, #B76E79, #C4956A)" }}
+                  style={{ background: "linear-gradient(135deg, #111111, #444444)" }}
                 >
                   {member.avatar
                     ? <img src={member.avatar} className="w-8 h-8 rounded-full object-cover" alt={member.name} />
@@ -86,8 +86,8 @@ export function StaffPerformance({ staff, loading = false }: StaffPerformancePro
                       style={{
                         width: `${pct}%`,
                         background: i === 0
-                          ? "linear-gradient(90deg, #B76E79, #C4956A)"
-                          : "linear-gradient(90deg, #D4A0A7, #DBA98E)",
+                          ? "linear-gradient(90deg, #111111, #444444)"
+                          : "linear-gradient(90deg, #888888, #DBA98E)",
                       }}
                     />
                   </div>
@@ -95,7 +95,7 @@ export function StaffPerformance({ staff, loading = false }: StaffPerformancePro
 
                 {/* Revenue */}
                 <span className="text-xs font-semibold text-foreground flex-shrink-0 w-20 text-right"
-                  style={{ color: i === 0 ? "#B76E79" : undefined }}>
+                  style={{ color: i === 0 ? "#111111" : undefined }}>
                   {formatCurrency(member.revenue)}
                 </span>
               </div>

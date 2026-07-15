@@ -68,22 +68,22 @@ function LoginContent() {
       <div
         className="hidden lg:flex lg:w-1/2 relative flex-col items-center justify-center p-12 overflow-hidden"
         style={{
-          background: "linear-gradient(145deg, #2D1B1F 0%, #1A0F12 40%, #3D2229 100%)",
+          background: "linear-gradient(145deg, #0a0a0a 0%, #1A0F12 40%, #3D2229 100%)",
         }}
       >
         {/* Decorative circles */}
         <div className="absolute top-[-60px] right-[-60px] w-80 h-80 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #B76E79, transparent)" }} />
+          style={{ background: "radial-gradient(circle, #111111, transparent)" }} />
         <div className="absolute bottom-[-40px] left-[-40px] w-64 h-64 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #C4956A, transparent)" }} />
+          style={{ background: "radial-gradient(circle, #444444, transparent)" }} />
         <div className="absolute top-1/2 left-[-30px] w-48 h-48 rounded-full opacity-5"
-          style={{ background: "radial-gradient(circle, #B76E79, transparent)" }} />
+          style={{ background: "radial-gradient(circle, #111111, transparent)" }} />
 
         {/* Content */}
         <div className="relative z-10 text-center max-w-md">
           {/* Logo mark */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6"
-            style={{ background: "linear-gradient(135deg, #B76E79 0%, #C4956A 100%)" }}>
+            style={{ background: "linear-gradient(135deg, #111111 0%, #444444 100%)" }}>
             <Scissors className="w-10 h-10 text-white" strokeWidth={1.5} />
           </div>
 
@@ -91,12 +91,12 @@ function LoginContent() {
             Lumi
           </h1>
           <p className="text-lg mb-1"
-            style={{ color: "#D4A0A7" }}>
+            style={{ color: "#888888" }}>
             Management Suite
           </p>
 
           <div className="w-16 h-0.5 mx-auto my-6 rounded-full"
-            style={{ background: "linear-gradient(90deg, #B76E79, #C4956A)" }} />
+            style={{ background: "linear-gradient(90deg, #111111, #444444)" }} />
 
           <p className="text-sm leading-relaxed"
             style={{ color: "#9A7A80" }}>
@@ -115,7 +115,7 @@ function LoginContent() {
             ].map((feat) => (
               <div key={feat} className="flex items-center gap-3">
                 <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ background: "#B76E79" }} />
+                  style={{ background: "#111111" }} />
                 <span className="text-sm" style={{ color: "#9A7A80" }}>{feat}</span>
               </div>
             ))}
@@ -139,7 +139,7 @@ function LoginContent() {
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #B76E79, #C4956A)" }}>
+              style={{ background: "linear-gradient(135deg, #111111, #444444)" }}>
               <Scissors className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
             <div>

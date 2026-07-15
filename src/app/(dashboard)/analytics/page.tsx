@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center h-64 gap-3">
-      <Loader2 className="w-7 h-7 animate-spin" style={{ color: "#B76E79" }} />
+      <Loader2 className="w-7 h-7 animate-spin" style={{ color: "#111111" }} />
       <p className="text-sm text-muted-foreground">Crunching the numbers…</p>
     </div>
   );
@@ -66,7 +66,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpiCards.map(s => (
           <div key={s.label} className="card-luxury p-4">
-            <s.icon className="w-5 h-5 mb-2" style={{ color:"#B76E79" }} />
+            <s.icon className="w-5 h-5 mb-2" style={{ color:"#111111" }} />
             <p className="text-xl font-display font-bold text-foreground">{s.value}</p>
             <p className="text-xs font-semibold text-foreground mt-1">{s.label}</p>
             <p className="text-[10px] text-muted-foreground">{s.desc}</p>
@@ -140,7 +140,7 @@ export default function AnalyticsPage() {
                     <div className="rounded-l-md" title={`Retained: ${m.retained}`}
                       style={{ width:`${(m.retained/total)*100}%`, background:"#10B981" }} />
                     <div title={`New: ${m.new}`}
-                      style={{ width:`${(m.new/total)*100}%`, background:"#B76E79" }} />
+                      style={{ width:`${(m.new/total)*100}%`, background:"#111111" }} />
                     <div className="rounded-r-md" title={`Churned: ${m.churned}`}
                       style={{ width:`${(m.churned/total)*100}%`, background:"#F3E8EB" }} />
                   </div>
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
             })}
           </div>
           <div className="flex gap-4 mt-4">
-            {[{color:"#10B981",label:"Retained"},{color:"#B76E79",label:"New"},{color:"#F3E8EB",label:"Churned"}].map(l => (
+            {[{color:"#10B981",label:"Retained"},{color:"#111111",label:"New"},{color:"#F3E8EB",label:"Churned"}].map(l => (
               <div key={l.label} className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ background:l.color, border:l.color==="#F3E8EB"?"1px solid #E5DDE0":"none" }} />
                 <p className="text-[10px] text-muted-foreground">{l.label}</p>
@@ -186,14 +186,14 @@ export default function AnalyticsPage() {
                 <td>
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                      style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                      style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                       {s.name.split(" ").map(n=>n[0]).join("")}
                     </div>
                     <p className="text-sm font-semibold text-foreground">{s.name}</p>
                   </div>
                 </td>
                 <td><p className="text-sm text-foreground">{s.appts}</p></td>
-                <td><p className="text-sm font-bold" style={{ color:"#B76E79" }}>₹{s.revenue.toLocaleString("en-IN")}</p></td>
+                <td><p className="text-sm font-bold" style={{ color:"#111111" }}>₹{s.revenue.toLocaleString("en-IN")}</p></td>
                 <td>
                   {s.avgRating !== null ? (
                     <div className="flex items-center gap-1">
@@ -205,7 +205,7 @@ export default function AnalyticsPage() {
                 <td>
                   <div className="flex items-center gap-2">
                     <div className="w-16 h-1.5 bg-ivory-200 rounded-full">
-                      <div className="h-1.5 rounded-full" style={{ width:`${s.repeatRate}%`, background:"#B76E79" }} />
+                      <div className="h-1.5 rounded-full" style={{ width:`${s.repeatRate}%`, background:"#111111" }} />
                     </div>
                     <p className="text-xs font-bold text-foreground">{s.repeatRate}%</p>
                   </div>

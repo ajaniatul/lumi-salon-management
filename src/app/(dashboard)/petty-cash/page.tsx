@@ -132,7 +132,7 @@ export default function PettyCashPage() {
         <div className="card-luxury p-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: "rgba(183,110,121,0.10)" }}>
-              <BookOpen className="w-3.5 h-3.5" style={{ color: "#B76E79" }} />
+              <BookOpen className="w-3.5 h-3.5" style={{ color: "#111111" }} />
             </div>
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Opening Balance</p>
           </div>
@@ -162,7 +162,7 @@ export default function PettyCashPage() {
         <div className="card-luxury p-4">
           <div className="flex items-center gap-2 mb-1">
             <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: "rgba(196,149,106,0.12)" }}>
-              <Wallet className="w-3.5 h-3.5" style={{ color: "#C4956A" }} />
+              <Wallet className="w-3.5 h-3.5" style={{ color: "#444444" }} />
             </div>
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Closing Balance</p>
           </div>
@@ -175,7 +175,7 @@ export default function PettyCashPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading ledger…</p>
         </div>
       ) : (

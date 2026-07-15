@@ -167,7 +167,7 @@ export default function ServicesPage() {
       {/* ── Service grid ── */}
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading services…</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -195,7 +195,7 @@ export default function ServicesPage() {
                     <Tag className="w-3.5 h-3.5" />GST {s.gst}%
                   </span>
                 </div>
-                <p className="text-base font-display font-bold" style={{ color: "#B76E79" }}>
+                <p className="text-base font-display font-bold" style={{ color: "#111111" }}>
                   ₹{s.price.toLocaleString("en-IN")}
                 </p>
               </div>

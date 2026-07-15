@@ -65,7 +65,7 @@ export function AppointmentsWidget({ appointments, loading = false }: Appointmen
         <Link
           href="/appointments"
           className="flex items-center gap-1 text-xs font-medium hover:underline"
-          style={{ color: "#B76E79" }}
+          style={{ color: "#111111" }}
         >
           View all
           <ChevronRight className="w-3.5 h-3.5" />
@@ -77,7 +77,7 @@ export function AppointmentsWidget({ appointments, loading = false }: Appointmen
         <div className="flex flex-col items-center justify-center py-10 text-center">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
             style={{ background: "rgba(183,110,121,0.08)" }}>
-            <Clock className="w-6 h-6" style={{ color: "#D4A0A7" }} />
+            <Clock className="w-6 h-6" style={{ color: "#888888" }} />
           </div>
           <p className="text-sm font-medium text-foreground">No appointments today</p>
           <p className="text-xs text-muted-foreground mt-1">

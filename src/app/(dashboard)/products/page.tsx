@@ -171,7 +171,7 @@ export default function ProductsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading products…</p>
         </div>
       ) : (
@@ -216,7 +216,7 @@ export default function ProductsPage() {
                       <p className="text-xs text-muted-foreground mt-0.5">{p.brand || "—"} · {p.categoryLabel}</p>
                     </div>
                     <div className="text-right flex-shrink-0 ml-2">
-                      <p className="text-sm font-bold" style={{ color: "#B76E79" }}>₹{p.price.toLocaleString("en-IN")}</p>
+                      <p className="text-sm font-bold" style={{ color: "#111111" }}>₹{p.price.toLocaleString("en-IN")}</p>
                       <p className={cn("text-[10px] mt-0.5", p.stock <= p.minStock ? "text-red-500 font-semibold" : "text-muted-foreground")}>
                         {p.stock} {p.unit}s left
                       </p>
@@ -250,7 +250,7 @@ export default function ProductsPage() {
 
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { label: "Sale Price", value: `₹${prod.price.toLocaleString("en-IN")}`, color: "#B76E79" },
+                    { label: "Sale Price", value: `₹${prod.price.toLocaleString("en-IN")}`, color: "#111111" },
                     { label: "Cost Price", value: `₹${prod.costPrice.toLocaleString("en-IN")}`, color: "#6B7280" },
                     { label: "MRP",        value: prod.mrp ? `₹${prod.mrp.toLocaleString("en-IN")}` : "—", color: "#6B7280" },
                   ].map(v => (

@@ -149,7 +149,7 @@ export default function StaffPage() {
                 className={cn("px-3 py-2 text-xs font-semibold transition-all",
                   statusFilter === f ? "text-white" : "bg-white text-muted-foreground hover:bg-ivory-50"
                 )}
-                style={statusFilter === f ? { background: f === "INACTIVE" ? "#6B7280" : "#B76E79" } : {}}>
+                style={statusFilter === f ? { background: f === "INACTIVE" ? "#6B7280" : "#111111" } : {}}>
                 {f === "ALL" ? "All" : f === "ACTIVE" ? "Active" : "Inactive"}
               </button>
             ))}
@@ -163,7 +163,7 @@ export default function StaffPage() {
       {/* ── Staff grid ── */}
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color:"#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color:"#111111" }} />
           <p className="text-sm text-muted-foreground">Loading staff…</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -177,7 +177,7 @@ export default function StaffPage() {
               className="card-luxury p-5 text-left hover:shadow-luxury hover:-translate-y-0.5 transition-all group cursor-pointer">
               <div className="flex items-start gap-4 mb-4">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 group-hover:scale-105 transition-transform"
-                  style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                  style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                   {s.initials}
                 </div>
                 <div className="flex-1 min-w-0">

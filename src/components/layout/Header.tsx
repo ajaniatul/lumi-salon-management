@@ -66,7 +66,7 @@ const ACTION_GROUPS = ["Bookings","Finance","Stock","Team"] as const;
 const NOTIFICATIONS = [
   { icon: AlertTriangle, color: "#EF4444", title: "Low stock: Lakme Eyeconic Kajal", desc: "Only 3 left (min 10). Reorder soon.", href: "/inventory" },
   { icon: Receipt,       color: "#F59E0B", title: "3 invoices pending payment", desc: "₹10,000 outstanding across customers.", href: "/billing" },
-  { icon: CreditCard,    color: "#B76E79", title: "Membership expiring soon", desc: "Anjali Mehta's Gold plan expires in 18 days.", href: "/memberships" },
+  { icon: CreditCard,    color: "#111111", title: "Membership expiring soon", desc: "Anjali Mehta's Gold plan expires in 18 days.", href: "/memberships" },
 ];
 
 type SearchResult = {
@@ -274,7 +274,7 @@ export function Header({ userRole, userName }: HeaderProps) {
                         className="w-full text-left flex items-center gap-3 px-5 py-2.5 hover:bg-ivory-100 transition-colors"
                       >
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(183,110,121,0.1)" }}>
-                          <Icon className="w-4 h-4" style={{ color: "#B76E79" }} />
+                          <Icon className="w-4 h-4" style={{ color: "#111111" }} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{r.label}</p>

@@ -64,7 +64,7 @@ function InvoiceViewer() {
         </div>
         <div style={{ display:"flex", gap:"8px" }}>
           <button onClick={openPrint}
-            style={{ display:"flex", alignItems:"center", gap:"6px", padding:"8px 18px", borderRadius:"10px", background:"linear-gradient(135deg,#B76E79,#C4956A)", color:"white", fontSize:"12px", fontWeight:700, border:"none", cursor:"pointer" }}>
+            style={{ display:"flex", alignItems:"center", gap:"6px", padding:"8px 18px", borderRadius:"10px", background:"linear-gradient(135deg,#111111,#444444)", color:"white", fontSize:"12px", fontWeight:700, border:"none", cursor:"pointer" }}>
             <Printer style={{ width:"14px", height:"14px" }} />
             Print / Save as PDF
           </button>
@@ -76,7 +76,7 @@ function InvoiceViewer() {
         <div style={{ width:"210mm", minHeight:"297mm", background:"white", boxShadow:"0 32px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(183,110,121,0.2)", display:"flex", flexDirection:"column" }}>
 
           {/* Header */}
-          <div style={{ background:"linear-gradient(135deg,#2D1B1F 0%,#B76E79 55%,#C4956A 100%)", padding:"36px 44px 30px" }}>
+          <div style={{ background:"linear-gradient(135deg,#0a0a0a 0%,#333333 55%,#555555 100%)", padding:"36px 44px 30px" }}>
             <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:"8px", marginBottom:"0px" }}>
               {data.brandLogo ? (
                 <img src={data.brandLogo} style={{ height:"150px", maxWidth:"350px", objectFit:"contain", position:"relative", left:"-48px", marginBottom:"-25px" }} alt="Logo" />
@@ -94,7 +94,7 @@ function InvoiceViewer() {
           </div>
 
           {/* Meta bar */}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 44px", background:"#FCF5F6", borderBottom:"1px solid #EDD0D4" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 44px", background:"#fafafa", borderBottom:"1px solid #e5e5e5" }}>
             {[{ lbl:"Invoice No.", val:data.invoiceNo }, { lbl:"Date", val:data.date }].map(m => (
               <div key={m.lbl}>
                 <p style={{ fontSize:"7.5px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.18em", color:"#9A7A80", marginBottom:"3px" }}>{m.lbl}</p>
@@ -110,7 +110,7 @@ function InvoiceViewer() {
           {/* Body */}
           <div style={{ padding:"30px 44px", flex:1 }}>
             {/* Bill To */}
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"26px", paddingBottom:"22px", borderBottom:"1px solid #EDD0D4" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"26px", paddingBottom:"22px", borderBottom:"1px solid #e5e5e5" }}>
               <div>
                 <p style={{ fontSize:"7.5px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.15em", color:"#9A7A80", marginBottom:"5px" }}>Bill To</p>
                 <p style={{ fontSize:"15px", fontWeight:700, color:"#1a0f12", marginBottom:"2px" }}>{data.customer}</p>
@@ -126,7 +126,7 @@ function InvoiceViewer() {
             </div>
 
             {/* Items header */}
-            <div style={{ display:"flex", justifyContent:"space-between", paddingBottom:"8px", borderTop:"1px solid #EDD0D4", borderBottom:"2px solid #EDD0D4", marginBottom:"4px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", paddingBottom:"8px", borderTop:"1px solid #e5e5e5", borderBottom:"2px solid #e5e5e5", marginBottom:"4px" }}>
               {["Description","Amount"].map(h => (
                 <span key={h} style={{ fontSize:"8px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.15em", color:"#9A7A80" }}>{h}</span>
               ))}
@@ -145,7 +145,7 @@ function InvoiceViewer() {
             ))}
 
             {/* Totals */}
-            <div style={{ borderTop:"1px solid #EDD0D4", marginTop:"4px" }}>
+            <div style={{ borderTop:"1px solid #e5e5e5", marginTop:"4px" }}>
               {[
                 { label:"Subtotal", value:`Rs.${data.subtotal.toLocaleString("en-IN")}`, color:"#6B7280" },
                 ...(discountAmt > 0 ? [{ label:`Discount${data.discountLabel ? ` (${data.discountLabel})` : ""}${data.discountNote ? ` — ${data.discountNote}` : ""}`, value:`− Rs.${discountAmt.toLocaleString("en-IN")}`, color:"#059669" }] : []),
@@ -157,9 +157,9 @@ function InvoiceViewer() {
                   <span style={{ fontSize:"12px", fontWeight:600, color:r.color }}>{r.value}</span>
                 </div>
               ))}
-              <div style={{ display:"flex", justifyContent:"space-between", padding:"12px 0", borderTop:"2.5px solid #B76E79", marginTop:"4px" }}>
-                <span style={{ fontSize:"17px", fontWeight:800, color:"#B76E79" }}>Grand Total</span>
-                <span style={{ fontSize:"17px", fontWeight:800, color:"#B76E79" }}>Rs.{data.total.toLocaleString("en-IN")}</span>
+              <div style={{ display:"flex", justifyContent:"space-between", padding:"12px 0", borderTop:"2.5px solid #111111", marginTop:"4px" }}>
+                <span style={{ fontSize:"17px", fontWeight:800, color:"#111111" }}>Grand Total</span>
+                <span style={{ fontSize:"17px", fontWeight:800, color:"#111111" }}>Rs.{data.total.toLocaleString("en-IN")}</span>
               </div>
             </div>
 
@@ -171,8 +171,8 @@ function InvoiceViewer() {
           </div>
 
           {/* Footer */}
-          <div style={{ background:"#FCF5F6", borderTop:"1px solid #EDD0D4", padding:"18px 44px", textAlign:"center" as const }}>
-            <p style={{ fontSize:"13px", fontWeight:800, color:"#B76E79", marginBottom:"6px" }}>Thank you for visiting {data.brandName || "Lumi"}!</p>
+          <div style={{ background:"#fafafa", borderTop:"1px solid #e5e5e5", padding:"18px 44px", textAlign:"center" as const }}>
+            <p style={{ fontSize:"13px", fontWeight:800, color:"#111111", marginBottom:"6px" }}>Thank you for visiting {data.brandName || "Lumi"}!</p>
             <p style={{ fontSize:"9.5px", color:"#9A7A80", lineHeight:"1.7" }}>
               This is a computer-generated invoice and does not require a signature.<br />
               For queries, reach us at {data.brandPhone || "022-12345678"} or {data.brandEmail || "hello@lumisalon.in"}

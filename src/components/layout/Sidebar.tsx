@@ -115,7 +115,7 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
         collapsed ? "w-[70px]" : "w-[240px]"
       )}
       style={{
-        background: "linear-gradient(180deg, #2D1B1F 0%, #1A0F12 100%)",
+        background: "linear-gradient(180deg, #0a0a0a 0%, #1A0F12 100%)",
       }}
     >
       {/* ── Logo ── */}
@@ -128,7 +128,7 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
           {!collapsed && (
             <div>
               <p className="text-white font-display font-bold text-sm leading-none tracking-wide">{brandName || "Lumi"}</p>
-              <p className="text-[9px] font-semibold mt-0.5 tracking-widest uppercase" style={{ color:"#C4956A" }}>{brandTagline || "Beauty Lounge"}</p>
+              <p className="text-[9px] font-semibold mt-0.5 tracking-widest uppercase" style={{ color:"#444444" }}>{brandTagline || "Beauty Lounge"}</p>
             </div>
           )}
         </div>
@@ -137,13 +137,13 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
           className={cn(
             "flex items-center justify-center transition-all z-50",
             collapsed
-              ? "absolute -right-3 top-5 w-6 h-6 rounded-full border border-white/10 bg-[#2D1B1F] shadow-lg hover:bg-[#3d252a] text-white"
+              ? "absolute -right-3 top-5 w-6 h-6 rounded-full border border-white/10 bg-[#0a0a0a] shadow-lg hover:bg-[#3d252a] text-white"
               : "p-1 rounded-lg hover:bg-white/5 text-[#5A3A40]"
           )}
           style={collapsed ? {} : { color: "#5A3A40" }}
         >
           {collapsed
-            ? <ChevronRight className="w-3.5 h-3.5" style={{ color: "#C4956A" }} />
+            ? <ChevronRight className="w-3.5 h-3.5" style={{ color: "#444444" }} />
             : <ChevronLeft className="w-4 h-4" />
           }
         </button>
@@ -187,7 +187,7 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
                       >
                         <item.icon
                           className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")}
-                          style={{ color: active ? "#D4A0A7" : "#6A4550" }}
+                          style={{ color: active ? "#888888" : "#6A4550" }}
                         />
                         {!collapsed && (
                           <span className="text-sm font-medium">
@@ -196,7 +196,7 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
                         )}
                         {active && !collapsed && (
                           <div className="ml-auto w-1.5 h-1.5 rounded-full"
-                            style={{ background: "#B76E79" }} />
+                            style={{ background: "#111111" }} />
                         )}
                       </Link>
                     </li>
@@ -233,7 +233,7 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
           collapsed ? "justify-center p-2" : "gap-3 px-3 py-3"
         )} style={{ background: "rgba(255,255,255,0.03)" }}>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-semibold text-white"
-            style={{ background: "linear-gradient(135deg, #B76E79, #C4956A)" }}>
+            style={{ background: "linear-gradient(135deg, #111111, #444444)" }}>
             {userAvatar
               ? <img src={userAvatar} className="w-8 h-8 rounded-lg object-cover" alt={userName} />
               : userName.charAt(0).toUpperCase()

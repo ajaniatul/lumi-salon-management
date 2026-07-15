@@ -167,7 +167,7 @@ export default function PurchasesPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading purchases…</p>
         </div>
       ) : purchases.length === 0 ? (
@@ -203,7 +203,7 @@ export default function PurchasesPage() {
                   <p className="text-xs text-muted-foreground mt-0.5">{p.purchaseNumber} · {p.date}</p>
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs text-muted-foreground">{p.items.length} item{p.items.length > 1 ? "s" : ""}</p>
-                    <p className="text-sm font-bold" style={{ color: "#B76E79" }}>₹{Math.round(p.total).toLocaleString("en-IN")}</p>
+                    <p className="text-sm font-bold" style={{ color: "#111111" }}>₹{Math.round(p.total).toLocaleString("en-IN")}</p>
                   </div>
                   {p.due > 0 && <p className="text-xs text-red-500 mt-1">Due: ₹{Math.round(p.due).toLocaleString("en-IN")}</p>}
                 </button>
@@ -265,7 +265,7 @@ export default function PurchasesPage() {
                   </div>
                   <div className="border-t border-ivory-300 pt-2 flex justify-between font-bold">
                     <span>Total Invoice</span>
-                    <span style={{ color: "#B76E79" }}>₹{Math.round(purch.total).toLocaleString("en-IN")}</span>
+                    <span style={{ color: "#111111" }}>₹{Math.round(purch.total).toLocaleString("en-IN")}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-emerald-600">Amount Paid</span>
@@ -367,7 +367,7 @@ export default function PurchasesPage() {
                   ))}
                 </div>
                 {liveTotal > 0 && (
-                  <p className="text-xs font-bold text-right mt-2" style={{ color: "#B76E79" }}>
+                  <p className="text-xs font-bold text-right mt-2" style={{ color: "#111111" }}>
                     Grand Total: ₹{Math.round(liveTotal).toLocaleString("en-IN")}
                   </p>
                 )}

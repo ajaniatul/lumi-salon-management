@@ -123,7 +123,7 @@ export default function ExpensesPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading expenses…</p>
         </div>
       ) : expenses.length === 0 ? (
@@ -147,7 +147,7 @@ export default function ExpensesPage() {
                       <span className="text-sm font-bold text-foreground">₹{Math.round(c.total).toLocaleString("en-IN")}</span>
                     </div>
                     <div className="h-1.5 bg-ivory-200 rounded-full">
-                      <div className="h-1.5 rounded-full" style={{ width: `${(c.total / totalSpend) * 100}%`, background: "#B76E79" }} />
+                      <div className="h-1.5 rounded-full" style={{ width: `${(c.total / totalSpend) * 100}%`, background: "#111111" }} />
                     </div>
                   </div>
                 ))}
@@ -181,7 +181,7 @@ export default function ExpensesPage() {
                   )}>
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-foreground truncate flex-1 mr-2">{e.name}</p>
-                    <p className="text-sm font-bold flex-shrink-0" style={{ color: "#B76E79" }}>₹{Math.round(e.total).toLocaleString("en-IN")}</p>
+                    <p className="text-sm font-bold flex-shrink-0" style={{ color: "#111111" }}>₹{Math.round(e.total).toLocaleString("en-IN")}</p>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={cn("badge text-[10px]", CATS[e.category]?.color)}>{CATS[e.category]?.label ?? e.category}</span>
@@ -223,7 +223,7 @@ export default function ExpensesPage() {
                     )}
                     <div className="border-t border-ivory-300 pt-2 flex justify-between font-bold">
                       <span>Total Paid</span>
-                      <span style={{ color: "#B76E79" }}>₹{Math.round(exp.total).toLocaleString("en-IN")}</span>
+                      <span style={{ color: "#111111" }}>₹{Math.round(exp.total).toLocaleString("en-IN")}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Payment Method</span>
@@ -307,7 +307,7 @@ export default function ExpensesPage() {
                   placeholder="Additional details…" className={iCls + " resize-none"} />
               </div>
               {form.amount && (
-                <p className="text-xs font-bold text-right" style={{ color: "#B76E79" }}>
+                <p className="text-xs font-bold text-right" style={{ color: "#111111" }}>
                   Total: ₹{(Number(form.amount) + Number(form.gst || 0)).toLocaleString("en-IN")}
                 </p>
               )}

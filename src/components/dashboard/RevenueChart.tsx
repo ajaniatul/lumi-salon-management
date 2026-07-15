@@ -84,7 +84,7 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
               className="text-xs px-3 py-1.5 rounded-lg transition-all duration-150 font-medium capitalize"
               style={{
                 background: view === v ? "#fff" : "transparent",
-                color: view === v ? "#B76E79" : "#9CA3AF",
+                color: view === v ? "#111111" : "#9CA3AF",
                 boxShadow: view === v ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
               }}
             >
@@ -99,12 +99,12 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
         <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%"  stopColor="#B76E79" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#B76E79" stopOpacity={0} />
+              <stop offset="5%"  stopColor="#111111" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#111111" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="apptGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%"  stopColor="#C4956A" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#C4956A" stopOpacity={0} />
+              <stop offset="5%"  stopColor="#444444" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#444444" stopOpacity={0} />
             </linearGradient>
           </defs>
 
@@ -131,11 +131,11 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
             <Area
               type="monotone"
               dataKey="revenue"
-              stroke="#B76E79"
+              stroke="#111111"
               strokeWidth={2}
               fill="url(#revenueGrad)"
               dot={false}
-              activeDot={{ r: 4, fill: "#B76E79", strokeWidth: 0 }}
+              activeDot={{ r: 4, fill: "#111111", strokeWidth: 0 }}
             />
           )}
 
@@ -143,11 +143,11 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
             <Area
               type="monotone"
               dataKey="appointments"
-              stroke="#C4956A"
+              stroke="#444444"
               strokeWidth={2}
               fill="url(#apptGrad)"
               dot={false}
-              activeDot={{ r: 4, fill: "#C4956A", strokeWidth: 0 }}
+              activeDot={{ r: 4, fill: "#444444", strokeWidth: 0 }}
             />
           )}
         </AreaChart>

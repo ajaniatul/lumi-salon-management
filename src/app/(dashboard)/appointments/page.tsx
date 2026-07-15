@@ -43,7 +43,7 @@ function borderForSlot(i: number) {
 // ─── Static config ──────────────────────────────────────────────────────────
 // Column colours for staff loaded from the database (cycled by index)
 const STAFF_PALETTE = [
-  { color:"#B76E79", grad:"linear-gradient(135deg,#B76E79,#C4956A)" },
+  { color:"#111111", grad:"linear-gradient(135deg,#111111,#444444)" },
   { color:"#7C3AED", grad:"linear-gradient(135deg,#7C3AED,#A78BFA)" },
   { color:"#0369A1", grad:"linear-gradient(135deg,#0369A1,#38BDF8)" },
   { color:"#047857", grad:"linear-gradient(135deg,#047857,#34D399)" },
@@ -594,7 +594,7 @@ export default function AppointmentsPage() {
                           isToday && !isSel ? "font-bold"             : "",
                           !isSel  ? "hover:bg-ivory-100"              : "",
                         )}
-                        style={isSel ? { background:"#B76E79", color:"#fff" } : isToday ? { color:"#B76E79" } : {}}
+                        style={isSel ? { background:"#111111", color:"#fff" } : isToday ? { color:"#111111" } : {}}
                       >
                         {day}
                       </button>
@@ -606,7 +606,7 @@ export default function AppointmentsPage() {
                   <button
                     onClick={() => { setSelectedDate(new Date()); setShowCal(false); }}
                     className="w-full text-xs font-semibold py-1.5 rounded-lg hover:bg-ivory-100 transition-colors text-center"
-                    style={{ color:"#B76E79" }}>
+                    style={{ color:"#111111" }}>
                     Today
                   </button>
                 </div>
@@ -624,7 +624,7 @@ export default function AppointmentsPage() {
       {/* ── Compact summary + legend (single slim row, keeps the grid tall) ── */}
       <div className="flex items-center gap-2 flex-wrap">
         {[
-          { label:"Total",       value:counts.total,      color:"#B76E79" },
+          { label:"Total",       value:counts.total,      color:"#111111" },
           { label:"In Progress", value:counts.inProgress, color:"#10B981" },
           { label:"Confirmed",   value:counts.confirmed,  color:"#3B82F6" },
           { label:"Waiting",     value:counts.waiting,    color:"#F59E0B" },
@@ -762,7 +762,7 @@ export default function AppointmentsPage() {
                       style={{
                         left:  hSlot * SLOT_W,
                         top:   "50%", transform: "translateY(-50%)",
-                        background: "linear-gradient(135deg,#B76E79,#C4956A)",
+                        background: "linear-gradient(135deg,#111111,#444444)",
                       }}>
                       <ClipboardPaste className="w-3 h-3" />
                       Paste {copiedAppt.customer}
@@ -944,7 +944,7 @@ export default function AppointmentsPage() {
             icon: <Receipt className="w-3.5 h-3.5" />, label: "Bill Customer",
             action: () => { setBillingAppt(appt); setContextMenu(null); },
             disabled: !!appt.invoiceNumber,
-            color: "#B76E79",
+            color: "#111111",
           },
           "sep",
           {
@@ -1016,7 +1016,7 @@ export default function AppointmentsPage() {
             <div className="px-5 py-4 border-b border-ivory-100" style={{ background:"linear-gradient(135deg,#FDF6F7,#FBF0F1)" }}>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white flex-shrink-0"
-                  style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                  style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                   <ClipboardPaste className="w-4 h-4" />
                 </div>
                 <div>
@@ -1046,7 +1046,7 @@ export default function AppointmentsPage() {
               >Cancel</button>
               <button
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white transition-colors hover:opacity-90"
-                style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}
+                style={{ background:"linear-gradient(135deg,#111111,#444444)" }}
                 onClick={() => { pasteAppt(pasteConfirm.staffId, pasteConfirm.slot); setPasteConfirm(null); }}
               >Paste Here</button>
             </div>
@@ -1063,7 +1063,7 @@ export default function AppointmentsPage() {
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden max-h-[92vh] flex flex-col">
 
               {/* Header */}
-              <div className="p-5 border-b border-ivory-200 flex-shrink-0" style={{ background:"linear-gradient(135deg,#2D1B1F,#1A0F12)" }}>
+              <div className="p-5 border-b border-ivory-200 flex-shrink-0" style={{ background:"linear-gradient(135deg,#0a0a0a,#1A0F12)" }}>
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-white font-display font-bold text-base">
@@ -1097,7 +1097,7 @@ export default function AppointmentsPage() {
                   {bookModal.editApptId ? (
                     <div className="flex items-center gap-2.5 p-3 rounded-xl bg-ivory-50 border border-ivory-200">
                       <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold"
-                        style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                        style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                         {form.customer.split(" ").map(n => n[0]).join("").slice(0,2)}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1113,7 +1113,7 @@ export default function AppointmentsPage() {
                       className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-colors",
                         form.customerMode === "existing" ? "text-white" : "text-muted-foreground hover:bg-ivory-100"
                       )}
-                      style={form.customerMode === "existing" ? { background:"#B76E79" } : {}}
+                      style={form.customerMode === "existing" ? { background:"#111111" } : {}}
                       onClick={() => setForm(p => ({ ...p, customerMode:"existing", customerId:"", customerSearch:"" }))}
                     >
                       <Users className="w-3.5 h-3.5" /> Existing Customer
@@ -1122,7 +1122,7 @@ export default function AppointmentsPage() {
                       className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-colors border-l border-ivory-300",
                         form.customerMode === "new" ? "text-white" : "text-muted-foreground hover:bg-ivory-100"
                       )}
-                      style={form.customerMode === "new" ? { background:"#B76E79" } : {}}
+                      style={form.customerMode === "new" ? { background:"#111111" } : {}}
                       onClick={() => setForm(p => ({ ...p, customerMode:"new", customerId:"" }))}
                     >
                       <UserPlus className="w-3.5 h-3.5" /> New Customer
@@ -1146,9 +1146,9 @@ export default function AppointmentsPage() {
                           );
                           return (
                             <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-xl overflow-hidden"
-                              style={{ boxShadow:"0 8px 30px rgba(183,110,121,0.18)", border:"1px solid #DFACB2", background:"#fff" }}>
+                              style={{ boxShadow:"0 8px 30px rgba(183,110,121,0.18)", border:"1px solid #d0d0d0", background:"#fff" }}>
                               {matches.length === 0 ? (
-                                <div className="px-4 py-3 text-sm text-center" style={{ color:"#9A5D67" }}>
+                                <div className="px-4 py-3 text-sm text-center" style={{ color:"#222222" }}>
                                   No customers found
                                 </div>
                               ) : matches.map(c => (
@@ -1159,15 +1159,15 @@ export default function AppointmentsPage() {
                                   onClick={() => setForm(p => ({ ...p, customerId: c.id, customerSearch: c.name }))}
                                   className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors"
                                   style={{
-                                    background: form.customerId === c.id ? "#FCF5F6" : "transparent",
-                                    borderBottom: "1px solid #F7E8EA",
+                                    background: form.customerId === c.id ? "#fafafa" : "transparent",
+                                    borderBottom: "1px solid #f0f0f0",
                                   }}
                                   onMouseEnter={e => { if (form.customerId !== c.id) (e.currentTarget as HTMLElement).style.background = "#FBF0F2"; }}
                                   onMouseLeave={e => { if (form.customerId !== c.id) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                                 >
                                   {/* Avatar */}
                                   <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold"
-                                    style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                                    style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                                     {c.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                                   </div>
                                   {/* Info */}
@@ -1180,7 +1180,7 @@ export default function AppointmentsPage() {
                                   {/* Checkmark */}
                                   {form.customerId === c.id && (
                                     <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px]"
-                                      style={{ background:"#B76E79" }}>✓</div>
+                                      style={{ background:"#111111" }}>✓</div>
                                   )}
                                 </button>
                               ))}
@@ -1364,7 +1364,7 @@ export default function AppointmentsPage() {
               <div className="p-5 border-t border-ivory-200 flex-shrink-0 space-y-2">
                 <button disabled={!canSubmit} onClick={submitBooking}
                   className="w-full py-3 rounded-xl font-bold text-white text-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                  style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                   {bookModal.editApptId ? "Save Changes" : "Book Appointment"}
                 </button>
                 <button onClick={() => setBookModal(null)}
@@ -1655,10 +1655,10 @@ export default function AppointmentsPage() {
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10 overflow-hidden flex flex-col">
 
               {/* Dark header */}
-              <div className="p-5 flex-shrink-0" style={{ background:"linear-gradient(135deg,#2D1B1F,#1A0F12)" }}>
+              <div className="p-5 flex-shrink-0" style={{ background:"linear-gradient(135deg,#0a0a0a,#1A0F12)" }}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background:"#B76E7930" }}>
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background:"#11111130" }}>
                       <Receipt className="w-4 h-4" style={{ color:"#E8C5CB" }} />
                     </div>
                     <div>
@@ -1700,10 +1700,10 @@ export default function AppointmentsPage() {
                 ) : payDone ? (
                   /* INVOICE VIEW */
                   <div className="p-4">
-                    <div className="rounded-2xl overflow-hidden border" style={{ borderColor:"#EDD0D4" }}>
+                    <div className="rounded-2xl overflow-hidden border" style={{ borderColor:"#e5e5e5" }}>
 
                       {/* Salon letterhead */}
-                      <div className="py-5 px-4 text-center flex flex-col items-center justify-center gap-1.5" style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                      <div className="py-5 px-4 text-center flex flex-col items-center justify-center gap-1.5" style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                         {settings?.logo ? (
                           <img src={settings.logo} className="h-24 max-w-[200px] object-contain" alt="Logo" />
                         ) : (
@@ -1719,7 +1719,7 @@ export default function AppointmentsPage() {
 
                       {/* Invoice meta bar */}
                       <div className="flex justify-between items-center px-4 py-2.5"
-                        style={{ background:"#FCF5F6", borderBottom:"1px solid #EDD0D4" }}>
+                        style={{ background:"#fafafa", borderBottom:"1px solid #e5e5e5" }}>
                         <div>
                           <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Invoice No.</p>
                           <p className="text-sm font-bold text-foreground">{currentInvNum}</p>
@@ -1752,7 +1752,7 @@ export default function AppointmentsPage() {
 
                         {/* Service row(s) */}
                         <div>
-                          <div className="grid grid-cols-12 pb-1.5 mb-2" style={{ borderBottom:"1.5px solid #EDD0D4" }}>
+                          <div className="grid grid-cols-12 pb-1.5 mb-2" style={{ borderBottom:"1.5px solid #e5e5e5" }}>
                             <p className="col-span-6 text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Service</p>
                             <p className="col-span-3 text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Time</p>
                             <p className="col-span-3 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</p>
@@ -1774,7 +1774,7 @@ export default function AppointmentsPage() {
                         </div>
 
                         {/* Tax breakdown */}
-                        <div className="space-y-1.5 pt-3" style={{ borderTop:"1px solid #EDD0D4" }}>
+                        <div className="space-y-1.5 pt-3" style={{ borderTop:"1px solid #e5e5e5" }}>
                           <div className="flex justify-between">
                             <span className="text-xs text-muted-foreground">Subtotal</span>
                             <span className="text-xs text-muted-foreground">Rs.{base.toLocaleString("en-IN")}</span>
@@ -1788,9 +1788,9 @@ export default function AppointmentsPage() {
                             <span className="text-xs text-muted-foreground">Rs.{sgst.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between items-center pt-2.5"
-                            style={{ borderTop:"2px solid #B76E79" }}>
+                            style={{ borderTop:"2px solid #111111" }}>
                             <span className="text-sm font-bold text-foreground">Total</span>
-                            <span className="text-lg font-display font-bold" style={{ color:"#B76E79" }}>
+                            <span className="text-lg font-display font-bold" style={{ color:"#111111" }}>
                               Rs.{total.toLocaleString("en-IN")}
                             </span>
                           </div>
@@ -1807,7 +1807,7 @@ export default function AppointmentsPage() {
 
                       {/* Footer */}
                       <div className="px-4 py-3 text-center"
-                        style={{ background:"#FCF5F6", borderTop:"1px solid #EDD0D4" }}>
+                        style={{ background:"#fafafa", borderTop:"1px solid #e5e5e5" }}>
                         <p className="text-[9px] text-muted-foreground font-medium">Thank you for visiting Lumi!</p>
                         <p className="text-[8px] text-muted-foreground mt-0.5">Queries: 022-12345678 - hello@lumisalon.in</p>
                       </div>
@@ -1845,12 +1845,12 @@ export default function AppointmentsPage() {
                       )}
                       <div className="flex gap-2">
                         <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold border"
-                          style={{ borderColor:"#EDD0D4", color:"#B76E79", background:"white" }}
+                          style={{ borderColor:"#e5e5e5", color:"#111111", background:"white" }}
                           onClick={() => setShowA4(true)}>
                           View A4 / Print
                         </button>
                         <button className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
-                          style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}
+                          style={{ background:"linear-gradient(135deg,#111111,#444444)" }}
                           onClick={closeAll}>
                           Done
                         </button>
@@ -1863,7 +1863,7 @@ export default function AppointmentsPage() {
                   <div className="p-5 space-y-4">
 
                     {/* Service summary */}
-                    <div className="p-3 rounded-xl" style={{ background:"#FCF5F6", border:"1px solid #EDD0D4" }}>
+                    <div className="p-3 rounded-xl" style={{ background:"#fafafa", border:"1px solid #e5e5e5" }}>
                       <p className="text-xs font-bold text-foreground">{billingAppt.service}</p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
                         {slotToTime(billingAppt.startSlot)} to {slotToTime(billingAppt.startSlot + billingAppt.durationSlots)} - {dur} min - {s.role}
@@ -1878,12 +1878,12 @@ export default function AppointmentsPage() {
                           <button key={rate} onClick={() => setGstRate(rate)}
                             className="py-2.5 rounded-xl border text-sm font-bold transition-all"
                             style={{
-                              borderColor: gstRate===rate ? "#B76E79" : "#EDD0D4",
-                              background:  gstRate===rate ? "#FCF5F6" : "white",
-                              color:       gstRate===rate ? "#B76E79" : "#9CA3AF",
+                              borderColor: gstRate===rate ? "#111111" : "#e5e5e5",
+                              background:  gstRate===rate ? "#fafafa" : "white",
+                              color:       gstRate===rate ? "#111111" : "#9CA3AF",
                             }}>
                             {rate}%{" "}
-                            <span className="text-[9px] font-normal" style={{ color:gstRate===rate?"#9A5D67":"#9CA3AF" }}>
+                            <span className="text-[9px] font-normal" style={{ color:gstRate===rate?"#222222":"#9CA3AF" }}>
                               {rate === 5 ? "(Reduced)" : "(Standard)"}
                             </span>
                           </button>
@@ -1894,15 +1894,15 @@ export default function AppointmentsPage() {
                     {/* Discount */}
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Discount (Optional)</p>
-                      <div className="p-3 rounded-xl space-y-2.5" style={{ background:"#FCF5F6", border:"1px solid #EDD0D4" }}>
+                      <div className="p-3 rounded-xl space-y-2.5" style={{ background:"#fafafa", border:"1px solid #e5e5e5" }}>
                         <div className="flex gap-2">
                           {([["PCT","% Off"],["FLAT","Rs. Off"]] as const).map(([v,l]) => (
                             <button key={v} onClick={() => { setDiscountType(v); setDiscountVal(""); }}
                               className="flex-1 py-2 rounded-xl text-xs font-semibold border transition-all"
                               style={{
-                                borderColor: discountType===v ? "#B76E79" : "#EDD0D4",
+                                borderColor: discountType===v ? "#111111" : "#e5e5e5",
                                 background:  discountType===v ? "#fff" : "transparent",
-                                color:       discountType===v ? "#B76E79" : "#9CA3AF",
+                                color:       discountType===v ? "#111111" : "#9CA3AF",
                               }}>
                               {l}
                             </button>
@@ -1965,9 +1965,9 @@ export default function AppointmentsPage() {
                         <span className="text-sm text-muted-foreground">SGST @ {halfGst}%</span>
                         <span className="text-sm font-semibold text-muted-foreground">Rs.{sgst.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between items-center pt-2" style={{ borderTop:"1.5px solid #EDD0D4" }}>
+                      <div className="flex justify-between items-center pt-2" style={{ borderTop:"1.5px solid #e5e5e5" }}>
                         <span className="text-sm font-bold text-foreground">Total Payable</span>
-                        <span className="text-lg font-display font-bold" style={{ color:"#B76E79" }}>Rs.{total.toLocaleString("en-IN")}</span>
+                        <span className="text-lg font-display font-bold" style={{ color:"#111111" }}>Rs.{total.toLocaleString("en-IN")}</span>
                       </div>
                     </div>
 
@@ -1979,9 +1979,9 @@ export default function AppointmentsPage() {
                           <button key={id} onClick={() => setPayMethod(id)}
                             className="flex flex-col items-center gap-1.5 py-2.5 rounded-xl border transition-all"
                             style={{
-                              borderColor: payMethod===id ? "#B76E79" : "#EDD0D4",
-                              background:  payMethod===id ? "#FCF5F6" : "white",
-                              color:       payMethod===id ? "#B76E79" : "#6B7280",
+                              borderColor: payMethod===id ? "#111111" : "#e5e5e5",
+                              background:  payMethod===id ? "#fafafa" : "white",
+                              color:       payMethod===id ? "#111111" : "#6B7280",
                             }}>
                             <Icon className="w-4 h-4" />
                             <span className="text-[10px] font-semibold">{label}</span>
@@ -1993,13 +1993,13 @@ export default function AppointmentsPage() {
                     {/* UPI QR */}
                     {payMethod === "UPI" && (
                       <div className="flex flex-col items-center gap-3 p-4 rounded-2xl"
-                        style={{ background:"#FCF5F6", border:"1px solid #EDD0D4" }}>
+                        style={{ background:"#fafafa", border:"1px solid #e5e5e5" }}>
                         <img src={qrSrc} alt="UPI QR" width={176} height={176}
-                          className="rounded-xl" style={{ border:"2px solid #EDD0D4" }} />
+                          className="rounded-xl" style={{ border:"2px solid #e5e5e5" }} />
                         <div className="text-center">
                           <p className="text-xs font-bold text-foreground">Scan to Pay Rs.{total.toLocaleString("en-IN")}</p>
                           <p className="text-[10px] text-muted-foreground mt-0.5">
-                            UPI ID: <span className="font-semibold" style={{ color:"#B76E79" }}>lumi@upi</span>
+                            UPI ID: <span className="font-semibold" style={{ color:"#111111" }}>lumi@upi</span>
                           </p>
                           <p className="text-[10px] text-muted-foreground">PhonePe - GPay - Paytm - BHIM</p>
                         </div>
@@ -2010,7 +2010,7 @@ export default function AppointmentsPage() {
                     {payMethod === "CARD" && (
                       <div className="space-y-3">
                         <div className="relative h-36 rounded-2xl p-4 flex flex-col justify-between overflow-hidden"
-                          style={{ background:"linear-gradient(135deg,#2D1B1F 0%,#B76E79 55%,#C4956A 100%)" }}>
+                          style={{ background:"linear-gradient(135deg,#0a0a0a 0%,#333333 55%,#555555 100%)" }}>
                           <div className="flex justify-between items-start">
                             <div className="w-8 h-5 rounded-sm"
                               style={{ background:"linear-gradient(135deg,#FFD700,#FFA500)", opacity:0.85 }} />
@@ -2070,7 +2070,7 @@ export default function AppointmentsPage() {
                     {/* Confirm */}
                     <button disabled={!cardValid} onClick={doProcess}
                       className="w-full py-3 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                      style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                       <Receipt className="w-4 h-4" />
                       {payMethod === "UPI"  ? `Paid via UPI - Rs.${total.toLocaleString("en-IN")}`  :
                        payMethod === "CARD" ? `Charge Card - Rs.${total.toLocaleString("en-IN")}` :

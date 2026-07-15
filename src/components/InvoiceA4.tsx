@@ -56,7 +56,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
 
   const itemRows = d.items.map(it => {
     const typeBadge = it.type === "Service"
-      ? `<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:999px;background:#FCE7EE;color:#B76E79;">SERVICE</span>`
+      ? `<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:999px;background:#FCE7EE;color:#111111;">SERVICE</span>`
       : `<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 7px;border-radius:999px;background:#FEF3C7;color:#92400E;">PRODUCT</span>`;
     const hsnLabel = it.type === "Service" ? "SAC" : "HSN";
     return `
@@ -98,33 +98,33 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:white;color:#1a0f12;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .page{width:210mm;min-height:297mm;background:white;display:flex;flex-direction:column;}
-  .hdr{background:linear-gradient(135deg,#2D1B1F 0%,#B76E79 55%,#C4956A 100%);padding:36px 44px 30px;}
+  .hdr{background:linear-gradient(135deg,#0a0a0a 0%,#333333 55%,#555555 100%);padding:36px 44px 30px;}
   .hdr-name{color:white;font-size:28px;font-weight:900;letter-spacing:0.1em;margin-bottom:4px;}
   .hdr-tag{color:rgba(255,255,255,.65);font-size:10px;letter-spacing:0.28em;text-transform:uppercase;margin-bottom:6px;}
   .hdr-kind{display:inline-block;color:rgba(255,255,255,0.9);font-size:9.5px;font-weight:700;letter-spacing:0.1em;border:1px solid rgba(255,255,255,0.25);padding:3px 10px;border-radius:999px;margin-bottom:12px;}
   .hdr-contact{color:rgba(255,255,255,.5);font-size:9.5px;line-height:1.6;}
-  .meta{display:flex;justify-content:space-between;align-items:center;padding:14px 44px;background:#FCF5F6;border-bottom:1px solid #EDD0D4;}
+  .meta{display:flex;justify-content:space-between;align-items:center;padding:14px 44px;background:#fafafa;border-bottom:1px solid #e5e5e5;}
   .meta-lbl{font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:#9A7A80;margin-bottom:3px;}
   .meta-val{font-size:14px;font-weight:700;color:#1a0f12;}
   .status-pill{display:inline-block;padding:5px 16px;border-radius:999px;font-size:10px;font-weight:700;color:${sColor};background:${sBg};}
   .body{padding:30px 44px;flex:1;}
-  .bill-row{display:flex;justify-content:space-between;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #EDD0D4;}
+  .bill-row{display:flex;justify-content:space-between;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #e5e5e5;}
   .bill-lbl{font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#9A7A80;margin-bottom:5px;}
   .bill-name{font-size:15px;font-weight:700;color:#1a0f12;margin-bottom:2px;}
   .bill-sub{font-size:11px;color:#6B7280;}
   table{width:100%;border-collapse:collapse;}
-  .th{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#9A7A80;padding:8px 0;border-top:1px solid #EDD0D4;border-bottom:2px solid #EDD0D4;}
+  .th{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;color:#9A7A80;padding:8px 0;border-top:1px solid #e5e5e5;border-bottom:2px solid #e5e5e5;}
   .th-r{text-align:right;}
   .th-c{text-align:center;}
   .totals tr td{padding:5px 0;font-size:12px;color:#6B7280;}
   .totals tr td:last-child{text-align:right;font-weight:600;}
-  .grand-total{border-top:2.5px solid #B76E79;margin-top:4px;}
-  .grand-total td{padding:12px 0!important;font-size:17px!important;font-weight:800!important;color:#B76E79!important;}
+  .grand-total{border-top:2.5px solid #111111;margin-top:4px;}
+  .grand-total td{padding:12px 0!important;font-size:17px!important;font-weight:800!important;color:#111111!important;}
   .grand-total td:last-child{text-align:right;}
   .pay-badge{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding:12px 18px;background:#D1FAE5;border:1px solid #A7F3D0;border-radius:10px;}
   .pay-badge span{font-size:12px;font-weight:700;color:#065F46;}
-  .ftr{background:#FCF5F6;border-top:1px solid #EDD0D4;padding:18px 44px;text-align:center;}
-  .ftr-title{font-size:13px;font-weight:800;color:#B76E79;margin-bottom:6px;}
+  .ftr{background:#fafafa;border-top:1px solid #e5e5e5;padding:18px 44px;text-align:center;}
+  .ftr-title{font-size:13px;font-weight:800;color:#111111;margin-bottom:6px;}
   .ftr-sub{font-size:9.5px;color:#9A7A80;line-height:1.7;}
   @media print{ html,body{width:210mm;} .no-print{display:none!important;} }
 </style>
@@ -196,7 +196,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
       <span>&#8377;${d.total.toLocaleString("en-IN")}</span>
     </div>
 
-    ${d.notes ? `<div style="margin-top:14px;padding:10px 14px;background:#FCF5F6;border-radius:8px;border-left:3px solid #B76E79;font-size:11px;color:#5A3A40;line-height:1.6;"><span style="font-weight:700;text-transform:uppercase;letter-spacing:0.08em;font-size:9px;color:#9A7A80;display:block;margin-bottom:3px;">Notes</span>${d.notes}</div>` : ""}
+    ${d.notes ? `<div style="margin-top:14px;padding:10px 14px;background:#fafafa;border-radius:8px;border-left:3px solid #111111;font-size:11px;color:#5A3A40;line-height:1.6;"><span style="font-weight:700;text-transform:uppercase;letter-spacing:0.08em;font-size:9px;color:#9A7A80;display:block;margin-bottom:3px;">Notes</span>${d.notes}</div>` : ""}
   </div>
 
   <div class="ftr">
@@ -241,7 +241,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
   };
 
   const discountAmt = data.discountAmt ?? 0;
-  const TH: React.CSSProperties = { fontSize:"8px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.15em", color:"#9A7A80", padding:"8px 0", borderTop:"1px solid #EDD0D4", borderBottom:"2px solid #EDD0D4" };
+  const TH: React.CSSProperties = { fontSize:"8px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.15em", color:"#9A7A80", padding:"8px 0", borderTop:"1px solid #e5e5e5", borderBottom:"2px solid #e5e5e5" };
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ background:"#0f0709" }}>
@@ -249,7 +249,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
       <div className="flex items-center justify-between px-6 py-3 flex-shrink-0"
         style={{ background:"rgba(45,27,31,0.9)", borderBottom:"1px solid rgba(183,110,121,0.3)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background:"#B76E7930" }}>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background:"#11111130" }}>
             <span className="text-xs" style={{ color:"#E8C5CB" }}>A4</span>
           </div>
           <div>
@@ -265,7 +265,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           </button>
           <button onClick={openPrint}
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90"
-            style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+            style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
             <Printer className="w-3.5 h-3.5" /> Print / Save PDF
           </button>
           <button onClick={onClose}
@@ -283,7 +283,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           display:"flex", flexDirection:"column",
         }}>
           {/* Header */}
-          <div style={{ background:"linear-gradient(135deg,#2D1B1F 0%,#B76E79 55%,#C4956A 100%)", padding:"36px 44px 30px", position:"relative", overflow:"hidden" }}>
+          <div style={{ background:"linear-gradient(135deg,#0a0a0a 0%,#333333 55%,#555555 100%)", padding:"36px 44px 30px", position:"relative", overflow:"hidden" }}>
             <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:"8px", marginBottom:"0px" }}>
               {data.brandLogo ? (
                 <img src={data.brandLogo} style={{ height:"150px", maxWidth:"350px", objectFit:"contain", position:"relative", left:"-48px", marginBottom:"-25px" }} alt="Logo" />
@@ -302,7 +302,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           </div>
 
           {/* Meta bar */}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 44px", background:"#FCF5F6", borderBottom:"1px solid #EDD0D4" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 44px", background:"#fafafa", borderBottom:"1px solid #e5e5e5" }}>
             {[{ lbl:"Invoice No.", val:data.invoiceNo }, { lbl:"Date", val:data.date }].map(m => (
               <div key={m.lbl}>
                 <p style={{ fontSize:"7.5px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.18em", color:"#9A7A80", marginBottom:"3px" }}>{m.lbl}</p>
@@ -318,7 +318,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           {/* Body */}
           <div style={{ padding:"30px 44px", flex:1 }}>
             {/* Bill To / Stylist */}
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"26px", paddingBottom:"22px", borderBottom:"1px solid #EDD0D4" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"26px", paddingBottom:"22px", borderBottom:"1px solid #e5e5e5" }}>
               <div>
                 <p style={{ fontSize:"7.5px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.15em", color:"#9A7A80", marginBottom:"5px" }}>Bill To</p>
                 <p style={{ fontSize:"15px", fontWeight:700, color:"#1a0f12", marginBottom:"2px" }}>{data.customer}</p>
@@ -351,7 +351,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
                       <span style={{
                         display:"inline-block", fontSize:"9px", fontWeight:700, padding:"1px 7px", borderRadius:"999px",
                         background: it.type==="Service" ? "#FCE7EE" : "#FEF3C7",
-                        color:       it.type==="Service" ? "#B76E79"  : "#92400E",
+                        color:       it.type==="Service" ? "#111111"  : "#92400E",
                       }}>{it.type.toUpperCase()}</span>
                     </td>
                     <td style={{ padding:"10px 0", borderBottom:"1px solid #F3E8EA", textAlign:"center", verticalAlign:"top", width:"20%" }}>
@@ -371,7 +371,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
             </table>
 
             {/* Totals */}
-            <div style={{ borderTop:"1px solid #EDD0D4", marginTop:"4px" }}>
+            <div style={{ borderTop:"1px solid #e5e5e5", marginTop:"4px" }}>
               {[
                 { label:`Subtotal`, val:`₹${data.subtotal.toLocaleString("en-IN")}` },
                 { label:`CGST @ ${data.halfGst}%`, val:`₹${data.cgst.toFixed(2)}` },
@@ -387,7 +387,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
                   <span>− ₹{data.discountAmt.toLocaleString("en-IN")}</span>
                 </div>
               )}
-              <div style={{ display:"flex", justifyContent:"space-between", padding:"12px 0 4px", fontSize:"17px", fontWeight:800, color:"#B76E79", borderTop:"2.5px solid #B76E79", marginTop:"4px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", padding:"12px 0 4px", fontSize:"17px", fontWeight:800, color:"#111111", borderTop:"2.5px solid #111111", marginTop:"4px" }}>
                 <span>Grand Total</span><span>₹{data.total.toLocaleString("en-IN")}</span>
               </div>
             </div>
@@ -399,7 +399,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
             </div>
 
             {data.notes && (
-              <div style={{ marginTop:"14px", padding:"10px 14px", background:"#FCF5F6", borderRadius:"8px", borderLeft:"3px solid #B76E79" }}>
+              <div style={{ marginTop:"14px", padding:"10px 14px", background:"#fafafa", borderRadius:"8px", borderLeft:"3px solid #111111" }}>
                 <span style={{ fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.08em", fontSize:"9px", color:"#9A7A80", display:"block", marginBottom:"3px" }}>Notes</span>
                                 <span style={{ fontSize:"11px", color:"#5A3A40", lineHeight:"1.6" }}>{data.notes}</span>
               </div>
@@ -407,8 +407,8 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           </div>
 
           {/* Footer */}
-          <div style={{ background:"#FCF5F6", borderTop:"1px solid #EDD0D4", padding:"18px 44px", textAlign:"center" as const }}>
-            <p style={{ fontSize:"13px", fontWeight:800, color:"#B76E79", marginBottom:"6px" }}>Thank you for visiting {data.brandName || "Lumi"}!</p>
+          <div style={{ background:"#fafafa", borderTop:"1px solid #e5e5e5", padding:"18px 44px", textAlign:"center" as const }}>
+            <p style={{ fontSize:"13px", fontWeight:800, color:"#111111", marginBottom:"6px" }}>Thank you for visiting {data.brandName || "Lumi"}!</p>
             <p style={{ fontSize:"9.5px", color:"#9A7A80", lineHeight:"1.7" }}>
               This is a computer-generated invoice and does not require a signature.<br />
               For queries, reach us at {data.brandPhone || "022-12345678"} or {data.brandEmail || "hello@lumisalon.in"}

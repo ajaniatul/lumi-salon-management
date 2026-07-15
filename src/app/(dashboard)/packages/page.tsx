@@ -183,7 +183,7 @@ export default function PackagesPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#B76E79" }} />
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#111111" }} />
           <p className="text-sm text-muted-foreground">Loading packages…</p>
         </div>
       ) : (
@@ -213,7 +213,7 @@ export default function PackagesPage() {
                             <span className="text-xs text-muted-foreground">{p.services.length} sessions</span>
                           </div>
                         </div>
-                        <p className="text-sm font-bold" style={{ color: "#B76E79" }}>₹{p.packagePrice.toLocaleString("en-IN")}</p>
+                        <p className="text-sm font-bold" style={{ color: "#111111" }}>₹{p.packagePrice.toLocaleString("en-IN")}</p>
                       </div>
                       {p.savings > 0 && <p className="text-xs text-emerald-600 mt-1">Save ₹{p.savings.toLocaleString("en-IN")} vs individual</p>}
                     </button>
@@ -257,7 +257,7 @@ export default function PackagesPage() {
                         )}
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Package Price</span>
-                          <span className="font-bold" style={{ color: "#B76E79" }}>₹{pkg.packagePrice.toLocaleString("en-IN")}</span>
+                          <span className="font-bold" style={{ color: "#111111" }}>₹{pkg.packagePrice.toLocaleString("en-IN")}</span>
                         </div>
                         {pkg.savings > 0 && (
                           <div className="flex justify-between text-sm">
@@ -287,7 +287,7 @@ export default function PackagesPage() {
           {tab === "customers" && (
             custLoading ? (
               <div className="flex items-center justify-center h-32 gap-3">
-                <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#B76E79" }} />
+                <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#111111" }} />
                 <p className="text-sm text-muted-foreground">Loading…</p>
               </div>
             ) : customerPkgs.length === 0 ? (
@@ -318,13 +318,13 @@ export default function PackagesPage() {
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <div className="w-20 h-2 bg-ivory-200 rounded-full">
-                                <div className="h-2 rounded-full" style={{ width: `${(cp.sessionsUsed / cp.sessionsTotal) * 100}%`, background: "#B76E79" }} />
+                                <div className="h-2 rounded-full" style={{ width: `${(cp.sessionsUsed / cp.sessionsTotal) * 100}%`, background: "#111111" }} />
                               </div>
                               <p className="text-xs text-muted-foreground">{cp.sessionsUsed}/{cp.sessionsTotal}</p>
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <p className="text-sm font-bold" style={{ color: "#B76E79" }}>
+                            <p className="text-sm font-bold" style={{ color: "#111111" }}>
                               {cp.remaining} session{cp.remaining !== 1 ? "s" : ""}
                             </p>
                           </td>

@@ -92,7 +92,7 @@ export default function StaffProfile({ params }: { params: { id: string } }) {
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center h-64 gap-3">
-      <Loader2 className="w-7 h-7 animate-spin" style={{ color: "#B76E79" }} />
+      <Loader2 className="w-7 h-7 animate-spin" style={{ color: "#111111" }} />
       <p className="text-sm text-muted-foreground">Loading staff profile…</p>
     </div>
   );
@@ -132,11 +132,11 @@ export default function StaffProfile({ params }: { params: { id: string } }) {
 
       {/* ── Hero ── */}
       <div className="card-luxury overflow-hidden">
-        <div className="h-20" style={{ background: "linear-gradient(135deg,#1B2A2D,#B76E79,#C4956A)" }} />
+        <div className="h-20" style={{ background: "linear-gradient(135deg,#1B2A2D,#111111,#444444)" }} />
         <div className="px-6 pb-5">
           <div className="flex items-end justify-between -mt-8 mb-4">
             <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-xl font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#B76E79,#C4956A)" }}>
+              style={{ background: "linear-gradient(135deg,#111111,#444444)" }}>
               {staff.initials}
             </div>
             <div className="flex items-center gap-2 mb-1">
@@ -197,7 +197,7 @@ export default function StaffProfile({ params }: { params: { id: string } }) {
           {/* KPI chips */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
             {[
-              { label: "This Month",     value: staff.thisMonth.appointments, sub: `${staff.thisMonth.completed} completed`, color: "#B76E79" },
+              { label: "This Month",     value: staff.thisMonth.appointments, sub: `${staff.thisMonth.completed} completed`, color: "#111111" },
               { label: "Revenue",        value: `Rs.${incl.toLocaleString("en-IN")}`, sub: "Incl. GST",                     color: "#047857" },
               { label: "Clients",        value: staff.thisMonth.clients,       sub: "Unique served",                        color: "#B45309" },
               { label: "Commission",     value: `Rs.${staff.thisMonth.commission.toLocaleString("en-IN")}`, sub: staff.commissionRate > 0 ? `${staff.commissionRate}% rate` : "Fixed salary", color: "#7C3AED" },
@@ -254,7 +254,7 @@ export default function StaffProfile({ params }: { params: { id: string } }) {
                     <p className="text-xs font-semibold text-foreground">
                       Commission {cs.service ? `on ${cs.service}` : `(${cs.type === "SERVICE" ? "all services" : "all products"})`}
                     </p>
-                    <p className="text-sm font-bold" style={{ color: "#B76E79" }}>{cs.rate}%</p>
+                    <p className="text-sm font-bold" style={{ color: "#111111" }}>{cs.rate}%</p>
                   </div>
                 ))
               ) : (
@@ -274,7 +274,7 @@ export default function StaffProfile({ params }: { params: { id: string } }) {
                 </div>
                 <div className="flex justify-between items-center p-3 bg-ivory-50 rounded-xl">
                   <p className="text-xs font-semibold text-foreground">Taxable (Excl. GST)</p>
-                  <p className="text-sm font-bold" style={{ color: "#B76E79" }}>Rs.{excl.toLocaleString("en-IN")}</p>
+                  <p className="text-sm font-bold" style={{ color: "#111111" }}>Rs.{excl.toLocaleString("en-IN")}</p>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-ivory-50 rounded-xl">
                   <p className="text-xs font-semibold text-foreground">GST @ 18%</p>
@@ -387,7 +387,7 @@ export default function StaffProfile({ params }: { params: { id: string } }) {
             <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-4">This Month Summary</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Appointments",  value: staff.thisMonth.appointments, color: "#B76E79" },
+                { label: "Appointments",  value: staff.thisMonth.appointments, color: "#111111" },
                 { label: "Revenue",       value: `Rs.${incl.toLocaleString("en-IN")}`, color: "#047857" },
                 { label: "Clients",       value: staff.thisMonth.clients, color: "#B45309" },
                 { label: "Commission",    value: `Rs.${staff.thisMonth.commission.toLocaleString("en-IN")}`, color: "#7C3AED" },
@@ -429,7 +429,7 @@ export default function StaffProfile({ params }: { params: { id: string } }) {
                       <tr key={i} className={cn("border-b border-ivory-100", i % 2 === 0 ? "" : "bg-ivory-50/40")}>
                         <td className="px-3 py-3 text-xs font-semibold text-foreground whitespace-nowrap">{c.month}</td>
                         <td className="px-3 py-3 text-xs text-foreground">Rs.{c.svcRevenue.toLocaleString("en-IN")}</td>
-                        <td className="px-3 py-3 text-xs font-semibold" style={{ color: "#B76E79" }}>Rs.{c.amount.toLocaleString("en-IN")}</td>
+                        <td className="px-3 py-3 text-xs font-semibold" style={{ color: "#111111" }}>Rs.{c.amount.toLocaleString("en-IN")}</td>
                         <td className="px-3 py-3 text-xs text-emerald-600">{c.bonus > 0 ? `Rs.${c.bonus.toLocaleString("en-IN")}` : "—"}</td>
                         <td className="px-3 py-3 text-xs font-bold text-foreground">Rs.{c.total.toLocaleString("en-IN")}</td>
                         <td className="px-3 py-3">

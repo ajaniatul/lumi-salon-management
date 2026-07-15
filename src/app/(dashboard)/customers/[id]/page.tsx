@@ -184,7 +184,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <Loader2 className="w-7 h-7 animate-spin" style={{ color:"#B76E79" }} />
+        <Loader2 className="w-7 h-7 animate-spin" style={{ color:"#111111" }} />
         <p className="text-sm text-muted-foreground">Loading customer profile…</p>
       </div>
     );
@@ -202,7 +202,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
 
   const completedAppts  = customer.appts.filter(a => a.status === "COMPLETED");
   const upcomingAppts   = customer.appts.filter(a => a.status !== "COMPLETED" && a.status !== "CANCELLED" && a.status !== "NO_SHOW");
-  const tierGrad        = customer.membership ? TIER_GRAD[customer.membership] : "linear-gradient(135deg,#B76E79,#C4956A)";
+  const tierGrad        = customer.membership ? TIER_GRAD[customer.membership] : "linear-gradient(135deg,#111111,#444444)";
 
   const TABS: { id: Tab; label: string; icon: typeof Calendar }[] = [
     { id:"overview",     label:"Overview",     icon:ClipboardList },
@@ -227,7 +227,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
 
       {/* ── Profile hero ── */}
       <div className="card-luxury overflow-hidden">
-        <div className="h-20" style={{ background:"linear-gradient(135deg,#2D1B1F,#B76E79,#C4956A)" }} />
+        <div className="h-20" style={{ background:"linear-gradient(135deg,#0a0a0a,#333333,#555555)" }} />
         <div className="px-6 pb-5">
           <div className="flex items-end justify-between -mt-8 mb-4">
             <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-lg flex items-center justify-center text-xl font-bold text-white"
@@ -287,7 +287,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
           {/* KPI chips */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
             {[
-              { label:"Total Visits",   value: customer.visits,                                              sub:`Last: ${customer.lastVisit}`,              color:"#B76E79" },
+              { label:"Total Visits",   value: customer.visits,                                              sub:`Last: ${customer.lastVisit}`,              color:"#111111" },
               { label:"Total Spent",    value:`Rs.${customer.totalSpent.toLocaleString("en-IN")}`,           sub:"Lifetime revenue",                          color:"#047857" },
               { label:"Membership",     value: customer.membership ?? "None",                                sub: customer.membershipExpiry ? `Expires ${customer.membershipExpiry}` : "No active plan", color:"#7C3AED" },
             ].map(k => (
@@ -321,7 +321,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
 
           {/* Upcoming appointment */}
           {upcomingAppts.length > 0 ? (
-            <div className="card-luxury p-5 border-l-4" style={{ borderLeftColor:"#B76E79" }}>
+            <div className="card-luxury p-5 border-l-4" style={{ borderLeftColor:"#111111" }}>
               <p className="text-[10px] font-bold uppercase tracking-wide text-primary-600 mb-3">Upcoming Appointment</p>
               <div className="flex items-start justify-between">
                 <div>
@@ -523,7 +523,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
             return (
               <div key={inv.id} className="card-luxury overflow-hidden">
                 <div className="flex items-center justify-between px-5 py-3 border-b border-ivory-200"
-                  style={{ background:"linear-gradient(90deg,#FCF5F6,white)" }}>
+                  style={{ background:"linear-gradient(90deg,#fafafa,white)" }}>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
                       <FileText className="w-4 h-4 text-primary-500" />
@@ -581,7 +581,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
                       </div>
                       <div className="flex justify-between pt-2 border-t border-primary-200">
                         <span className="text-sm font-bold text-foreground">Total</span>
-                        <span className="text-base font-display font-bold" style={{ color:"#B76E79" }}>
+                        <span className="text-base font-display font-bold" style={{ color:"#111111" }}>
                           Rs.{inv.total.toLocaleString("en-IN")}
                         </span>
                       </div>
@@ -680,7 +680,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
                       <div className="flex items-center gap-3">
                         <div className="flex-1 h-2 bg-ivory-200 rounded-full overflow-hidden">
                           <div className="h-full rounded-full transition-all"
-                            style={{ width:`${pct}%`, background:"linear-gradient(90deg,#B76E79,#C4956A)" }} />
+                            style={{ width:`${pct}%`, background:"linear-gradient(90deg,#111111,#444444)" }} />
                         </div>
                         <span className="text-xs font-semibold text-foreground whitespace-nowrap">{pkg.used}/{pkg.total} used</span>
                       </div>
@@ -791,7 +791,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-5 py-4 border-b border-ivory-200">
               <div className="flex items-center gap-2">
-                <Edit3 className="w-4 h-4" style={{ color:"#B76E79" }} />
+                <Edit3 className="w-4 h-4" style={{ color:"#111111" }} />
                 <h3 className="text-sm font-display font-bold text-foreground">Edit Profile</h3>
               </div>
               <button onClick={() => setEditProfile(false)} className="p-1.5 rounded-lg hover:bg-ivory-100 transition-colors">
@@ -866,7 +866,7 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
               </button>
               <button onClick={saveProfile} disabled={savingProfile || !profileDraft.name.trim() || !profileDraft.phone.trim()}
                 className="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
-                style={{ background:"linear-gradient(135deg,#B76E79,#C4956A)" }}>
+                style={{ background:"linear-gradient(135deg,#111111,#444444)" }}>
                 {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Changes
               </button>

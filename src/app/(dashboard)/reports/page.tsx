@@ -143,12 +143,12 @@ export default function ReportsPage() {
             {YEARS.map(y=><option key={y} value={y}>{y}</option>)}
           </select>
         )}
-        {loading && <Loader2 className="w-4 h-4 animate-spin" style={{color:"#B76E79"}}/>}
+        {loading && <Loader2 className="w-4 h-4 animate-spin" style={{color:"#111111"}}/>}
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center h-48 gap-3">
-          <Loader2 className="w-6 h-6 animate-spin" style={{color:"#B76E79"}}/>
+          <Loader2 className="w-6 h-6 animate-spin" style={{color:"#111111"}}/>
           <p className="text-sm text-muted-foreground">Loading report data…</p>
         </div>
       ) : (
@@ -198,7 +198,7 @@ export default function ReportsPage() {
                               <td className="py-2.5 px-4 text-xs font-medium text-foreground">{d.date}{closed&&<span className="ml-2 text-[10px] text-muted-foreground">(No sales)</span>}</td>
                               <td className="py-2.5 px-4 text-xs text-right text-foreground">{closed?"—":fmt(d.services)}</td>
                               <td className="py-2.5 px-4 text-xs text-right text-foreground">{closed?"—":fmt(d.products)}</td>
-                              <td className="py-2.5 px-4 text-xs text-right font-bold" style={{color:closed?"inherit":"#B76E79"}}>{closed?"—":fmt(total)}</td>
+                              <td className="py-2.5 px-4 text-xs text-right font-bold" style={{color:closed?"inherit":"#111111"}}>{closed?"—":fmt(total)}</td>
                               <td className="py-2.5 px-4 text-xs text-right text-muted-foreground">{closed?"—":d.customers}</td>
                               <td className="py-2.5 px-4 text-xs text-muted-foreground">{d.method}</td>
                             </tr>
@@ -210,7 +210,7 @@ export default function ReportsPage() {
                           <td className="py-3 px-4 text-xs font-bold text-foreground">TOTAL</td>
                           <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{fmt(salesTotal.svc)}</td>
                           <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{fmt(salesTotal.prd)}</td>
-                          <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#B76E79"}}>{fmt(salesTotal.rev)}</td>
+                          <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#111111"}}>{fmt(salesTotal.rev)}</td>
                           <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{salesCustomers}</td>
                           <td/>
                         </tr>
@@ -249,12 +249,12 @@ export default function ReportsPage() {
                             <td className="py-3 px-4">
                               <p className="text-sm font-semibold text-foreground">{w.week}</p>
                               <div className="mt-1.5 h-1.5 bg-ivory-200 rounded-full w-40">
-                                <div className="h-1.5 rounded-full" style={{width:`${Math.round((total/maxTotal)*100)}%`,background:"#B76E79"}}/>
+                                <div className="h-1.5 rounded-full" style={{width:`${Math.round((total/maxTotal)*100)}%`,background:"#111111"}}/>
                               </div>
                             </td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(w.services)}</td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(w.products)}</td>
-                            <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#B76E79"}}>{fmt(total)}</td>
+                            <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#111111"}}>{fmt(total)}</td>
                             <td className="py-3 px-4 text-sm text-right text-muted-foreground">{w.customers}</td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(w.avgTicket)}</td>
                           </tr>
@@ -266,7 +266,7 @@ export default function ReportsPage() {
                         <td className="py-3 px-4 text-xs font-bold text-foreground">TOTAL</td>
                         <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{fmt(data.weekly.reduce((s,w)=>s+w.services,0))}</td>
                         <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{fmt(data.weekly.reduce((s,w)=>s+w.products,0))}</td>
-                        <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#B76E79"}}>{fmt(data.weekly.reduce((s,w)=>s+w.services+w.products,0))}</td>
+                        <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#111111"}}>{fmt(data.weekly.reduce((s,w)=>s+w.services+w.products,0))}</td>
                         <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{data.weekly.reduce((s,w)=>s+w.customers,0)}</td>
                         <td/>
                       </tr>
@@ -305,7 +305,7 @@ export default function ReportsPage() {
                             <td className="py-3 px-4 text-sm font-semibold text-foreground">{m.month}</td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(m.services)}</td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(m.products)}</td>
-                            <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#B76E79"}}>{fmtK(total)}</td>
+                            <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#111111"}}>{fmtK(total)}</td>
                             <td className="py-3 px-4 text-sm text-right text-muted-foreground">{m.customers}</td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(m.avgTicket)}</td>
                             <td className="py-3 px-4 text-sm text-right font-semibold">
@@ -320,7 +320,7 @@ export default function ReportsPage() {
                         <td className="py-3 px-4 text-xs font-bold text-foreground">TOTAL ({year})</td>
                         <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{fmt(data.monthly.reduce((s,m)=>s+m.services,0))}</td>
                         <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{fmt(data.monthly.reduce((s,m)=>s+m.products,0))}</td>
-                        <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#B76E79"}}>{fmtK(data.monthly.reduce((s,m)=>s+m.services+m.products,0))}</td>
+                        <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#111111"}}>{fmtK(data.monthly.reduce((s,m)=>s+m.services+m.products,0))}</td>
                         <td className="py-3 px-4 text-xs text-right font-bold text-foreground">{data.monthly.reduce((s,m)=>s+m.customers,0)}</td>
                         <td colSpan={2}/>
                       </tr>
@@ -360,7 +360,7 @@ export default function ReportsPage() {
                             <td className="py-3 px-4 text-sm font-bold text-foreground">{y.year}</td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmtK(y.services)}</td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmtK(y.products)}</td>
-                            <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#B76E79"}}>{fmtK(total)}</td>
+                            <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#111111"}}>{fmtK(total)}</td>
                             <td className="py-3 px-4 text-sm text-right text-muted-foreground">{y.customers.toLocaleString("en-IN")}</td>
                             <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(y.avgTicket)}</td>
                             <td className="py-3 px-4 text-sm text-right font-semibold">
@@ -404,20 +404,20 @@ export default function ReportsPage() {
                           return (
                             <tr key={i} className="border-t border-ivory-100 hover:bg-ivory-50">
                               <td className="py-3 px-4">
-                                <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] font-bold text-white" style={{background:i<3?"#B76E79":"#D9B5BC"}}>{i+1}</span>
+                                <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] font-bold text-white" style={{background:i<3?"#111111":"#D9B5BC"}}>{i+1}</span>
                               </td>
                               <td className="py-3 px-4 text-sm font-medium text-foreground">{s.service}</td>
                               <td className="py-3 px-4">
                                 <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full",CAT_COLOR[s.category]??"bg-ivory-100 text-muted-foreground")}>{s.category}</span>
                               </td>
                               <td className="py-3 px-4 text-sm text-right text-foreground">{s.bookings}</td>
-                              <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#B76E79"}}>{fmt(s.revenue)}</td>
+                              <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#111111"}}>{fmt(s.revenue)}</td>
                               <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(s.avgTicket)}</td>
                               <td className="py-3 px-4 text-sm text-right text-muted-foreground">{s.gst}%</td>
                               <td className="py-3 px-4">
                                 <div className="flex items-center gap-1.5 justify-end">
                                   <div className="w-16 h-1.5 bg-ivory-200 rounded-full">
-                                    <div className="h-1.5 rounded-full" style={{width:`${share}%`,background:"#B76E79"}}/>
+                                    <div className="h-1.5 rounded-full" style={{width:`${share}%`,background:"#111111"}}/>
                                   </div>
                                   <span className="text-xs font-semibold text-muted-foreground">{share}%</span>
                                 </div>
@@ -430,7 +430,7 @@ export default function ReportsPage() {
                     <tfoot>
                       <tr className="border-t-2 border-ivory-300 bg-ivory-50">
                         <td colSpan={4} className="py-3 px-4 text-xs font-bold text-foreground">TOTAL</td>
-                        <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#B76E79"}}>{fmt(data.service.reduce((s,r)=>s+r.revenue,0))}</td>
+                        <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#111111"}}>{fmt(data.service.reduce((s,r)=>s+r.revenue,0))}</td>
                         <td colSpan={3}/>
                       </tr>
                     </tfoot>
@@ -468,7 +468,7 @@ export default function ReportsPage() {
                           return (
                             <tr key={i} className="border-t border-ivory-100 hover:bg-ivory-50">
                               <td className="py-3 px-4">
-                                <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] font-bold text-white" style={{background:i<3?"#B76E79":"#D9B5BC"}}>{i+1}</span>
+                                <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[10px] font-bold text-white" style={{background:i<3?"#111111":"#D9B5BC"}}>{i+1}</span>
                               </td>
                               <td className="py-3 px-4 text-sm font-medium text-foreground">{p.product}</td>
                               <td className="py-3 px-4">
@@ -479,12 +479,12 @@ export default function ReportsPage() {
                               </td>
                               <td className="py-3 px-4 text-sm text-right text-foreground">{p.unitsSold}</td>
                               <td className="py-3 px-4 text-sm text-right text-foreground">{fmt(p.avgPrice)}</td>
-                              <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#C4956A"}}>{fmt(p.revenue)}</td>
+                              <td className="py-3 px-4 text-sm text-right font-bold" style={{color:"#444444"}}>{fmt(p.revenue)}</td>
                               <td className="py-3 px-4 text-sm text-right text-muted-foreground">{p.gst}%</td>
                               <td className="py-3 px-4">
                                 <div className="flex items-center gap-1.5 justify-end">
                                   <div className="w-16 h-1.5 bg-ivory-200 rounded-full">
-                                    <div className="h-1.5 rounded-full" style={{width:`${share}%`,background:"#C4956A"}}/>
+                                    <div className="h-1.5 rounded-full" style={{width:`${share}%`,background:"#444444"}}/>
                                   </div>
                                   <span className="text-xs font-semibold text-muted-foreground">{share}%</span>
                                 </div>
@@ -497,7 +497,7 @@ export default function ReportsPage() {
                     <tfoot>
                       <tr className="border-t-2 border-ivory-300 bg-ivory-50">
                         <td colSpan={6} className="py-3 px-4 text-xs font-bold text-foreground">TOTAL</td>
-                        <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#C4956A"}}>{fmt(data.product.reduce((s,r)=>s+r.revenue,0))}</td>
+                        <td className="py-3 px-4 text-xs text-right font-bold" style={{color:"#444444"}}>{fmt(data.product.reduce((s,r)=>s+r.revenue,0))}</td>
                         <td colSpan={2}/>
                       </tr>
                     </tfoot>

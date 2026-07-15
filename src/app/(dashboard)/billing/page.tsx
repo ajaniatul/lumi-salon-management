@@ -421,7 +421,7 @@ export default function BillingPage() {
               className={cn("text-xs px-3 py-2 rounded-xl font-semibold transition-all border",
                 filter===s ? "text-white border-transparent" : "bg-white border-ivory-300 text-muted-foreground hover:border-primary-300"
               )}
-              style={filter===s ? { background: s==="INFLUENCER" ? "#7C3AED" : "#B76E79", borderColor: s==="INFLUENCER" ? "#7C3AED" : "#B76E79" } : {}}>
+              style={filter===s ? { background: s==="INFLUENCER" ? "#7C3AED" : "#111111", borderColor: s==="INFLUENCER" ? "#7C3AED" : "#111111" } : {}}>
               {s==="ALL" ? "All" : STATUS[s as keyof typeof STATUS]?.label}
             </button>
           ))}
@@ -436,8 +436,8 @@ export default function BillingPage() {
         </div>
       ) : !showList ? (
         <div className="text-center py-10 space-y-4">
-          <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center" style={{ background:"linear-gradient(135deg,#FCF5F6,#F7E8EA)" }}>
-            <Receipt className="w-7 h-7" style={{ color:"#B76E79" }} />
+          <div className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center" style={{ background:"linear-gradient(135deg,#fafafa,#f0f0f0)" }}>
+            <Receipt className="w-7 h-7" style={{ color:"#111111" }} />
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Search above to find an invoice</p>
@@ -446,7 +446,7 @@ export default function BillingPage() {
           {invoices.length > 0 ? (
             <button onClick={() => setShowAll(true)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary-200 text-sm font-semibold transition-all hover:bg-primary-50"
-              style={{ color:"#B76E79" }}>
+              style={{ color:"#111111" }}>
               <Receipt className="w-4 h-4" /> Browse all {invoices.length} invoice{invoices.length!==1?"s":""}
             </button>
           ) : (
@@ -481,7 +481,7 @@ export default function BillingPage() {
                     {itemNames && <p className="text-xs text-muted-foreground mt-1 truncate">{itemNames}</p>}
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-base font-display font-bold" style={{ color: inv.status==="INFLUENCER"?"#7C3AED":"#B76E79" }}>Rs.{inv.total.toLocaleString("en-IN")}</p>
+                    <p className="text-base font-display font-bold" style={{ color: inv.status==="INFLUENCER"?"#7C3AED":"#111111" }}>Rs.{inv.total.toLocaleString("en-IN")}</p>
                     {inv.status==="INFLUENCER" ? <p className="text-xs font-semibold" style={{ color:"#7C3AED" }}>Barter value</p>
                     : inv.due>0 ? <p className="text-xs text-red-500 font-semibold">Due Rs.{inv.due.toLocaleString("en-IN")}</p>
                                : <p className="text-xs text-emerald-600 font-semibold">Fully paid</p>}
@@ -531,7 +531,7 @@ export default function BillingPage() {
                   {(["Service","Product"] as const).map(t => (
                     <button key={t} type="button" onClick={() => setAddType(t)}
                       className="flex-1 py-2 text-sm font-semibold transition-all"
-                      style={addType===t ? { background:"#B76E79", color:"#fff" } : { background:"#fff", color:"#6B7280" }}>
+                      style={addType===t ? { background:"#111111", color:"#fff" } : { background:"#fff", color:"#6B7280" }}>
                       {t==="Service" ? "⚙ Service" : "📦 Product"}
                     </button>
                   ))}
@@ -553,7 +553,7 @@ export default function BillingPage() {
                         <span className="text-sm font-bold w-5 text-center">{l.qty}</span>
                         <button onClick={() => updateQty(i, 1)} className="w-5 h-5 rounded-full bg-ivory-100 flex items-center justify-center hover:bg-ivory-200"><Plus className="w-3 h-3" /></button>
                       </div>
-                      <span className="text-sm font-bold w-20 text-right flex-shrink-0" style={{ color:"#B76E79" }}>Rs.{(l.unitPrice*l.qty).toLocaleString("en-IN")}</span>
+                      <span className="text-sm font-bold w-20 text-right flex-shrink-0" style={{ color:"#111111" }}>Rs.{(l.unitPrice*l.qty).toLocaleString("en-IN")}</span>
                       <button onClick={() => removeLine(i)} className="text-muted-foreground hover:text-red-500 flex-shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
@@ -567,7 +567,7 @@ export default function BillingPage() {
                   {GST_RATES.map(r => (
                     <button key={r} type="button" onClick={() => setGstRate(r)}
                       className="flex-1 py-2 text-sm font-bold transition-all"
-                      style={gstRate===r ? { background:"#B76E79", color:"#fff" } : { background:"#fff", color:"#6B7280" }}>
+                      style={gstRate===r ? { background:"#111111", color:"#fff" } : { background:"#fff", color:"#6B7280" }}>
                       {r}% (CGST {r/2}% + SGST {r/2}%)
                     </button>
                   ))}
@@ -628,7 +628,7 @@ export default function BillingPage() {
                   <div className="flex justify-between text-muted-foreground"><span>CGST @ {gstRate/2}%</span><span>Rs.{cgst.toFixed(2)}</span></div>
                   <div className="flex justify-between text-muted-foreground"><span>SGST @ {gstRate/2}%</span><span>Rs.{sgst.toFixed(2)}</span></div>
                   <div className="flex justify-between font-semibold text-foreground border-t border-ivory-300 pt-1 mt-1">
-                    <span>Grand Total</span><span style={{ color:"#B76E79" }}>Rs.{total.toLocaleString("en-IN")}</span>
+                    <span>Grand Total</span><span style={{ color:"#111111" }}>Rs.{total.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
               )}
