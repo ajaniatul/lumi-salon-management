@@ -51,7 +51,7 @@ export default function RootLayout({
               borderRadius: "12px",
               padding: "12px 16px",
               fontSize: "14px",
-              boxShadow: "0 4px 16px rgba(183,110,121,0.12)",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
             },
             success: {
               iconTheme: { primary: "#10B981", secondary: "#fff" },
