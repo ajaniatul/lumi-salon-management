@@ -138,9 +138,9 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
             "flex items-center justify-center transition-all z-50",
             collapsed
               ? "absolute -right-3 top-5 w-6 h-6 rounded-full border border-white/10 bg-[#0a0a0a] shadow-lg hover:bg-[#3d252a] text-white"
-              : "p-1 rounded-lg hover:bg-white/5 text-[#5A3A40]"
+              : "p-1 rounded-lg hover:bg-white/5 text-white/40"
           )}
-          style={collapsed ? {} : { color: "#5A3A40" }}
+          style={collapsed ? {} : {}}
         >
           {collapsed
             ? <ChevronRight className="w-3.5 h-3.5" style={{ color: "#444444" }} />
@@ -159,7 +159,7 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
             <div key={section.label}>
               {!collapsed && (
                 <p className="text-[10px] font-semibold uppercase tracking-widest px-3 mb-1.5"
-                  style={{ color: "#4A2D33" }}>
+                  style={{ color: "rgba(255,255,255,0.25)" }}>
                   {section.label}
                 </p>
               )}
@@ -179,15 +179,15 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
                         )}
                         style={{
                           background: active
-                            ? "linear-gradient(135deg, rgba(183,110,121,0.25), rgba(196,149,106,0.15))"
+                            ? "rgba(255,255,255,0.1)"
                             : undefined,
-                          color: active ? "#fff" : "#7A5560",
+                          color: active ? "#ffffff" : "rgba(255,255,255,0.55)",
                         }}
                         title={collapsed ? item.label : undefined}
                       >
                         <item.icon
                           className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")}
-                          style={{ color: active ? "#888888" : "#6A4550" }}
+                          style={{ color: active ? "#ffffff" : "rgba(255,255,255,0.45)" }}
                         />
                         {!collapsed && (
                           <span className="text-sm font-medium">
@@ -218,9 +218,9 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
               collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
               "hover:bg-white/5"
             )}
-            style={{ color: "#7A5560" }}
+            style={{ color: "rgba(255,255,255,0.55)" }}
           >
-            <Settings className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} style={{ color: "#6A4550" }} />
+            <Settings className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4")} style={{ color: "rgba(255,255,255,0.45)" }} />
             {!collapsed && <span className="text-sm font-medium">Settings</span>}
           </Link>
         )}
@@ -242,14 +242,14 @@ export function Sidebar({ userRole, userName, userAvatar, brandLogo, brandName, 
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-white truncate">{userName}</p>
-              <p className="text-xs" style={{ color: "#5A3A40" }}>{userRole}</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{userRole}</p>
             </div>
           )}
           {!collapsed && (
             <button
               onClick={handleLogout}
               className="p-1 rounded-lg hover:bg-white/10 transition-colors"
-              style={{ color: "#5A3A40" }}
+              style={{ color: "rgba(255,255,255,0.45)" }}
               title="Sign out"
             >
               <LogOut className="w-4 h-4" />
