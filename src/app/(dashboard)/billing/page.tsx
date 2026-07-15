@@ -86,18 +86,8 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
     brandLogo:    settings?.logo,
   };
 
-  // ── Shareable invoice link ────────────────────────────────────────────────
-  // Strip brandLogo (can be a large base64 image) to keep URL short.
-  // Use encodeURIComponent + unescape trick so btoa handles Unicode safely.
-  const invoiceLink = (() => {
-    try {
-      const { brandLogo: _logo, ...shareData } = a4Data;
-      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
-      return `${window.location.origin}/invoice?d=${encoded}`;
-    } catch {
-      return "";
-    }
-  })();
+  // ── Clean shareable link using invoice number ────────────────────────────
+  const invoiceLink = `${window.location.origin}/invoice/${encodeURIComponent(inv.id)}`;
 
   // ── WhatsApp / SMS helpers ────────────────────────────────────────────────
   const buildMessage = () => {
@@ -119,7 +109,7 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
       `🛎 ${itemsList}\n` +
       `💰 Total: *Rs.${inv.total.toLocaleString("en-IN")}*\n` +
       `${statusLine}\n\n` +
-      `🧾 View Invoice: ${invoiceLink}\n\n` +
+      `🧾 Invoice: ${invoiceLink}\n\n` +
       `See you again soon! 💖`
     );
   };
@@ -139,7 +129,7 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
     if (!phone) { toast.error("No phone number on this invoice."); return; }
     const num  = phone.startsWith("91") ? `+${phone}` : `+91${phone}`;
     const salonName = settings?.salonName ?? "Our Salon";
-    const shortMsg  = `${salonName} | Invoice ${inv.id} | Rs.${inv.total.toLocaleString("en-IN")} | ${inv.status === "PAID" ? "Paid" : `Due Rs.${inv.due.toLocaleString("en-IN")}`}. View: ${invoiceLink}`;
+    const shortMsg  = `${salonName} | Invoice ${inv.id} | Rs.${inv.total.toLocaleString("en-IN")} | ${inv.status === "PAID" ? "Paid" : `Due Rs.${inv.due.toLocaleString("en-IN")}`}. Invoice: ${invoiceLink}`;
     window.open(`sms:${num}?body=${encodeURIComponent(shortMsg)}`, "_self");
   };
 
