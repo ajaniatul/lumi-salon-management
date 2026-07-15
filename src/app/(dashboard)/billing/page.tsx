@@ -49,49 +49,7 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
   const itemCount = inv.services.length + inv.products.length;
   const amtEach   = Math.round(inv.subtotal / Math.max(itemCount, 1));
 
-  // ── WhatsApp / SMS helpers ────────────────────────────────────────────────
-  const buildMessage = () => {
-    const salonName = settings?.salonName ?? "Our Salon";
-    const allItems  = [
-      ...inv.services.map(s => s.name),
-      ...inv.products.map(p => p.name),
-    ];
-    const itemsList = allItems.length > 0 ? allItems.join(", ") : "—";
-    const statusLine = inv.status === "PAID"       ? "✅ Paid"
-                     : inv.status === "PARTIAL"    ? `⏳ Partial (Due: Rs.${inv.due.toLocaleString("en-IN")})`
-                     : inv.status === "INFLUENCER" ? "🤝 Influencer (Barter)"
-                     : `❗ Due: Rs.${inv.due.toLocaleString("en-IN")}`;
-    return (
-      `*${salonName}*\n` +
-      `Invoice: ${inv.id} | ${inv.date}\n\n` +
-      `Hi ${inv.customer},\n` +
-      `Thank you for visiting us! Here is your invoice summary:\n\n` +
-      `🛎 ${itemsList}\n` +
-      `💰 Total: *Rs.${inv.total.toLocaleString("en-IN")}*\n` +
-      `${statusLine}\n\n` +
-      `See you again soon! 💖`
-    );
-  };
-
-  const cleanPhone = (ph: string) => ph.replace(/\D/g, "");
-
-  const sendWhatsApp = () => {
-    const phone = cleanPhone(inv.phone);
-    if (!phone) { toast.error("No phone number on this invoice."); return; }
-    const num  = phone.startsWith("91") ? phone : `91${phone}`;
-    const text = encodeURIComponent(buildMessage());
-    window.open(`https://wa.me/${num}?text=${text}`, "_blank");
-  };
-
-  const sendSMS = () => {
-    const phone = cleanPhone(inv.phone);
-    if (!phone) { toast.error("No phone number on this invoice."); return; }
-    const num  = phone.startsWith("91") ? `+${phone}` : `+91${phone}`;
-    const salonName = settings?.salonName ?? "Our Salon";
-    const shortMsg  = `${salonName} | Invoice ${inv.id} | Rs.${inv.total.toLocaleString("en-IN")} | ${inv.status === "PAID" ? "Paid" : `Due Rs.${inv.due.toLocaleString("en-IN")}`}. Thank you!`;
-    window.open(`sms:${num}?body=${encodeURIComponent(shortMsg)}`, "_self");
-  };
-
+  // ── Build a4Data first so the invoice link can be included in messages ──
   const lineItems: InvLine[] = inv.items && inv.items.length > 0
     ? inv.items
     : [
@@ -126,6 +84,55 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
     brandPhone:   settings?.phone,
     brandEmail:   settings?.email,
     brandLogo:    settings?.logo,
+  };
+
+  // ── Shareable invoice link ────────────────────────────────────────────────
+  const invoiceLink = typeof window !== "undefined"
+    ? `${window.location.origin}/invoice?d=${btoa(JSON.stringify(a4Data))}`
+    : "";
+
+  // ── WhatsApp / SMS helpers ────────────────────────────────────────────────
+  const buildMessage = () => {
+    const salonName = settings?.salonName ?? "Our Salon";
+    const allItems  = [
+      ...inv.services.map(s => s.name),
+      ...inv.products.map(p => p.name),
+    ];
+    const itemsList = allItems.length > 0 ? allItems.join(", ") : "—";
+    const statusLine = inv.status === "PAID"       ? "✅ Paid"
+                     : inv.status === "PARTIAL"    ? `⏳ Partial (Due: Rs.${inv.due.toLocaleString("en-IN")})`
+                     : inv.status === "INFLUENCER" ? "🤝 Influencer (Barter)"
+                     : `❗ Due: Rs.${inv.due.toLocaleString("en-IN")}`;
+    return (
+      `*${salonName}*\n` +
+      `Invoice: ${inv.id} | ${inv.date}\n\n` +
+      `Hi ${inv.customer},\n` +
+      `Thank you for visiting us! Here is your invoice summary:\n\n` +
+      `🛎 ${itemsList}\n` +
+      `💰 Total: *Rs.${inv.total.toLocaleString("en-IN")}*\n` +
+      `${statusLine}\n\n` +
+      `🧾 View Invoice: ${invoiceLink}\n\n` +
+      `See you again soon! 💖`
+    );
+  };
+
+  const cleanPhone = (ph: string) => ph.replace(/\D/g, "");
+
+  const sendWhatsApp = () => {
+    const phone = cleanPhone(inv.phone);
+    if (!phone) { toast.error("No phone number on this invoice."); return; }
+    const num  = phone.startsWith("91") ? phone : `91${phone}`;
+    const text = encodeURIComponent(buildMessage());
+    window.open(`https://wa.me/${num}?text=${text}`, "_blank");
+  };
+
+  const sendSMS = () => {
+    const phone = cleanPhone(inv.phone);
+    if (!phone) { toast.error("No phone number on this invoice."); return; }
+    const num  = phone.startsWith("91") ? `+${phone}` : `+91${phone}`;
+    const salonName = settings?.salonName ?? "Our Salon";
+    const shortMsg  = `${salonName} | Invoice ${inv.id} | Rs.${inv.total.toLocaleString("en-IN")} | ${inv.status === "PAID" ? "Paid" : `Due Rs.${inv.due.toLocaleString("en-IN")}`}. View: ${invoiceLink}`;
+    window.open(`sms:${num}?body=${encodeURIComponent(shortMsg)}`, "_self");
   };
 
   return (
