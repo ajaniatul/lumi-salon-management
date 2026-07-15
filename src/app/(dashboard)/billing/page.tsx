@@ -83,6 +83,7 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
     brandGstin:   settings?.gstin,
     brandPhone:   settings?.phone,
     brandEmail:   settings?.email,
+    brandPhone2:  (settings as any)?.phone2,
     brandLogo:    settings?.logo,
   };
 

@@ -211,6 +211,7 @@ export default function SettingsPage() {
     salonName: "Lumi Beauty Lounge",
     tagline: "Where Beauty Meets Luxury",
     phone: "022-12345678",
+    phone2: "",
     email: "hello@lumisalon.in",
     website: "www.lumisalon.in",
     address: "Shop No. 12, First Floor, Luxury Mall, Linking Road, Bandra West, Mumbai - 400050",
@@ -232,6 +233,7 @@ export default function SettingsPage() {
             salonName: d.salonName || "",
             tagline: d.tagline || "",
             phone: d.phone || "",
+            phone2: (d as any).phone2 || "",
             email: d.email || "",
             website: "www.lumisalon.in", // mock website
             address: d.address || "",
@@ -286,6 +288,7 @@ export default function SettingsPage() {
           salonName: form.salonName,
           tagline: form.tagline,
           phone: form.phone,
+          phone2: form.phone2,
           email: form.email,
           address: form.address,
           gstin: form.gstin,
@@ -428,6 +431,10 @@ export default function SettingsPage() {
                     <div>
                       <label className="text-xs font-semibold text-foreground mb-1 block">Phone Number</label>
                       <input className="input-luxury text-sm w-full" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-ivory-500 uppercase tracking-wider">Phone 2 (Optional)</label>
+                      <input className="input-luxury text-sm w-full" value={form.phone2} onChange={e => setForm(f => ({ ...f, phone2: e.target.value }))} placeholder="Alternate number" />
                       <p className="text-[10px] text-muted-foreground mt-1">Primary contact for customers</p>
                     </div>
                     <div>

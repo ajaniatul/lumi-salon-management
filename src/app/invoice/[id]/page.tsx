@@ -87,7 +87,7 @@ export default function PublicInvoicePage() {
             )}
             <p style={{ color:"rgba(255,255,255,0.5)", fontSize:"9.5px", lineHeight:1.7 }}>
               GSTIN: {data.brandGstin || "—"} &nbsp;·&nbsp; {data.brandAddress || "—"}<br />
-              Tel: {data.brandPhone || "—"} &nbsp;·&nbsp; {data.brandEmail || "—"}
+              Tel: {data.brandPhone || "—"}{data.brandPhone2 ? ` / ${data.brandPhone2}` : ""} &nbsp;·&nbsp; {data.brandEmail || "—"}
             </p>
           </div>
 
@@ -167,7 +167,7 @@ export default function PublicInvoicePage() {
             <p style={{ fontSize:"13px", fontWeight:800, color:"#111", marginBottom:"6px" }}>Thank you for visiting {data.brandName || "Lumi"}!</p>
             <p style={{ fontSize:"9.5px", color:"#888", lineHeight:1.7 }}>
               This is a computer-generated invoice and does not require a signature.<br />
-              For queries, reach us at {data.brandPhone || "—"} or {data.brandEmail || "—"}
+              For queries, reach us at {data.brandPhone || "—"}{data.brandPhone2 ? ` / ${data.brandPhone2}` : ""} or {data.brandEmail || "—"}
             </p>
           </div>
         </div>

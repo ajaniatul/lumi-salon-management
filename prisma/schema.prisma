@@ -856,6 +856,7 @@ model SalonSettings {
   tagline                 String?
   address                 String?
   phone                   String?
+  phone2                  String?
   email                   String?
   gstin                   String?
   logo                    String?
