@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Attach services if provided
+    // Attach services if provided, then re-fetch so the include has them
     if (svcs.length > 0) {
       await prisma.appointmentService.createMany({
         data: svcs.map((sv, i) => ({
@@ -172,6 +172,15 @@ export async function POST(request: NextRequest) {
           duration,
         })),
       });
+      const withSvcs = await prisma.appointment.findUnique({
+        where: { id: created.id },
+        include: {
+          customer: { select: { name: true, phone: true, customerId: true } },
+          services: { include: { service: { select: { name: true, gstRate: true } } } },
+          invoice:  { select: { invoiceNumber: true, totalAmount: true } },
+        },
+      });
+      return NextResponse.json({ success: true, data: toUI(withSvcs) }, { status: 201 });
     }
     return NextResponse.json({ success: true, data: toUI(created) }, { status: 201 });
   } catch (e: any) {
