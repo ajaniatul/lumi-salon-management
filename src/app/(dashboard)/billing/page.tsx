@@ -87,9 +87,17 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
   };
 
   // ── Shareable invoice link ────────────────────────────────────────────────
-  const invoiceLink = typeof window !== "undefined"
-    ? `${window.location.origin}/invoice?d=${btoa(JSON.stringify(a4Data))}`
-    : "";
+  // Strip brandLogo (can be a large base64 image) to keep URL short.
+  // Use encodeURIComponent + unescape trick so btoa handles Unicode safely.
+  const invoiceLink = (() => {
+    try {
+      const { brandLogo: _logo, ...shareData } = a4Data;
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
+      return `${window.location.origin}/invoice?d=${encoded}`;
+    } catch {
+      return "";
+    }
+  })();
 
   // ── WhatsApp / SMS helpers ────────────────────────────────────────────────
   const buildMessage = () => {
