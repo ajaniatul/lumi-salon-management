@@ -61,6 +61,7 @@ export async function GET(request: NextRequest) {
         brandGstin:   settings?.gstin ?? undefined,
         brandPhone:   settings?.phone ?? undefined,
         brandEmail:   settings?.email ?? undefined,
+        brandLogo:    settings?.logo ?? undefined,
       },
     });
   } catch (e) {
