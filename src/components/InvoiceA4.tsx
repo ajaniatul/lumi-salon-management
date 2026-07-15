@@ -37,7 +37,6 @@ export interface InvoiceData {
   brandAddress?: string;
   brandGstin?:   string;
   brandPhone?:   string;
-  brandPhone2?:  string;
   brandEmail?:   string;
   brandWebsite?: string;
   brandLogo?:    string | null;
@@ -145,7 +144,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
     <div class="hdr-kind" style="margin-top: 12px;">${invoiceKind}</div>
     <div class="hdr-contact">
       GSTIN: ${d.brandGstin || "27AABCE1234F1Z5"} &nbsp;·&nbsp; ${d.brandAddress || "Shop 12, Luxury Mall, Bandra West, Mumbai 400050"}<br>
-      Tel: ${d.brandPhone || "022-12345678"}${d.brandPhone2 ? ` / ${d.brandPhone2}` : ""} &nbsp;·&nbsp; ${d.brandEmail || "hello@lumisalon.in"} &nbsp;·&nbsp; ${d.brandWebsite || "www.lumisalon.in"}
+      Tel: ${d.brandPhone || "022-12345678"} &nbsp;·&nbsp; ${d.brandEmail || "hello@lumisalon.in"} &nbsp;·&nbsp; ${d.brandWebsite || "www.lumisalon.in"}
     </div>
   </div>
 
@@ -204,7 +203,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
     <div class="ftr-title">Thank you for visiting ${d.brandName || "Lumi"}!</div>
     <div class="ftr-sub">
       This is a computer-generated invoice and does not require a signature.<br>
-      For queries, reach us at ${d.brandPhone || "022-12345678"}${d.brandPhone2 ? ` / ${d.brandPhone2}` : ""} or ${d.brandEmail || "hello@lumisalon.in"}
+      For queries, reach us at ${d.brandPhone || "022-12345678"} or ${d.brandEmail || "hello@lumisalon.in"}
     </div>
   </div>
   </div>
@@ -298,7 +297,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
             <p style={{ display:"inline-block", color:"rgba(255,255,255,0.9)", fontSize:"9.5px", fontWeight:700, letterSpacing:"0.1em", border:"1px solid rgba(255,255,255,0.25)", padding:"3px 10px", borderRadius:"999px", marginBottom:"12px" }}>{invoiceKind}</p>
             <p style={{ color:"rgba(255,255,255,0.5)", fontSize:"9.5px", lineHeight:"1.7", display:"block" }}>
               GSTIN: {data.brandGstin || "27AABCE1234F1Z5"} &nbsp;·&nbsp; {data.brandAddress || "Shop 12, Luxury Mall, Bandra West, Mumbai 400050"}<br />
-              Tel: {data.brandPhone || "022-12345678"}{data.brandPhone2 ? ` / ${data.brandPhone2}` : ""} &nbsp;·&nbsp; {data.brandEmail || "hello@lumisalon.in"} &nbsp;·&nbsp; {data.brandWebsite || "www.lumisalon.in"}
+              Tel: {data.brandPhone || "022-12345678"} &nbsp;·&nbsp; {data.brandEmail || "hello@lumisalon.in"} &nbsp;·&nbsp; {data.brandWebsite || "www.lumisalon.in"}
             </p>
           </div>
 
@@ -412,7 +411,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
             <p style={{ fontSize:"13px", fontWeight:800, color:"#111111", marginBottom:"6px" }}>Thank you for visiting {data.brandName || "Lumi"}!</p>
             <p style={{ fontSize:"9.5px", color:"#9A7A80", lineHeight:"1.7" }}>
               This is a computer-generated invoice and does not require a signature.<br />
-              For queries, reach us at {data.brandPhone || "022-12345678"}{data.brandPhone2 ? ` / ${data.brandPhone2}` : ""} or {data.brandEmail || "hello@lumisalon.in"}
+              For queries, reach us at {data.brandPhone || "022-12345678"} or {data.brandEmail || "hello@lumisalon.in"}
             </p>
           </div>
         </div>
