@@ -1284,7 +1284,7 @@ export default function AppointmentsPage() {
                           if (!pkg) return;
                           // Match package service names to loaded service IDs
                           const pkgSvcIds = pkg.services
-                            .map((name: string) => services.find(s => s.name === name)?.id)
+                            .map((name: string) => services.find(s => s.name.trim().toLowerCase() === name.trim().toLowerCase())?.id)
                             .filter(Boolean) as string[];
                           setForm(p => ({
                             ...p,

@@ -52,6 +52,7 @@ export default function PackagesPage() {
   const [looking,      setLooking]      = useState(false);
   const [err,          setErr]          = useState("");
   const [submitting,   setSubmitting]   = useState(false);
+  const [catalogSvcs,  setCatalogSvcs]  = useState<string[]>([]);
 
   const loadPackages = useCallback(() => {
     setLoading(true);
@@ -67,7 +68,13 @@ export default function PackagesPage() {
     }).catch(() => {}).finally(() => setCustLoading(false));
   }, []);
 
-  useEffect(() => { loadPackages(); loadCustomers(); }, []);
+  useEffect(() => {
+    loadPackages();
+    loadCustomers();
+    fetch("/api/services").then(r => r.json()).then(j => {
+      if (j.success) setCatalogSvcs(j.data.map((s: any) => s.name));
+    }).catch(() => {});
+  }, []);
 
   const openNewModal = useCallback(() => {
     setEditingId(null); setForm(DEFAULT_FORM); setErr(""); setShowModal(true);
@@ -389,7 +396,12 @@ export default function PackagesPage() {
                 <div className="space-y-2">
                   {form.services.map((s, i) => (
                     <div key={i} className="flex gap-2">
-                      <input value={s} onChange={e => setRow(i, e.target.value)} placeholder={`Service ${i + 1}`} className={iCls} />
+                      <select value={s} onChange={e => setRow(i, e.target.value)} className={iCls}>
+                        <option value="">Select service…</option>
+                        {catalogSvcs.map(name => (
+                          <option key={name} value={name}>{name}</option>
+                        ))}
+                      </select>
                       {form.services.length > 1 && (
                         <button onClick={() => removeRow(i)} className="text-muted-foreground hover:text-red-500 flex-shrink-0">
                           <X className="w-4 h-4" />
