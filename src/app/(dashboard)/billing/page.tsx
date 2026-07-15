@@ -97,20 +97,20 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
       ...inv.products.map(p => p.name),
     ];
     const itemsList = allItems.length > 0 ? allItems.join(", ") : "—";
-    const statusLine = inv.status === "PAID"       ? "✅ Paid"
-                     : inv.status === "PARTIAL"    ? `⏳ Partial (Due: Rs.${inv.due.toLocaleString("en-IN")})`
-                     : inv.status === "INFLUENCER" ? "🤝 Influencer (Barter)"
-                     : `❗ Due: Rs.${inv.due.toLocaleString("en-IN")}`;
+    const statusLine = inv.status === "PAID"       ? "Paid"
+                     : inv.status === "PARTIAL"    ? `Partial (Due: Rs.${inv.due.toLocaleString("en-IN")})`
+                     : inv.status === "INFLUENCER" ? "Influencer (Barter)"
+                     : `Due: Rs.${inv.due.toLocaleString("en-IN")}`;
     return (
-      `*${salonName}*\n` +
+      `${salonName}\n` +
       `Invoice: ${inv.id} | ${inv.date}\n\n` +
       `Hi ${inv.customer},\n` +
-      `Thank you for visiting us! Here is your invoice summary:\n\n` +
-      `🛎 ${itemsList}\n` +
-      `💰 Total: *Rs.${inv.total.toLocaleString("en-IN")}*\n` +
+      `Thank you for visiting us. Here is your invoice summary:\n\n` +
+      `${itemsList}\n` +
+      `Total: Rs.${inv.total.toLocaleString("en-IN")}\n` +
       `${statusLine}\n\n` +
-      `🧾 Invoice: ${invoiceLink}\n\n` +
-      `See you again soon! 💖`
+      `View your invoice: ${invoiceLink}\n\n` +
+      `We look forward to seeing you again.`
     );
   };
 
