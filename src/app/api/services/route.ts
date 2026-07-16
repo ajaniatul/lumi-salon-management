@@ -54,8 +54,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Name, category, price and duration are required." }, { status: 400 });
     }
 
-    const count = await prisma.service.count();
-    const serviceCode = `SRV-${String(count + 1).padStart(3, "0")}`;
+    const last = await prisma.service.findFirst({ orderBy: { serviceCode: "desc" }, select: { serviceCode: true } });
+    const lastNum = last ? parseInt(last.serviceCode.replace("SRV-", ""), 10) : 0;
+    const serviceCode = `SRV-${String(lastNum + 1).padStart(3, "0")}`;
 
     const service = await prisma.service.create({
       data: {
