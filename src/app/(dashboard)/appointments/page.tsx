@@ -158,7 +158,6 @@ export default function AppointmentsPage() {
   const [payMethod,    setPayMethod]    = useState<"CASH"|"CARD"|"UPI">("UPI");
   const [gstRate,      setGstRate]      = useState<5|18>(18);
   const [currentInvNum,setCurrentInvNum]= useState("");
-  const [cardDetails,  setCardDetails]  = useState({ number:"", expiry:"", cvv:"", name:"" });
   const [payProcessing,setPayProcessing]= useState(false);
   const [payDone,      setPayDone]      = useState(false);
   const [showA4,        setShowA4]        = useState(false);
@@ -1588,13 +1587,7 @@ export default function AppointmentsPage() {
           { id:"UPI"  as const, label:"UPI",  Icon:Smartphone },
         ];
 
-        const cardNumDisplay = cardDetails.number.replace(/(.{4})/g,"$1 ").trim();
-        const cardValid = payMethod !== "CARD" || (
-          cardDetails.number.length === 16 &&
-          cardDetails.expiry.length === 5 &&
-          cardDetails.cvv.length    === 3 &&
-          cardDetails.name.trim().length > 0
-        );
+        const cardValid = true;
 
         const upiUrl = `upi://pay?pa=lumi@upi&pn=Lumi+Salon&am=${total}&tn=${currentInvNum}`;
         const qrSrc  = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUrl)}&bgcolor=FCF5F6&color=2D1B1F&margin=2`;
@@ -1641,7 +1634,6 @@ export default function AppointmentsPage() {
           setBillingAppt(null);
           setDetailAppt(null);
           setPayDone(false);
-          setCardDetails({ number:"", expiry:"", cvv:"", name:"" });
           setDiscountVal("");
           setDiscountNote("");
           setDiscountType("PCT");
@@ -2008,66 +2000,7 @@ export default function AppointmentsPage() {
                       </div>
                     )}
 
-                    {/* CARD form */}
-                    {payMethod === "CARD" && (
-                      <div className="space-y-3">
-                        <div className="relative h-36 rounded-2xl p-4 flex flex-col justify-between overflow-hidden"
-                          style={{ background:"linear-gradient(135deg,#0a0a0a 0%,#333333 55%,#555555 100%)" }}>
-                          <div className="flex justify-between items-start">
-                            <div className="w-8 h-5 rounded-sm"
-                              style={{ background:"linear-gradient(135deg,#FFD700,#FFA500)", opacity:0.85 }} />
-                            <span className="text-white text-xs font-bold tracking-widest opacity-75">VISA</span>
-                          </div>
-                          <div>
-                            <p className="text-white font-mono text-sm tracking-[0.18em] mb-2 drop-shadow">
-                              {cardNumDisplay || "xxxx xxxx xxxx xxxx"}
-                            </p>
-                            <div className="flex justify-between items-end">
-                              <div>
-                                <p className="text-white/50 text-[8px] uppercase tracking-wider">Cardholder</p>
-                                <p className="text-white text-[11px] font-semibold tracking-wide truncate max-w-[140px]">
-                                  {cardDetails.name || "YOUR NAME"}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-white/50 text-[8px] uppercase tracking-wider">Expires</p>
-                                <p className="text-white text-[11px] font-semibold">{cardDetails.expiry || "MM/YY"}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-muted-foreground mb-1 block">Card Number</label>
-                          <input className="input-luxury w-full text-sm font-mono tracking-widest"
-                            placeholder="1234 5678 9012 3456" maxLength={19}
-                            value={cardNumDisplay}
-                            onChange={e => setCardDetails(p => ({ ...p, number: e.target.value.replace(/\D/g,"").slice(0,16) }))} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-[10px] text-muted-foreground mb-1 block">Expiry</label>
-                            <input className="input-luxury w-full text-sm font-mono" placeholder="MM/YY" maxLength={5}
-                              value={cardDetails.expiry}
-                              onChange={e => {
-                                const raw = e.target.value.replace(/\D/g,"").slice(0,4);
-                                setCardDetails(p => ({ ...p, expiry: raw.length > 2 ? raw.slice(0,2)+"/"+raw.slice(2) : raw }));
-                              }} />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-muted-foreground mb-1 block">CVV</label>
-                            <input className="input-luxury w-full text-sm font-mono" placeholder="xxx" maxLength={3} type="password"
-                              value={cardDetails.cvv}
-                              onChange={e => setCardDetails(p => ({ ...p, cvv: e.target.value.replace(/\D/g,"").slice(0,3) }))} />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-[10px] text-muted-foreground mb-1 block">Cardholder Name</label>
-                          <input className="input-luxury w-full text-sm uppercase tracking-wide" placeholder="AS ON CARD"
-                            value={cardDetails.name}
-                            onChange={e => setCardDetails(p => ({ ...p, name: e.target.value.toUpperCase() }))} />
-                        </div>
-                      </div>
-                    )}
+
 
                     {/* Confirm */}
                     <button disabled={!cardValid} onClick={doProcess}
