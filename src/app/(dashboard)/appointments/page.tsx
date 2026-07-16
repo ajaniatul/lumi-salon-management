@@ -1984,21 +1984,7 @@ export default function AppointmentsPage() {
                       </div>
                     </div>
 
-                    {/* UPI QR */}
-                    {payMethod === "UPI" && (
-                      <div className="flex flex-col items-center gap-3 p-4 rounded-2xl"
-                        style={{ background:"#fafafa", border:"1px solid #e5e5e5" }}>
-                        <img src={qrSrc} alt="UPI QR" width={176} height={176}
-                          className="rounded-xl" style={{ border:"2px solid #e5e5e5" }} />
-                        <div className="text-center">
-                          <p className="text-xs font-bold text-foreground">Scan to Pay Rs.{total.toLocaleString("en-IN")}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            UPI ID: <span className="font-semibold" style={{ color:"#111111" }}>lumi@upi</span>
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">PhonePe - GPay - Paytm - BHIM</p>
-                        </div>
-                      </div>
-                    )}
+
 
 
 
