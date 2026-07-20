@@ -34,7 +34,7 @@ async function ensureSheets(sheets: any, titles: string[]) {
   }
 }
 
-async function writeTab(sheets: any, tab: string, rows: (string | number | null)[][]) {
+async function writeTab(sheets: any, tab: string, rows: any[][]) {
   const range = `${tab}!A1`;
   await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range: `${tab}!A:ZZ` });
   if (rows.length) {
