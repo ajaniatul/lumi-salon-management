@@ -26,7 +26,7 @@ async function ensureSheets(sheets: any, titles: string[]) {
     await sheets.spreadsheets.batchUpdate({
       spreadsheetId: SHEET_ID,
       requestBody: {
-        requests: toAdd.map(title => ({
+        requests: toAdd.map((title: any) => ({
           addSheet: { properties: { title } },
         })),
       },
@@ -72,7 +72,7 @@ export async function GET() {
     });
     await writeTab(sheets, "Invoices", [
       ["Invoice No", "Date", "Customer", "Phone", "Items", "Subtotal", "CGST", "SGST", "Total", "Paid", "Due", "Status", "Method"],
-      ...invoices.map(inv => [
+      ...invoices.map((inv: any) => [
         inv.invoiceNumber, fmt(inv.createdAt), inv.customer?.name ?? "", inv.customer?.phone ?? "",
         inv.items.map((i: any) => i.name).join(", "),
         fmt(inv.taxableAmount), fmt(inv.cgst), fmt(inv.sgst),
@@ -92,7 +92,7 @@ export async function GET() {
     });
     await writeTab(sheets, "Appointments", [
       ["ID", "Date", "Start Time", "Customer", "Phone", "Staff", "Services", "Duration (min)", "Status", "Notes"],
-      ...appts.map(a => [
+      ...appts.map((a: any) => [
         a.id, fmt(a.date), a.startTime,
         a.customer?.name ?? "", a.customer?.phone ?? "",
         a.staff?.name ?? "",
@@ -105,7 +105,7 @@ export async function GET() {
     const staff = await prisma.staff.findMany({ orderBy: { name: "asc" } });
     await writeTab(sheets, "Staff", [
       ["ID", "Name", "Phone", "Email", "Role", "Designation", "Commission %", "Salary", "Join Date", "Active"],
-      ...staff.map(s => [s.id, s.name, s.phone, fmt(s.email), s.role, fmt(s.designation),
+      ...staff.map((s: any) => [s.id, s.name, s.phone, fmt(s.email), s.role, fmt(s.designation),
         fmt(s.commissionRate), fmt(s.salary), fmt(s.joinDate), s.isActive]),
     ]);
 
@@ -113,21 +113,21 @@ export async function GET() {
     const services = await prisma.service.findMany({ orderBy: { name: "asc" } });
     await writeTab(sheets, "Services", [
       ["Code", "Name", "Category", "Price", "Duration (min)", "GST %", "Description"],
-      ...services.map(s => [s.serviceCode, s.name, s.category, fmt(s.price), s.duration, fmt(s.gstRate), fmt(s.description)]),
+      ...services.map((s: any) => [s.serviceCode, s.name, s.category, fmt(s.price), s.duration, fmt(s.gstRate), fmt(s.description)]),
     ]);
 
     // ── Products ─────────────────────────────────────────────────────────────
     const products = await prisma.product.findMany({ orderBy: { name: "asc" } });
     await writeTab(sheets, "Products", [
       ["ID", "Name", "Brand", "Category", "Price", "Cost", "Stock", "Min Stock", "HSN Code"],
-      ...products.map(p => [p.id, p.name, fmt(p.brand), p.category, fmt(p.price), fmt(p.costPrice), p.stockQuantity, p.minStockLevel, fmt(p.hsnCode)]),
+      ...products.map((p: any) => [p.id, p.name, fmt(p.brand), p.category, fmt(p.price), fmt(p.costPrice), p.stockQuantity, p.minStockLevel, fmt(p.hsnCode)]),
     ]);
 
     // ── Expenses ─────────────────────────────────────────────────────────────
     const expenses = await prisma.expense.findMany({ orderBy: { date: "desc" } });
     await writeTab(sheets, "Expenses", [
       ["ID", "Date", "Category", "Description", "Amount", "Paid To", "Payment Method", "Notes"],
-      ...expenses.map(e => [e.id, fmt(e.date), e.category, e.description, fmt(e.amount), fmt(e.paidTo), fmt(e.paymentMethod), fmt(e.notes)]),
+      ...expenses.map((e: any) => [e.id, fmt(e.date), e.category, e.description, fmt(e.amount), fmt(e.paidTo), fmt(e.paymentMethod), fmt(e.notes)]),
     ]);
 
     // ── Attendance ────────────────────────────────────────────────────────────
@@ -137,14 +137,14 @@ export async function GET() {
     });
     await writeTab(sheets, "Attendance", [
       ["Date", "Staff", "Status", "Clock In", "Clock Out", "Notes"],
-      ...attendance.map(a => [fmt(a.date), a.staff?.name ?? "", a.status, fmt(a.clockIn), fmt(a.clockOut), fmt(a.notes)]),
+      ...attendance.map((a: any) => [fmt(a.date), a.staff?.name ?? "", a.status, fmt(a.clockIn), fmt(a.clockOut), fmt(a.notes)]),
     ]);
 
     // ── Petty Cash ────────────────────────────────────────────────────────────
     const petty = await prisma.pettyCashTransaction.findMany({ orderBy: { date: "desc" } });
     await writeTab(sheets, "PettyCash", [
       ["ID", "Date", "Type", "Category", "Description", "Amount", "Running Balance"],
-      ...petty.map(p => [p.id, fmt(p.date), p.type, p.category, p.description, fmt(p.amount), fmt(p.balance)]),
+      ...petty.map((p: any) => [p.id, fmt(p.date), p.type, p.category, p.description, fmt(p.amount), fmt(p.balance)]),
     ]);
 
     const ts = new Date().toISOString().slice(0, 19).replace("T", " ");
