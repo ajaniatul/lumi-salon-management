@@ -98,10 +98,10 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:white;color:#1a0f12;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .page{width:210mm;min-height:297mm;background:white;display:flex;flex-direction:column;}
-  .hdr{background:linear-gradient(135deg,#0a0a0a 0%,#333333 55%,#555555 100%);padding:36px 44px 30px;}
+  .hdr{background:#ffffff;padding:28px 44px 20px;border-bottom:2px solid #111111;text-align:center;}
   .hdr-name{color:white;font-size:28px;font-weight:900;letter-spacing:0.1em;margin-bottom:4px;}
   .hdr-tag{color:rgba(255,255,255,.65);font-size:10px;letter-spacing:0.28em;text-transform:uppercase;margin-bottom:6px;}
-  .hdr-kind{display:inline-block;color:rgba(255,255,255,0.9);font-size:9.5px;font-weight:700;letter-spacing:0.1em;border:1px solid rgba(255,255,255,0.25);padding:3px 10px;border-radius:999px;margin-bottom:12px;}
+  .hdr-kind{display:inline-block;color:#111111;font-size:9.5px;font-weight:700;letter-spacing:0.1em;border:1px solid #111111;padding:3px 10px;border-radius:999px;margin-bottom:12px;}
   .hdr-contact{color:rgba(255,255,255,.5);font-size:9.5px;line-height:1.6;}
   .meta{display:flex;justify-content:space-between;align-items:center;padding:14px 44px;background:#fafafa;border-bottom:1px solid #e5e5e5;}
   .meta-lbl{font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:#9A7A80;margin-bottom:3px;}
@@ -134,7 +134,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   <div class="hdr">
     <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px;">
       ${d.brandLogo 
-        ? `<img src="${d.brandLogo}" style="height: 150px; max-width: 350px; object-fit: contain; margin-bottom: -25px; position: relative; left: -48px;" />` 
+        ? `<img src="${d.brandLogo}" style="height: 120px; max-width: 320px; object-fit: contain; display: block; margin: 0 auto 6px;" />` 
         : `<div>
              <div class="hdr-name">${d.brandName || "LUMI"}</div>
              <div class="hdr-tag">${d.brandTagline || "Where Beauty Meets Luxury"}</div>
@@ -283,19 +283,19 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           display:"flex", flexDirection:"column",
         }}>
           {/* Header */}
-          <div style={{ background:"linear-gradient(135deg,#0a0a0a 0%,#333333 55%,#555555 100%)", padding:"36px 44px 30px", position:"relative", overflow:"hidden" }}>
-            <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-start", gap:"8px", marginBottom:"0px" }}>
+          <div style={{ background:"#ffffff", padding:"28px 44px 20px", borderBottom:"2px solid #111111", textAlign:"center" as const }}>
+            <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:"6px", marginBottom:"10px" }}>
               {data.brandLogo ? (
-                <img src={data.brandLogo} style={{ height:"150px", maxWidth:"350px", objectFit:"contain", position:"relative", left:"-48px", marginBottom:"-25px" }} alt="Logo" />
+                <img src={data.brandLogo} style={{ height:"120px", maxWidth:"320px", objectFit:"contain" }} alt="Logo" />
               ) : (
                 <div>
-                  <p style={{ color:"white", fontSize:"26px", fontWeight:900, letterSpacing:"0.1em", marginBottom:"4px" }}>{data.brandName || "LUMI"}</p>
-                  <p style={{ color:"rgba(255,255,255,0.65)", fontSize:"10px", letterSpacing:"0.28em", textTransform:"uppercase" as const, marginBottom:"0px" }}>{data.brandTagline || "Where Beauty Meets Luxury"}</p>
+                  <p style={{ color:"#111111", fontSize:"26px", fontWeight:900, letterSpacing:"0.1em", marginBottom:"4px" }}>{data.brandName || "LUMI"}</p>
+                  <p style={{ color:"#555555", fontSize:"10px", letterSpacing:"0.28em", textTransform:"uppercase" as const, marginBottom:"0px" }}>{data.brandTagline || "Where Beauty Meets Luxury"}</p>
                 </div>
               )}
             </div>
-            <p style={{ display:"inline-block", color:"rgba(255,255,255,0.9)", fontSize:"9.5px", fontWeight:700, letterSpacing:"0.1em", border:"1px solid rgba(255,255,255,0.25)", padding:"3px 10px", borderRadius:"999px", marginBottom:"12px" }}>{invoiceKind}</p>
-            <p style={{ color:"rgba(255,255,255,0.5)", fontSize:"9.5px", lineHeight:"1.7", display:"block" }}>
+            <p style={{ display:"inline-block", color:"#111111", fontSize:"9.5px", fontWeight:700, letterSpacing:"0.1em", border:"1px solid #111111", padding:"3px 10px", borderRadius:"999px", marginBottom:"8px" }}>{invoiceKind}</p>
+            <p style={{ color:"#666666", fontSize:"9.5px", lineHeight:"1.7", display:"block" }}>
               GSTIN: {data.brandGstin || "27AABCE1234F1Z5"} &nbsp;·&nbsp; {data.brandAddress || "Shop 12, Luxury Mall, Bandra West, Mumbai 400050"}<br />
               Tel: {data.brandPhone || "022-12345678"} / 9995818169 &nbsp;·&nbsp; {data.brandEmail || "hello@lumisalon.in"} &nbsp;·&nbsp; {data.brandWebsite || "www.lumisalon.in"}
             </p>

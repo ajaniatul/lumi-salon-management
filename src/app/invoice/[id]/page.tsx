@@ -78,14 +78,14 @@ export default function PublicInvoicePage() {
           {/* Header */}
           <div style={{ background:"linear-gradient(135deg,#0a0a0a 0%,#333 55%,#555 100%)", padding:"36px 44px 30px" }}>
             {data.brandLogo ? (
-              <img src={data.brandLogo} style={{ height:"150px", maxWidth:"350px", objectFit:"contain", position:"relative", left:"-48px", marginBottom:"-25px" }} alt="Logo" />
+              <img src={data.brandLogo} style={{ height:"120px", maxWidth:"320px", objectFit:"contain", display:"block", margin:"0 auto 6px" }} alt="Logo" />
             ) : (
               <div style={{ marginBottom:"10px" }}>
-                <p style={{ color:"white", fontSize:"26px", fontWeight:900, letterSpacing:"0.1em", marginBottom:"4px" }}>{data.brandName || "LUMI"}</p>
-                <p style={{ color:"rgba(255,255,255,0.65)", fontSize:"10px", letterSpacing:"0.28em", textTransform:"uppercase", marginBottom:"0" }}>{data.brandTagline || "Where Beauty Meets Luxury"}</p>
+                <p style={{ color:"#111111", fontSize:"26px", fontWeight:900, letterSpacing:"0.1em", marginBottom:"4px" }}>{data.brandName || "LUMI"}</p>
+                <p style={{ color:"#555555", fontSize:"10px", letterSpacing:"0.28em", textTransform:"uppercase", marginBottom:"0" }}>{data.brandTagline || "Where Beauty Meets Luxury"}</p>
               </div>
             )}
-            <p style={{ color:"rgba(255,255,255,0.5)", fontSize:"9.5px", lineHeight:1.7 }}>
+            <p style={{ color:"#666666", fontSize:"9.5px", lineHeight:1.7 }}>
               GSTIN: {data.brandGstin || "—"} &nbsp;·&nbsp; {data.brandAddress || "—"}<br />
               Tel: {data.brandPhone || "—"} / 9995818169 &nbsp;·&nbsp; {data.brandEmail || "—"}
             </p>

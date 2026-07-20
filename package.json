@@ -52,7 +52,8 @@
     "xlsx": "^0.18.5",
     "@tanstack/react-table": "^8.17.3",
     "react-dropzone": "^14.2.3",
-    "sharp": "^0.33.4"
+    "sharp": "^0.33.4",
+    "googleapis": "^144.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
