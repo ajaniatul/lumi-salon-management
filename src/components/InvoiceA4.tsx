@@ -128,10 +128,18 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   </div>
 
   <div class="section">
-    <div class="lbl" style="margin-bottom:3px;">Bill To</div>
-    <div style="font-size:12px;font-weight:700;color:#1a0f12;">${d.customer}</div>
-    ${d.phone ? `<div style="font-size:10px;color:#6B7280;">${d.phone}</div>` : ""}
-    ${d.stylist ? `<div style="margin-top:5px;"><div class="lbl" style="margin-bottom:2px;">Attended By</div><div style="font-size:11px;font-weight:700;color:#1a0f12;">${d.stylist}</div>${d.stylistRole ? `<div style="font-size:9px;color:#6B7280;">${d.stylistRole}</div>` : ""}</div>` : ""}
+    <div style="display:flex;justify-content:space-between;gap:8px;">
+      <div>
+        <div class="lbl" style="margin-bottom:3px;">Bill To</div>
+        <div style="font-size:12px;font-weight:700;color:#1a0f12;">${d.customer}</div>
+        ${d.phone ? `<div style="font-size:10px;color:#6B7280;">${d.phone}</div>` : ""}
+      </div>
+      ${d.stylist ? `<div style="text-align:right;">
+        <div class="lbl" style="margin-bottom:3px;">Attended By</div>
+        <div style="font-size:11px;font-weight:700;color:#1a0f12;">${d.stylist}</div>
+        ${d.stylistRole ? `<div style="font-size:9px;color:#6B7280;">${d.stylistRole}</div>` : ""}
+      </div>` : ""}
+    </div>
   </div>
 
   <div style="padding:8px 10px;flex:1;">
@@ -281,16 +289,20 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
 
           {/* Customer */}
           <div style={{ ...sec }}>
-            <div style={{ ...lbl, marginBottom:"3px" }}>Bill To</div>
-            <div style={{ fontSize:"12px", fontWeight:700, color:"#1a0f12" }}>{data.customer}</div>
-            {data.phone && <div style={{ fontSize:"10px", color:"#6B7280" }}>{data.phone}</div>}
-            {data.stylist && (
-              <div style={{ marginTop:"6px" }}>
-                <div style={{ ...lbl, marginBottom:"2px" }}>Attended By</div>
-                <div style={{ fontSize:"11px", fontWeight:700, color:"#1a0f12" }}>{data.stylist}</div>
-                {data.stylistRole && <div style={{ fontSize:"9px", color:"#6B7280" }}>{data.stylistRole}</div>}
+            <div style={{ display:"flex", justifyContent:"space-between", gap:"8px" }}>
+              <div>
+                <div style={{ ...lbl, marginBottom:"3px" }}>Bill To</div>
+                <div style={{ fontSize:"12px", fontWeight:700, color:"#1a0f12" }}>{data.customer}</div>
+                {data.phone && <div style={{ fontSize:"10px", color:"#6B7280" }}>{data.phone}</div>}
               </div>
-            )}
+              {data.stylist && (
+                <div style={{ textAlign:"right" as const }}>
+                  <div style={{ ...lbl, marginBottom:"3px" }}>Attended By</div>
+                  <div style={{ fontSize:"11px", fontWeight:700, color:"#1a0f12" }}>{data.stylist}</div>
+                  {data.stylistRole && <div style={{ fontSize:"9px", color:"#6B7280" }}>{data.stylistRole}</div>}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Items */}
