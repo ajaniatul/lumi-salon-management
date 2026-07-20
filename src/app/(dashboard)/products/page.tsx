@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Search, Star, X, Loader2, Trash2 } from "lucide-react";
+import { Search, X, Loader2, Trash2, Camera, ScanLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHeaderAction } from "@/components/layout/HeaderActionContext";
 import toast from "react-hot-toast";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 type Product = {
-  id: string; sku: string; name: string; brand: string;
+  id: string; sku: string; name: string; brand: string; barcode: string | null;
   category: string; categoryLabel: string;
   price: number; costPrice: number; mrp: number | null;
   gst: number; hsn: string;
@@ -32,7 +33,7 @@ function makeCats(raw: string[]) {
 const UNITS = ["piece","bottle","tube","kit","jar","tin","pack","box","kg","litre","ml","g"];
 
 const iCls = "w-full px-3 py-2 rounded-xl border border-ivory-300 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 bg-white";
-const DEFAULT_FORM = { name:"", brand:"", category:"HAIR_CARE", price:"", costPrice:"", mrp:"", stock:"", minStock:"5", unit:"piece", mfgDate:"", expiry:"", isForSale:true, gst:"18", hsn:"3305" };
+const DEFAULT_FORM = { name:"", brand:"", barcode:"", category:"HAIR_CARE", price:"", costPrice:"", mrp:"", stock:"", minStock:"5", unit:"piece", mfgDate:"", expiry:"", isForSale:true, gst:"18", hsn:"3305" };
 
 export default function ProductsPage() {
   const { setAction } = useHeaderAction();
@@ -50,6 +51,7 @@ export default function ProductsPage() {
   const [err,            setErr]            = useState("");
   const [submitting,     setSubmitting]     = useState(false);
   const [categories,     setCategories]     = useState(makeCats(DEFAULT_PROD_CATS.map(c => c.value)));
+  const [showScanner,    setShowScanner]    = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -73,7 +75,7 @@ export default function ProductsPage() {
   const prod = products.find(p => p.id === selected) ?? products[0] ?? null;
 
   const openEdit = (p: Product) => {
-    setForm({ name: p.name, brand: p.brand, category: p.category, price: String(p.price), costPrice: String(p.costPrice), mrp: p.mrp ? String(p.mrp) : "", stock: String(p.stock), minStock: String(p.minStock), unit: p.unit, mfgDate: p.mfgDate ?? "", expiry: p.expiry ?? "", isForSale: p.isForSale, gst: String(p.gst), hsn: p.hsn });
+    setForm({ name: p.name, brand: p.brand, barcode: p.barcode ?? "", category: p.category, price: String(p.price), costPrice: String(p.costPrice), mrp: p.mrp ? String(p.mrp) : "", stock: String(p.stock), minStock: String(p.minStock), unit: p.unit, mfgDate: p.mfgDate ?? "", expiry: p.expiry ?? "", isForSale: p.isForSale, gst: String(p.gst), hsn: p.hsn });
     setEditingId(p.id);
     setErr("");
     setShowModal(true);
@@ -109,7 +111,7 @@ export default function ProductsPage() {
     }
     setSubmitting(true);
     try {
-      const body = { name: form.name, brand: form.brand, category: form.category, price: Number(form.price), costPrice: Number(form.costPrice) || 0, mrp: form.mrp ? Number(form.mrp) : null, stock: Number(form.stock) || 0, minStock: Number(form.minStock) || 5, unit: form.unit, mfgDate: form.mfgDate || null, expiry: form.expiry || null, isForSale: form.isForSale, gst: Number(form.gst) || 18, hsn: form.hsn };
+      const body = { name: form.name, brand: form.brand, barcode: form.barcode || null, category: form.category, price: Number(form.price), costPrice: Number(form.costPrice) || 0, mrp: form.mrp ? Number(form.mrp) : null, stock: Number(form.stock) || 0, minStock: Number(form.minStock) || 5, unit: form.unit, mfgDate: form.mfgDate || null, expiry: form.expiry || null, isForSale: form.isForSale, gst: Number(form.gst) || 18, hsn: form.hsn };
       const url    = editingId ? `/api/products/${editingId}` : "/api/products";
       const method = editingId ? "PATCH" : "POST";
       const res    = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -245,6 +247,11 @@ export default function ProductsPage() {
                     </div>
                     <h3 className="text-base font-bold text-foreground mt-2">{prod.name}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">{prod.brand || "—"} · {prod.sku}</p>
+                    {prod.barcode && (
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <ScanLine className="w-3 h-3" /> {prod.barcode}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -326,6 +333,25 @@ export default function ProductsPage() {
               <div>
                 <label className="text-xs font-semibold text-foreground block mb-1">Product Name <span className="text-red-400">*</span></label>
                 <input value={form.name} onChange={e => set("name", e.target.value)} placeholder="e.g. Wella Koleston Hair Color" className={iCls} />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-foreground block mb-1">Barcode / QR Code</label>
+                <div className="flex gap-2">
+                  <input
+                    value={form.barcode}
+                    onChange={e => set("barcode", e.target.value)}
+                    placeholder="Scan or type barcode…"
+                    className={cn(iCls, "flex-1")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowScanner(true)}
+                    className="px-3 py-2 rounded-xl border border-ivory-300 bg-ivory-50 hover:bg-primary-50 hover:border-primary-300 transition-all flex items-center gap-1.5 text-xs font-semibold text-muted-foreground"
+                    title="Scan barcode with camera"
+                  >
+                    <Camera className="w-3.5 h-3.5" /> Scan
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -411,6 +437,18 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Barcode Scanner Modal ── */}
+      {showScanner && (
+        <BarcodeScanner
+          onDetect={code => {
+            setShowScanner(false);
+            set("barcode", code);
+            toast.success(`Barcode captured: ${code}`);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
       )}
 
       {/* ── Stock Adjust Modal ── */}

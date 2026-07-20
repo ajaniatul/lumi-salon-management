@@ -61,7 +61,7 @@ export async function GET() {
     const customers = await prisma.customer.findMany({ orderBy: { createdAt: "desc" } });
     await writeTab(sheets, "Customers", [
       ["ID", "Name", "Phone", "Email", "DOB", "Anniversary", "Total Visits", "Total Spent", "Loyalty Points", "Notes", "Created At"],
-      ...customers.map(c => [c.id, c.name, c.phone, fmt(c.email), fmt(c.dateOfBirth), fmt(c.anniversary),
+      ...customers.map((c: any) => [c.id, c.name, c.phone, fmt(c.email), fmt(c.dateOfBirth), fmt(c.anniversary),
         c.totalVisits, fmt(c.totalSpent), c.loyaltyPoints, fmt(c.notes), fmt(c.createdAt)]),
     ]);
 

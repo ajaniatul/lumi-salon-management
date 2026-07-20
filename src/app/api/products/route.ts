@@ -12,9 +12,32 @@ export async function GET(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
 
-  const full = new URL(req.url).searchParams.get("full") === "true";
+  const _url    = new URL(req.url);
+  const full    = _url.searchParams.get("full") === "true";
+  const barcode = _url.searchParams.get("barcode");
 
   try {
+    // Barcode lookup
+    if (barcode) {
+      const p = await prisma.product.findUnique({ where: { barcode } });
+      if (!p) return NextResponse.json({ success: false, error: "No product with that barcode." }, { status: 404 });
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: p.id, sku: p.sku, name: p.name, brand: p.brand ?? "",
+          barcode: p.barcode ?? null,
+          category: p.category, categoryLabel: CAT_LABEL[p.category] ?? p.category,
+          price: Number(p.price), costPrice: Number(p.costPrice),
+          mrp: p.mrp ? Number(p.mrp) : null,
+          gst: Number(p.gstRate), hsn: p.hsnCode ?? "3305",
+          stock: p.stockQuantity, minStock: p.minStockLevel, unit: p.unit,
+          mfgDate: p.manufacturingDate ? p.manufacturingDate.toISOString().slice(0, 7) : null,
+          expiry: p.expiryDate ? p.expiryDate.toISOString().slice(0, 7) : null,
+          isForSale: p.isForSale, isForUse: p.isForUse, isActive: p.isActive,
+        },
+      });
+    }
+
     const products = await prisma.product.findMany({
       where: full ? { isActive: true } : { isActive: true, isForSale: true },
       orderBy: { name: "asc" },
@@ -27,6 +50,7 @@ export async function GET(req: NextRequest) {
         sku:           p.sku,
         name:          p.name,
         brand:         p.brand ?? "",
+        barcode:       p.barcode ?? null,
         category:      p.category,
         categoryLabel: CAT_LABEL[p.category] ?? p.category,
         price:         Number(p.price),
@@ -57,20 +81,22 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, brand, category, price, costPrice, mrp, stock, minStock, unit, mfgDate, expiry, isForSale, gst, hsn } = body;
+    const { name, brand, barcode: bcode, category, price, costPrice, mrp, stock, minStock, unit, mfgDate, expiry, isForSale, gst, hsn } = body;
 
     if (!name?.trim() || !category || price == null) {
       return NextResponse.json({ success: false, error: "Name, category and price are required." }, { status: 400 });
     }
 
-    const count = await prisma.product.count();
-    const sku   = `PRD-${String(count + 1).padStart(4, "0")}`;
+    const lastP = await prisma.product.findFirst({ orderBy: { sku: "desc" }, select: { sku: true } });
+    const lastNum = lastP ? parseInt(lastP.sku.replace("PRD-", ""), 10) : 0;
+    const sku     = `PRD-${String(lastNum + 1).padStart(4, "0")}`;
 
     const product = await prisma.product.create({
       data: {
         sku,
         name:          name.trim(),
         brand:         brand?.trim() || null,
+        barcode:       bcode?.trim() || null,
         category,
         price:         Number(price),
         costPrice:     Number(costPrice) || 0,

@@ -42,13 +42,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     // General product update
-    const { name, brand, category, price, costPrice, mrp, minStock, unit, mfgDate, expiry, isForSale, gst, hsn } = body;
+    const { name, brand, barcode, category, price, costPrice, mrp, minStock, unit, mfgDate, expiry, isForSale, gst, hsn } = body;
 
     const updated = await prisma.product.update({
       where: { id: params.id },
       data: {
         ...(name      && { name: name.trim() }),
         ...(brand     !== undefined && { brand: brand?.trim() || null }),
+        ...(barcode   !== undefined && { barcode: barcode?.trim() || null }),
         ...(category  && { category }),
         ...(price     != null && { price: Number(price) }),
         ...(costPrice != null && { costPrice: Number(costPrice) }),
