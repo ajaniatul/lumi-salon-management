@@ -141,10 +141,10 @@ export async function GET() {
     ]);
 
     // ── Petty Cash ────────────────────────────────────────────────────────────
-    const petty = await prisma.pettyCashTransaction.findMany({ orderBy: { date: "desc" } });
+    const petty = await prisma.pettyCashEntry.findMany({ orderBy: { date: "desc" } });
     await writeTab(sheets, "PettyCash", [
-      ["ID", "Date", "Type", "Category", "Description", "Amount", "Running Balance"],
-      ...petty.map((p: any) => [p.id, fmt(p.date), p.type, p.category, p.description, fmt(p.amount), fmt(p.balance)]),
+      ["ID", "Voucher No", "Date", "Type", "Category", "Description", "Amount"],
+      ...petty.map((p: any) => [p.id, p.voucherNo, fmt(p.date), p.type, p.category, p.description, fmt(p.amount)]),
     ]);
 
     const ts = new Date().toISOString().slice(0, 19).replace("T", " ");
