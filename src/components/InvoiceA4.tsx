@@ -102,7 +102,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
 <div class="page">
   <div class="hdr">
     ${d.brandLogo
-      ? `<img src="${d.brandLogo}" style="max-width:74mm;height:auto;display:block;margin:0 auto;" />`
+      ? `<div style="max-width:74mm;height:155px;overflow:hidden;margin:0 auto;"><img src="${d.brandLogo}" style="width:100%;height:auto;display:block;" /></div>`
       : `<div style="font-size:20px;font-weight:900;letter-spacing:0.08em;color:#111;margin-bottom:3px;">${d.brandName || "SALON"}</div>
          <div style="font-size:7.5px;letter-spacing:0.2em;text-transform:uppercase;color:#777;margin-bottom:5px;">${d.brandTagline || ""}</div>`
     }
@@ -244,7 +244,9 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           {/* Header */}
           <div style={{ background:"#fff", padding:"10px 12px 8px", borderBottom:"1.5px solid #111", textAlign:"center" as const }}>
             {data.brandLogo ? (
-              <img src={data.brandLogo} style={{ maxWidth:"280px", height:"auto", display:"block", margin:"0 auto" }} alt="Logo" />
+              <div style={{ maxWidth:"280px", height:"155px", overflow:"hidden", margin:"0 auto" }}>
+                <img src={data.brandLogo} style={{ width:"100%", height:"auto", display:"block" }} alt="Logo" />
+              </div>
             ) : (
               <>
                 <p style={{ fontSize:"20px", fontWeight:900, letterSpacing:"0.08em", color:"#111", marginBottom:"3px" }}>{data.brandName || "SALON"}</p>
