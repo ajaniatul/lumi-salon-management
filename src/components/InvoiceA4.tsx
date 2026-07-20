@@ -83,7 +83,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:white;color:#1a0f12;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .page{width:80mm;min-height:210mm;background:white;display:flex;flex-direction:column;}
-  .hdr{background:#fff;padding:14px 10px 10px;border-bottom:1.5px solid #111;text-align:center;}
+  .hdr{background:#fff;padding:10px 10px 8px;border-bottom:1.5px solid #111;text-align:center;}
   .divider{border:none;border-top:1px dashed #ccc;margin:6px 0;}
   .row{display:flex;justify-content:space-between;align-items:baseline;}
   .lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#9A7A80;}
@@ -102,11 +102,11 @@ export function generateInvoiceHTML(d: InvoiceData): string {
 <div class="page">
   <div class="hdr">
     ${d.brandLogo
-      ? `<img src="${d.brandLogo}" style="max-width:74mm;max-height:160px;object-fit:contain;display:block;margin:0 auto 2px;" />`
+      ? `<img src="${d.brandLogo}" style="max-width:74mm;max-height:160px;object-fit:contain;display:block;margin:0 auto 0;" />`
       : `<div style="font-size:20px;font-weight:900;letter-spacing:0.08em;color:#111;margin-bottom:3px;">${d.brandName || "SALON"}</div>
          <div style="font-size:7.5px;letter-spacing:0.2em;text-transform:uppercase;color:#777;margin-bottom:5px;">${d.brandTagline || ""}</div>`
     }
-    <div style="font-size:7.5px;color:#666;line-height:1.7;margin-bottom:6px;">
+    <div style="font-size:7.5px;color:#666;line-height:1.5;margin-bottom:5px;">
       ${d.brandAddress || ""}<br>
       Tel: ${d.brandPhone || ""} / 9995818169<br>
       GSTIN: ${d.brandGstin || ""}
@@ -242,16 +242,16 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           display:"flex", flexDirection:"column",
         }}>
           {/* Header */}
-          <div style={{ background:"#fff", padding:"14px 12px 10px", borderBottom:"1.5px solid #111", textAlign:"center" as const }}>
+          <div style={{ background:"#fff", padding:"10px 12px 8px", borderBottom:"1.5px solid #111", textAlign:"center" as const }}>
             {data.brandLogo ? (
-              <img src={data.brandLogo} style={{ maxWidth:"280px", maxHeight:"160px", objectFit:"contain", display:"block", margin:"0 auto 2px" }} alt="Logo" />
+              <img src={data.brandLogo} style={{ maxWidth:"280px", maxHeight:"160px", objectFit:"contain", display:"block", margin:"0 auto 0" }} alt="Logo" />
             ) : (
               <>
                 <p style={{ fontSize:"20px", fontWeight:900, letterSpacing:"0.08em", color:"#111", marginBottom:"3px" }}>{data.brandName || "SALON"}</p>
                 {data.brandTagline && <p style={{ fontSize:"7.5px", letterSpacing:"0.2em", textTransform:"uppercase" as const, color:"#777", marginBottom:"5px" }}>{data.brandTagline}</p>}
               </>
             )}
-            <p style={{ fontSize:"7.5px", color:"#666", lineHeight:"1.7", marginBottom:"6px" }}>
+            <p style={{ fontSize:"7.5px", color:"#666", lineHeight:"1.5", marginBottom:"5px" }}>
               {data.brandAddress}<br />
               Tel: {data.brandPhone || ""} / 9995818169<br />
               GSTIN: {data.brandGstin || ""}
