@@ -82,7 +82,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   @page { size:80mm 210mm; margin:0; }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:white;color:#1a0f12;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .page{width:80mm;min-height:210mm;background:white;display:flex;flex-direction:column;}
+  .page{width:80mm;min-height:210mm;background:white;display:flex;flex-direction:column;overflow-x:hidden;word-wrap:break-word;}
   .hdr{background:#fff;padding:10px 10px 8px;border-bottom:1.5px solid #111;text-align:center;}
   .divider{border:none;border-top:1px dashed #ccc;margin:6px 0;}
   .row{display:flex;justify-content:space-between;align-items:baseline;}
@@ -129,14 +129,14 @@ export function generateInvoiceHTML(d: InvoiceData): string {
 
   <div class="section">
     <div style="display:flex;justify-content:space-between;gap:8px;">
-      <div>
+      <div style="min-width:0;flex:1;">
         <div class="lbl" style="margin-bottom:3px;">Bill To</div>
-        <div style="font-size:12px;font-weight:700;color:#1a0f12;">${d.customer}</div>
+        <div style="font-size:12px;font-weight:700;color:#1a0f12;word-break:break-word;">${d.customer}</div>
         ${d.phone ? `<div style="font-size:10px;color:#6B7280;">${d.phone}</div>` : ""}
       </div>
-      ${d.stylist ? `<div style="text-align:right;">
+      ${d.stylist ? `<div style="text-align:right;flex-shrink:0;max-width:45%;">
         <div class="lbl" style="margin-bottom:3px;">Attended By</div>
-        <div style="font-size:11px;font-weight:700;color:#1a0f12;">${d.stylist}</div>
+        <div style="font-size:11px;font-weight:700;color:#1a0f12;word-break:break-word;">${d.stylist}</div>
         ${d.stylistRole ? `<div style="font-size:9px;color:#6B7280;">${d.stylistRole}</div>` : ""}
       </div>` : ""}
     </div>
@@ -245,7 +245,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
       <div className="flex-1 overflow-auto py-8 px-4 flex justify-center" style={{ background:"#1a0f12" }}>
         <div style={{
           ...S,
-          width:"302px", background:"white",
+          width:"302px", background:"white", overflowX:"hidden", wordWrap:"break-word",
           boxShadow:"0 32px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(183,110,121,0.2)",
           display:"flex", flexDirection:"column",
         }}>
@@ -290,15 +290,15 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           {/* Customer */}
           <div style={{ ...sec }}>
             <div style={{ display:"flex", justifyContent:"space-between", gap:"8px" }}>
-              <div>
+              <div style={{ minWidth:0, flex:1 }}>
                 <div style={{ ...lbl, marginBottom:"3px" }}>Bill To</div>
-                <div style={{ fontSize:"12px", fontWeight:700, color:"#1a0f12" }}>{data.customer}</div>
+                <div style={{ fontSize:"12px", fontWeight:700, color:"#1a0f12", wordBreak:"break-word" }}>{data.customer}</div>
                 {data.phone && <div style={{ fontSize:"10px", color:"#6B7280" }}>{data.phone}</div>}
               </div>
               {data.stylist && (
-                <div style={{ textAlign:"right" as const }}>
+                <div style={{ textAlign:"right" as const, flexShrink:0, maxWidth:"45%" }}>
                   <div style={{ ...lbl, marginBottom:"3px" }}>Attended By</div>
-                  <div style={{ fontSize:"11px", fontWeight:700, color:"#1a0f12" }}>{data.stylist}</div>
+                  <div style={{ fontSize:"11px", fontWeight:700, color:"#1a0f12", wordBreak:"break-word" }}>{data.stylist}</div>
                   {data.stylistRole && <div style={{ fontSize:"9px", color:"#6B7280" }}>{data.stylistRole}</div>}
                 </div>
               )}
