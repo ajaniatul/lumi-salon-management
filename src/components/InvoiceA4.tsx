@@ -58,7 +58,7 @@ export function generateInvoiceHTML(d: InvoiceData): string {
       <td style="padding:7px 0;border-bottom:1px solid #f0e8ea;vertical-align:top;">
         <div style="font-size:11px;font-weight:600;color:#1a0f12;margin-bottom:2px;">${it.description}</div>
         ${it.detail ? `<div style="font-size:9px;color:#9A7A80;">${it.detail}</div>` : ""}
-        ${it.hsnCode ? `<div style="font-size:8.5px;color:#9A7A80;">${hsnLabel}: ${it.hsnCode}</div>` : ""}
+        ${it.hsnCode ? `<div style="font-size:8.5px;color:#666;">${hsnLabel}: ${it.hsnCode}</div>` : ""}
       </td>
       <td style="padding:7px 0;border-bottom:1px solid #f0e8ea;text-align:right;font-size:11px;font-weight:600;color:#1a0f12;white-space:nowrap;vertical-align:top;min-width:60px;">
         &#8377;${it.amount.toLocaleString("en-IN")}
@@ -79,23 +79,29 @@ export function generateInvoiceHTML(d: InvoiceData): string {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Invoice ${d.invoiceNo} — ${d.brandName || "Salon"}</title>
 <style>
-  @page { size:80mm 210mm; margin:0; }
+  @page { size:80mm 210mm; margin:2mm 4mm; }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:white;color:#1a0f12;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .page{width:80mm;min-height:210mm;background:white;display:flex;flex-direction:column;overflow-x:hidden;word-wrap:break-word;}
-  .hdr{background:#fff;padding:10px 10px 8px;border-bottom:1.5px solid #111;text-align:center;}
+  .page{width:72mm;min-height:206mm;background:white;display:flex;flex-direction:column;overflow-x:hidden;word-wrap:break-word;}
+  .hdr{background:#fff;padding:10px 8px 8px;border-bottom:1.5px solid #111;text-align:center;}
   .divider{border:none;border-top:1px dashed #ccc;margin:6px 0;}
   .row{display:flex;justify-content:space-between;align-items:baseline;}
-  .lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#9A7A80;}
+  .lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;}
   .val{font-size:11px;font-weight:700;color:#1a0f12;}
-  .section{padding:8px 10px;border-bottom:1px dashed #e0d8da;}
+  .section{padding:8px 8px;border-bottom:1px dashed #ccc;}
   table{width:100%;border-collapse:collapse;}
-  .totals td{padding:3px 0;font-size:10px;color:#555;}
+  .totals td{padding:3px 0;font-size:10px;color:#333;}
   .totals td:last-child{text-align:right;font-weight:600;}
   .grand td{padding:6px 0 3px!important;font-size:14px!important;font-weight:800!important;color:#111!important;border-top:1.5px solid #111;margin-top:3px;}
   .grand td:last-child{text-align:right;}
-  .ftr{padding:10px;text-align:center;border-top:1px dashed #ccc;}
-  @media print{ html,body{width:80mm;} .no-print{display:none!important;} }
+  .ftr{padding:10px 8px;text-align:center;border-top:1px dashed #ccc;}
+  @media print{
+    html,body{width:72mm;}
+    .no-print{display:none!important;}
+    span[style*="background"]{background:transparent!important;border:1px solid #333!important;color:#111!important;}
+    *{color:#111!important;}
+    img{-webkit-print-color-adjust:exact!important;}
+  }
 </style>
 </head>
 <body>
