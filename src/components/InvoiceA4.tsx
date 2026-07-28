@@ -55,12 +55,12 @@ export function generateInvoiceHTML(d: InvoiceData): string {
     const hsnLabel = it.type === "Service" ? "SAC" : "HSN";
     return `
     <tr>
-      <td style="padding:7px 0;border-bottom:1px solid #ccc;vertical-align:top;">
+      <td style="padding:7px 0;vertical-align:top;">
         <div style="font-size:11px;font-weight:600;color:#1a0f12;margin-bottom:2px;">${it.description}</div>
         ${it.detail ? `<div style="font-size:9px;color:#111;">${it.detail}</div>` : ""}
         ${it.hsnCode ? `<div style="font-size:8.5px;color:#111;">${hsnLabel}: ${it.hsnCode}</div>` : ""}
       </td>
-      <td style="padding:7px 0;border-bottom:1px solid #ccc;text-align:right;font-size:11px;font-weight:600;color:#1a0f12;white-space:nowrap;vertical-align:top;min-width:60px;">
+      <td style="padding:7px 0;text-align:right;font-size:11px;font-weight:600;color:#1a0f12;white-space:nowrap;vertical-align:top;min-width:60px;">
         &#8377;${it.amount.toLocaleString("en-IN")}
       </td>
     </tr>`;
@@ -322,12 +322,12 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
               <tbody>
                 {data.items.map((it, i) => (
                   <tr key={i}>
-                    <td style={{ padding:"7px 0", borderBottom:"1px solid #f0e8ea", verticalAlign:"top" }}>
+                    <td style={{ padding:"7px 0", verticalAlign:"top" }}>
                       <p style={{ fontSize:"11px", fontWeight:600, color:"#1a0f12", marginBottom:"2px" }}>{it.description}</p>
                       {it.detail && <p style={{ fontSize:"9px", color:"#111" }}>{it.detail}</p>}
                       {it.hsnCode && <p style={{ fontSize:"8.5px", color:"#111" }}>{it.type==="Service" ? "SAC" : "HSN"}: {it.hsnCode}</p>}
                     </td>
-                    <td style={{ padding:"7px 0", borderBottom:"1px solid #f0e8ea", textAlign:"right" as const, fontSize:"11px", fontWeight:600, color:"#1a0f12", whiteSpace:"nowrap", verticalAlign:"top", minWidth:"60px" }}>
+                    <td style={{ padding:"7px 0", textAlign:"right" as const, fontSize:"11px", fontWeight:600, color:"#1a0f12", whiteSpace:"nowrap", verticalAlign:"top", minWidth:"60px" }}>
                       ₹{it.amount.toLocaleString("en-IN")}
                     </td>
                   </tr>
