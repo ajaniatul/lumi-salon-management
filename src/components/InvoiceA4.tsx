@@ -55,12 +55,12 @@ export function generateInvoiceHTML(d: InvoiceData): string {
     const hsnLabel = it.type === "Service" ? "SAC" : "HSN";
     return `
     <tr>
-      <td style="padding:7px 0;border-bottom:1px solid #f0e8ea;vertical-align:top;">
+      <td style="padding:7px 0;border-bottom:1px solid #ccc;vertical-align:top;">
         <div style="font-size:11px;font-weight:600;color:#1a0f12;margin-bottom:2px;">${it.description}</div>
-        ${it.detail ? `<div style="font-size:9px;color:#666;">${it.detail}</div>` : ""}
-        ${it.hsnCode ? `<div style="font-size:8.5px;color:#666;">${hsnLabel}: ${it.hsnCode}</div>` : ""}
+        ${it.detail ? `<div style="font-size:9px;color:#111;">${it.detail}</div>` : ""}
+        ${it.hsnCode ? `<div style="font-size:8.5px;color:#111;">${hsnLabel}: ${it.hsnCode}</div>` : ""}
       </td>
-      <td style="padding:7px 0;border-bottom:1px solid #f0e8ea;text-align:right;font-size:11px;font-weight:600;color:#1a0f12;white-space:nowrap;vertical-align:top;min-width:60px;">
+      <td style="padding:7px 0;border-bottom:1px solid #ccc;text-align:right;font-size:11px;font-weight:600;color:#1a0f12;white-space:nowrap;vertical-align:top;min-width:60px;">
         &#8377;${it.amount.toLocaleString("en-IN")}
       </td>
     </tr>`;
@@ -84,17 +84,17 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:white;color:#1a0f12;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .page{width:72mm;min-height:206mm;background:white;display:flex;flex-direction:column;overflow-x:hidden;word-wrap:break-word;}
   .hdr{background:#fff;padding:10px 8px 8px;border-bottom:1.5px solid #111;text-align:center;}
-  .divider{border:none;border-top:1px dashed #ccc;margin:6px 0;}
+  .divider{border:none;border-top:1px dashed #111;margin:6px 0;}
   .row{display:flex;justify-content:space-between;align-items:baseline;}
-  .lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;}
+  .lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#111;}
   .val{font-size:11px;font-weight:700;color:#1a0f12;}
-  .section{padding:8px 8px;border-bottom:1px dashed #ccc;}
+  .section{padding:8px 8px;border-bottom:1px dashed #111;}
   table{width:100%;border-collapse:collapse;}
-  .totals td{padding:3px 0;font-size:10px;color:#333;}
+  .totals td{padding:3px 0;font-size:10px;color:#111;}
   .totals td:last-child{text-align:right;font-weight:600;}
   .grand td{padding:6px 0 3px!important;font-size:14px!important;font-weight:800!important;color:#111!important;border-top:1.5px solid #111;margin-top:3px;}
   .grand td:last-child{text-align:right;}
-  .ftr{padding:10px 8px;text-align:center;border-top:1px dashed #ccc;}
+  .ftr{padding:10px 8px;text-align:center;border-top:1px dashed #111;}
   @media print{
     html,body{width:72mm;}
     .no-print{display:none!important;}
@@ -109,9 +109,9 @@ export function generateInvoiceHTML(d: InvoiceData): string {
     ${d.brandLogo
       ? `<div style="max-width:74mm;height:155px;overflow:hidden;margin:0 auto;"><img src="${d.brandLogo}" style="width:100%;height:auto;display:block;filter:grayscale(100%);" /></div>`
       : `<div style="font-size:20px;font-weight:900;letter-spacing:0.08em;color:#111;margin-bottom:3px;">${d.brandName || "SALON"}</div>
-         <div style="font-size:7.5px;letter-spacing:0.2em;text-transform:uppercase;color:#777;margin-bottom:5px;">${d.brandTagline || ""}</div>`
+         <div style="font-size:7.5px;letter-spacing:0.2em;text-transform:uppercase;color:#111;margin-bottom:5px;">${d.brandTagline || ""}</div>`
     }
-    <div style="font-size:7.5px;color:#666;line-height:1.5;margin-bottom:5px;">
+    <div style="font-size:7.5px;color:#111;line-height:1.5;margin-bottom:5px;">
       ${d.brandAddress || ""}<br>
       Tel: ${d.brandPhone || ""} / 9995818169<br>
       GSTIN: ${d.brandGstin || ""}
@@ -126,9 +126,9 @@ export function generateInvoiceHTML(d: InvoiceData): string {
     </div>
     <div class="row">
       <div><div class="lbl">Status</div>
-        <span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:9px;font-weight:700;border:1px solid #333;color:#111;background:transparent;">${sLabel}</span>
+        <span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:9px;font-weight:700;border:1px solid #111;color:#111;background:transparent;">${sLabel}</span>
       </div>
-      <div style="text-align:right;"><div class="lbl">Payment</div><div style="font-size:10px;font-weight:600;color:#374151;">${d.payMethod}</div></div>
+      <div style="text-align:right;"><div class="lbl">Payment</div><div style="font-size:10px;font-weight:600;color:#111;">${d.payMethod}</div></div>
     </div>
   </div>
 
@@ -137,12 +137,12 @@ export function generateInvoiceHTML(d: InvoiceData): string {
       <div style="min-width:0;flex:1;">
         <div class="lbl" style="margin-bottom:3px;">Bill To</div>
         <div style="font-size:12px;font-weight:700;color:#1a0f12;word-break:break-word;">${d.customer}</div>
-        ${d.phone ? `<div style="font-size:10px;color:#555;">${d.phone}</div>` : ""}
+        ${d.phone ? `<div style="font-size:10px;color:#111;">${d.phone}</div>` : ""}
       </div>
       ${d.stylist ? `<div style="text-align:right;flex-shrink:0;max-width:45%;">
         <div class="lbl" style="margin-bottom:3px;">Attended By</div>
         <div style="font-size:11px;font-weight:700;color:#1a0f12;word-break:break-word;">${d.stylist}</div>
-        ${d.stylistRole ? `<div style="font-size:9px;color:#555;">${d.stylistRole}</div>` : ""}
+        ${d.stylistRole ? `<div style="font-size:9px;color:#111;">${d.stylistRole}</div>` : ""}
       </div>` : ""}
     </div>
   </div>
@@ -151,8 +151,8 @@ export function generateInvoiceHTML(d: InvoiceData): string {
     <table>
       <thead>
         <tr>
-          <th style="font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#666;padding:5px 0;border-bottom:1.5px solid #111;text-align:left;">Item</th>
-          <th style="font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#666;padding:5px 0;border-bottom:1.5px solid #111;text-align:right;">Amount</th>
+          <th style="font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#111;padding:5px 0;border-bottom:1.5px solid #111;text-align:left;">Item</th>
+          <th style="font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#111;padding:5px 0;border-bottom:1.5px solid #111;text-align:right;">Amount</th>
         </tr>
       </thead>
       <tbody>${itemRows}</tbody>
@@ -169,12 +169,12 @@ export function generateInvoiceHTML(d: InvoiceData): string {
       </tbody>
     </table>
 
-    ${d.notes ? `<div style="margin-top:8px;padding:6px 8px;background:#fafafa;border-radius:4px;border-left:2px solid #555;font-size:9px;color:#5A3A40;line-height:1.6;"><span style="font-weight:700;text-transform:uppercase;font-size:7.5px;color:#666;display:block;margin-bottom:2px;">Notes</span>${d.notes}</div>` : ""}
+    ${d.notes ? `<div style="margin-top:8px;padding:6px 8px;background:white;border-radius:4px;border-left:2px solid #555;font-size:9px;color:#111;line-height:1.6;"><span style="font-weight:700;text-transform:uppercase;font-size:7.5px;color:#111;display:block;margin-bottom:2px;">Notes</span>${d.notes}</div>` : ""}
   </div>
 
   <div class="ftr">
     <div style="font-size:10px;font-weight:800;color:#111;margin-bottom:4px;">Thank you for visiting ${d.brandName || "us"}!</div>
-    <div style="font-size:8px;color:#666;line-height:1.7;">
+    <div style="font-size:8px;color:#111;line-height:1.7;">
       Computer-generated invoice. No signature required.<br>
       ${d.brandEmail || ""} &nbsp;|&nbsp; ${d.brandWebsite || ""}
     </div>
@@ -213,7 +213,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
   };
 
   const S: React.CSSProperties = { fontFamily:"'Segoe UI',Tahoma,Geneva,Verdana,sans-serif" };
-  const lbl: React.CSSProperties = { fontSize:"7px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.12em", color:"#666", marginBottom:"2px" };
+  const lbl: React.CSSProperties = { fontSize:"7px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.12em", color:"#111", marginBottom:"2px" };
   const val: React.CSSProperties = { fontSize:"11px", fontWeight:700, color:"#1a0f12" };
   const sec: React.CSSProperties = { padding:"8px 12px", borderBottom:"1px dashed #e0d8da" };
 
@@ -225,7 +225,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
         <div className="flex items-center gap-3">
           <div>
             <p className="text-white text-sm font-semibold">{data.invoiceNo}</p>
-            <p className="text-xs" style={{ color:"#666" }}>{data.customer} · {data.date}</p>
+            <p className="text-xs" style={{ color:"#111" }}>{data.customer} · {data.date}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -263,10 +263,10 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
             ) : (
               <>
                 <p style={{ fontSize:"20px", fontWeight:900, letterSpacing:"0.08em", color:"#111", marginBottom:"3px" }}>{data.brandName || "SALON"}</p>
-                {data.brandTagline && <p style={{ fontSize:"7.5px", letterSpacing:"0.2em", textTransform:"uppercase" as const, color:"#777", marginBottom:"5px" }}>{data.brandTagline}</p>}
+                {data.brandTagline && <p style={{ fontSize:"7.5px", letterSpacing:"0.2em", textTransform:"uppercase" as const, color:"#111", marginBottom:"5px" }}>{data.brandTagline}</p>}
               </>
             )}
-            <p style={{ fontSize:"7.5px", color:"#666", lineHeight:"1.5", marginBottom:"5px" }}>
+            <p style={{ fontSize:"7.5px", color:"#111", lineHeight:"1.5", marginBottom:"5px" }}>
               {data.brandAddress}<br />
               Tel: {data.brandPhone || ""} / 9995818169<br />
               GSTIN: {data.brandGstin || ""}
@@ -283,11 +283,11 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div>
                 <div style={lbl}>Status</div>
-                <span style={{ display:"inline-block", padding:"2px 10px", borderRadius:"999px", fontSize:"9px", fontWeight:700, border:"1px solid #333", color:"#111", background:"transparent" }}>{sLabel}</span>
+                <span style={{ display:"inline-block", padding:"2px 10px", borderRadius:"999px", fontSize:"9px", fontWeight:700, border:"1px solid #111", color:"#111", background:"transparent" }}>{sLabel}</span>
               </div>
               <div style={{ textAlign:"right" }}>
                 <div style={lbl}>Payment</div>
-                <div style={{ fontSize:"10px", fontWeight:600, color:"#333" }}>{data.payMethod}</div>
+                <div style={{ fontSize:"10px", fontWeight:600, color:"#111" }}>{data.payMethod}</div>
               </div>
             </div>
           </div>
@@ -298,13 +298,13 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
               <div style={{ minWidth:0, flex:1 }}>
                 <div style={{ ...lbl, marginBottom:"3px" }}>Bill To</div>
                 <div style={{ fontSize:"12px", fontWeight:700, color:"#1a0f12", wordBreak:"break-word" }}>{data.customer}</div>
-                {data.phone && <div style={{ fontSize:"10px", color:"#555" }}>{data.phone}</div>}
+                {data.phone && <div style={{ fontSize:"10px", color:"#111" }}>{data.phone}</div>}
               </div>
               {data.stylist && (
                 <div style={{ textAlign:"right" as const, flexShrink:0, maxWidth:"45%" }}>
                   <div style={{ ...lbl, marginBottom:"3px" }}>Attended By</div>
                   <div style={{ fontSize:"11px", fontWeight:700, color:"#1a0f12", wordBreak:"break-word" }}>{data.stylist}</div>
-                  {data.stylistRole && <div style={{ fontSize:"9px", color:"#555" }}>{data.stylistRole}</div>}
+                  {data.stylistRole && <div style={{ fontSize:"9px", color:"#111" }}>{data.stylistRole}</div>}
                 </div>
               )}
             </div>
@@ -315,8 +315,8 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
             <table style={{ width:"100%", borderCollapse:"collapse" }}>
               <thead>
                 <tr>
-                  <th style={{ fontSize:"7.5px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.12em", color:"#666", padding:"5px 0", borderBottom:"1.5px solid #111", textAlign:"left" as const }}>Item</th>
-                  <th style={{ fontSize:"7.5px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.12em", color:"#666", padding:"5px 0", borderBottom:"1.5px solid #111", textAlign:"right" as const }}>Amount</th>
+                  <th style={{ fontSize:"7.5px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.12em", color:"#111", padding:"5px 0", borderBottom:"1.5px solid #111", textAlign:"left" as const }}>Item</th>
+                  <th style={{ fontSize:"7.5px", fontWeight:700, textTransform:"uppercase" as const, letterSpacing:"0.12em", color:"#111", padding:"5px 0", borderBottom:"1.5px solid #111", textAlign:"right" as const }}>Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -324,8 +324,8 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
                   <tr key={i}>
                     <td style={{ padding:"7px 0", borderBottom:"1px solid #f0e8ea", verticalAlign:"top" }}>
                       <p style={{ fontSize:"11px", fontWeight:600, color:"#1a0f12", marginBottom:"2px" }}>{it.description}</p>
-                      {it.detail && <p style={{ fontSize:"9px", color:"#666" }}>{it.detail}</p>}
-                      {it.hsnCode && <p style={{ fontSize:"8.5px", color:"#666" }}>{it.type==="Service" ? "SAC" : "HSN"}: {it.hsnCode}</p>}
+                      {it.detail && <p style={{ fontSize:"9px", color:"#111" }}>{it.detail}</p>}
+                      {it.hsnCode && <p style={{ fontSize:"8.5px", color:"#111" }}>{it.type==="Service" ? "SAC" : "HSN"}: {it.hsnCode}</p>}
                     </td>
                     <td style={{ padding:"7px 0", borderBottom:"1px solid #f0e8ea", textAlign:"right" as const, fontSize:"11px", fontWeight:600, color:"#1a0f12", whiteSpace:"nowrap", verticalAlign:"top", minWidth:"60px" }}>
                       ₹{it.amount.toLocaleString("en-IN")}
@@ -346,8 +346,8 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
                   { label:`SGST @ ${data.halfGst}%`, val:`₹${data.sgst.toFixed(2)}` },
                 ].map(r => (
                   <tr key={r.label}>
-                    <td style={{ padding:"3px 0", fontSize:"10px", color:"#555" }}>{r.label}</td>
-                    <td style={{ padding:"3px 0", fontSize:"10px", color:"#555", textAlign:"right" as const, fontWeight:600 }}>{r.val}</td>
+                    <td style={{ padding:"3px 0", fontSize:"10px", color:"#111" }}>{r.label}</td>
+                    <td style={{ padding:"3px 0", fontSize:"10px", color:"#111", textAlign:"right" as const, fontWeight:600 }}>{r.val}</td>
                   </tr>
                 ))}
                 {data.discountAmt && data.discountAmt > 0 ? (
@@ -364,9 +364,9 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
             </table>
 
             {data.notes && (
-              <div style={{ marginTop:"8px", padding:"6px 8px", background:"#fafafa", borderRadius:"4px", borderLeft:"2px solid #555" }}>
-                <span style={{ fontWeight:700, textTransform:"uppercase" as const, fontSize:"7.5px", color:"#666", display:"block", marginBottom:"2px" }}>Notes</span>
-                <span style={{ fontSize:"9px", color:"#5A3A40", lineHeight:"1.6" }}>{data.notes}</span>
+              <div style={{ marginTop:"8px", padding:"6px 8px", background:"white", borderRadius:"4px", borderLeft:"2px solid #555" }}>
+                <span style={{ fontWeight:700, textTransform:"uppercase" as const, fontSize:"7.5px", color:"#111", display:"block", marginBottom:"2px" }}>Notes</span>
+                <span style={{ fontSize:"9px", color:"#111", lineHeight:"1.6" }}>{data.notes}</span>
               </div>
             )}
           </div>
@@ -374,7 +374,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           {/* Footer */}
           <div style={{ padding:"10px 12px", textAlign:"center" as const, borderTop:"1px dashed #ccc" }}>
             <p style={{ fontSize:"10px", fontWeight:800, color:"#111", marginBottom:"4px" }}>Thank you for visiting {data.brandName || "us"}!</p>
-            <p style={{ fontSize:"8px", color:"#666", lineHeight:"1.7" }}>
+            <p style={{ fontSize:"8px", color:"#111", lineHeight:"1.7" }}>
               Computer-generated invoice. No signature required.<br />
               {data.brandEmail} &nbsp;|&nbsp; {data.brandWebsite}
             </p>
