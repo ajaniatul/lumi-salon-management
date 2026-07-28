@@ -84,17 +84,17 @@ export function generateInvoiceHTML(d: InvoiceData): string {
   body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:white;color:#1a0f12;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   .page{width:72mm;min-height:206mm;background:white;display:flex;flex-direction:column;overflow-x:hidden;word-wrap:break-word;}
   .hdr{background:#fff;padding:10px 8px 8px;border-bottom:1.5px solid #111;text-align:center;}
-  .divider{border:none;border-top:1px dashed #111;margin:6px 0;}
+  .divider{border:none;border-top:1.5px solid #111;margin:6px 0;}
   .row{display:flex;justify-content:space-between;align-items:baseline;}
   .lbl{font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#111;}
   .val{font-size:11px;font-weight:700;color:#1a0f12;}
-  .section{padding:8px 8px;border-bottom:1px dashed #111;}
+  .section{padding:8px 8px;border-bottom:1.5px solid #111;}
   table{width:100%;border-collapse:collapse;}
   .totals td{padding:3px 0;font-size:10px;color:#111;}
   .totals td:last-child{text-align:right;font-weight:600;}
   .grand td{padding:6px 0 3px!important;font-size:14px!important;font-weight:800!important;color:#111!important;border-top:1.5px solid #111;margin-top:3px;}
   .grand td:last-child{text-align:right;}
-  .ftr{padding:10px 8px;text-align:center;border-top:1px dashed #111;}
+  .ftr{padding:10px 8px;text-align:center;border-top:1.5px solid #111;}
   @media print{
     html,body{width:72mm;}
     .no-print{display:none!important;}
@@ -215,7 +215,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
   const S: React.CSSProperties = { fontFamily:"'Segoe UI',Tahoma,Geneva,Verdana,sans-serif" };
   const lbl: React.CSSProperties = { fontSize:"7px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.12em", color:"#111", marginBottom:"2px" };
   const val: React.CSSProperties = { fontSize:"11px", fontWeight:700, color:"#1a0f12" };
-  const sec: React.CSSProperties = { padding:"8px 12px", borderBottom:"1px dashed #e0d8da" };
+  const sec: React.CSSProperties = { padding:"8px 12px", borderBottom:"1.5px solid #111" };
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ background:"#0f0709" }}>
@@ -335,7 +335,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
               </tbody>
             </table>
 
-            <hr style={{ border:"none", borderTop:"1px dashed #ccc", margin:"6px 0 4px" }} />
+            <hr style={{ border:"none", borderTop:"1.5px solid #111", margin:"6px 0 4px" }} />
 
             {/* Totals */}
             <table style={{ width:"100%", borderCollapse:"collapse" }}>
@@ -372,7 +372,7 @@ export function InvoiceA4({ data, onClose, actions }: { data: InvoiceData; onClo
           </div>
 
           {/* Footer */}
-          <div style={{ padding:"10px 12px", textAlign:"center" as const, borderTop:"1px dashed #ccc" }}>
+          <div style={{ padding:"10px 12px", textAlign:"center" as const, borderTop:"1.5px solid #111" }}>
             <p style={{ fontSize:"10px", fontWeight:800, color:"#111", marginBottom:"4px" }}>Thank you for visiting {data.brandName || "us"}!</p>
             <p style={{ fontSize:"8px", color:"#111", lineHeight:"1.7" }}>
               Computer-generated invoice. No signature required.<br />
