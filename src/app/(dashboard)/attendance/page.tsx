@@ -93,6 +93,7 @@ export default function AttendancePage() {
   const [saving,    setSaving]    = useState<string | null>(null);
   const [isAdmin,   setIsAdmin]   = useState(false);
   const [tab,       setTab]       = useState<"today" | "month">("today");
+  const [selectedDate, setSelectedDate] = useState(today);
   // Per-staff open time forms (keyed by dbId)
   const [openTimes, setOpenTimes] = useState<Record<string, TimeForm>>({});
 
@@ -118,6 +119,12 @@ export default function AttendancePage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const onDateChange = (newDate: string) => {
+    setSelectedDate(newDate);
+    const [y, m] = newDate.split("-").map(Number);
+    if (y !== year || m !== month) { setYear(y); setMonth(m); }
+  };
+
   const prevMonth = () => {
     if (month === 1) { setMonth(12); setYear(y => y - 1); }
     else setMonth(m => m - 1);
@@ -136,7 +143,7 @@ export default function AttendancePage() {
       const res = await fetch("/api/attendance", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ staffDbId, date: today, status: dbStatus, notes }),
+        body:    JSON.stringify({ staffDbId, date: selectedDate, status: dbStatus, notes }),
       });
       const j = await res.json();
       if (j.success) {
@@ -167,7 +174,7 @@ export default function AttendancePage() {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
           staffDbId,
-          date:     today,
+          date:     selectedDate,
           status,
           notes,
           clockIn:  checkIn  || undefined,
@@ -188,7 +195,7 @@ export default function AttendancePage() {
 
   // ── summary counts for today
   const todayCounts = staff.reduce((acc, s) => {
-    const rec = s.records.find(r => r.date === today);
+    const rec = s.records.find(r => r.date === selectedDate);
     const st  = rec ? uiStatus(rec) : "NOT_MARKED";
     acc[st] = (acc[st] || 0) + 1;
     return acc;
@@ -219,10 +226,10 @@ export default function AttendancePage() {
     let filename = "";
 
     if (tab === "today") {
-      filename = `attendance-today-${today}.csv`;
+      filename = `attendance-${selectedDate}.csv`;
       rows.push(["Staff Name", "Designation", "Status", "Check In", "Check Out", "Work Hours", "Notes"]);
       staff.forEach(s => {
-        const rec = s.records.find(r => r.date === today);
+        const rec = s.records.find(r => r.date === selectedDate);
         const st  = rec ? STATUS_META[uiStatus(rec)].label : "Not Marked";
         rows.push([
           s.name,
@@ -287,16 +294,27 @@ export default function AttendancePage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex gap-1 p-1 bg-ivory-100 rounded-2xl border border-ivory-200">
-            {(["today", "month"] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)}
-                className={cn(
-                  "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize",
-                  tab === t ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}>
-                {t === "today" ? "Today's Register" : "Monthly Overview"}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 p-1 bg-ivory-100 rounded-2xl border border-ivory-200">
+              {(["today", "month"] as const).map(t => (
+                <button key={t} onClick={() => setTab(t)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all capitalize",
+                    tab === t ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}>
+                  {t === "today" ? "Daily Register" : "Monthly Overview"}
+                </button>
+              ))}
+            </div>
+            {tab === "today" && (
+              <input
+                type="date"
+                value={selectedDate}
+                max={today}
+                onChange={e => e.target.value && onDateChange(e.target.value)}
+                className="text-xs border border-ivory-300 rounded-xl px-3 py-1.5 bg-white text-foreground focus:outline-none focus:ring-2 focus:ring-primary-300 cursor-pointer"
+              />
+            )}
           </div>
           <button onClick={exportCSV}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-ivory-300 bg-white hover:bg-ivory-50 transition-colors text-muted-foreground">
@@ -350,7 +368,7 @@ export default function AttendancePage() {
                   </thead>
                   <tbody>
                     {staff.map(s => {
-                      const rec  = s.records.find(r => r.date === today);
+                      const rec  = s.records.find(r => r.date === selectedDate);
                       const ui   = rec ? uiStatus(rec) : null;
                       const meta = ui ? STATUS_META[ui] : null;
                       const tf   = openTimes[s.dbId];
