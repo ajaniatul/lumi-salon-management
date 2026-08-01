@@ -93,7 +93,7 @@ export default function AttendancePage() {
   const [saving,    setSaving]    = useState<string | null>(null);
   const [isAdmin,   setIsAdmin]   = useState(false);
   const [tab,       setTab]       = useState<"today" | "month">("today");
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedDate, setSelectedDate] = useState(todayISO());
   // Per-staff open time forms (keyed by dbId)
   const [openTimes, setOpenTimes] = useState<Record<string, TimeForm>>({});
 
