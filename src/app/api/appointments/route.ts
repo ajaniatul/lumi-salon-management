@@ -23,15 +23,20 @@ function toUI(a: any) {
     price: Number(sv.price),
     gstRate: sv.service?.gstRate != null ? Number(sv.service.gstRate) : 18,
   }));
+  // For appointments billed as secondary in a combined invoice, billedWith is in notes JSON
+  let parsedNotes: any = {};
+  try { parsedNotes = JSON.parse(a.notes || "{}"); } catch {}
+  const billedWith = parsedNotes.billedWith ?? null;
   return {
     id: a.id,
     staffId: a.staffId,
+    staffName: a.staff?.name ?? null,
     customer: a.customer?.name ?? "",
     phone: a.customer?.phone ?? "",
     customerCode: a.customer?.customerId ?? null,
     service: svcList.length > 1 ? `${svcList[0].name} +${svcList.length - 1} more` : (svcList[0]?.name ?? "Service"),
     services: svcList,
-    invoiceNumber: a.invoice?.invoiceNumber ?? null,
+    invoiceNumber: a.invoice?.invoiceNumber ?? billedWith ?? null,
     invoiceTotal: a.invoice?.totalAmount != null ? Number(a.invoice.totalAmount) : null,
     startSlot: timeToSlot(new Date(a.startTime)),
     durationSlots: Math.max(1, Math.round(a.duration / SLOT_MINS)),
@@ -52,14 +57,48 @@ export async function GET(request: NextRequest) {
   const dayStart = new Date(y, mo - 1, d, 0, 0, 0, 0);
   const dayEnd = new Date(y, mo - 1, d + 1, 0, 0, 0, 0);
 
+  const mode         = request.nextUrl.searchParams.get("mode");
+  const customerCode = request.nextUrl.searchParams.get("customerCode");
+  const excludeId    = request.nextUrl.searchParams.get("excludeId");
+
+  const INCLUDE = {
+    customer: { select: { name: true, phone: true, customerId: true } },
+    staff:    { select: { name: true, designation: true } },
+    services: { include: { service: { select: { name: true, gstRate: true } } } },
+    invoice:  { select: { invoiceNumber: true, totalAmount: true } },
+  };
+
   try {
+    // ── Siblings mode: same-day same-customer, not yet billed ─────────────
+    if (mode === "siblings" && customerCode) {
+      const customer = await prisma.customer.findUnique({
+        where: { customerId: customerCode },
+        select: { id: true },
+      });
+      if (!customer) return NextResponse.json({ success: true, data: [] });
+
+      const all = await prisma.appointment.findMany({
+        where: {
+          startTime: { gte: dayStart, lt: dayEnd },
+          customerId: customer.id,
+          id: excludeId ? { not: excludeId } : undefined,
+          status: { in: ["CONFIRMED", "WAITING", "IN_PROGRESS"] },
+          invoice: null, // not already invoiced via appointmentId link
+        },
+        include: INCLUDE,
+        orderBy: { startTime: "asc" },
+      });
+      // Also exclude appointments whose notes contain billedWith (secondary billed)
+      const unbilled = all.filter(a => {
+        try { return !JSON.parse(a.notes || "{}").billedWith; } catch { return true; }
+      });
+      return NextResponse.json({ success: true, data: unbilled.map(toUI) });
+    }
+
+    // ── Normal mode: all appointments on date ─────────────────────────────
     const appts = await prisma.appointment.findMany({
       where: { startTime: { gte: dayStart, lt: dayEnd } },
-      include: {
-        customer: { select: { name: true, phone: true, customerId: true } },
-        services: { include: { service: { select: { name: true, gstRate: true } } } },
-        invoice: { select: { invoiceNumber: true, totalAmount: true } },
-      },
+      include: INCLUDE,
       orderBy: { startTime: "asc" },
     });
     return NextResponse.json({ success: true, data: appts.map(toUI) });

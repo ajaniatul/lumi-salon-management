@@ -65,7 +65,7 @@ const TIER_CHIP: Record<string,string> = {
 type Status = "CONFIRMED"|"WAITING"|"IN_PROGRESS"|"COMPLETED"|"NO_SHOW"|"CANCELLED";
 type ApptService = { id:string; name:string; price:number; gstRate:number };
 type Appt = {
-  id:string; staffId:string; customer:string; phone:string; customerCode?:string|null;
+  id:string; staffId:string; staffName?:string|null; customer:string; phone:string; customerCode?:string|null;
   service:string; services?:ApptService[];
   invoiceNumber?:string|null; invoiceTotal?:number|null;
   startSlot:number; durationSlots:number; status:Status; notes?:string
@@ -125,6 +125,7 @@ export default function AppointmentsPage() {
   const [calMonth,   setCalMonth]    = useState(() => new Date());
   const calRef = useRef<HTMLDivElement>(null);
   const [billingAppt,  setBillingAppt]  = useState<Appt | null>(null);
+  const [siblingAppts, setSiblingAppts] = useState<Appt[]>([]);
   const [settings,     setSettings]     = useState<any>(null);
   const [movingApptId, setMovingApptId] = useState<string | null>(null);
   const [moveTarget,   setMoveTarget]   = useState<{staffId:string; slot:number} | null>(null);
@@ -156,6 +157,16 @@ export default function AppointmentsPage() {
   const allSlots = Array.from({ length: totalSlots + 1 }, (_, i) => ({ slot: i, label: slotToTime(i) }));
 
   const [payMethod,    setPayMethod]    = useState<"CASH"|"CARD"|"UPI">("UPI");
+
+  // Fetch sibling appointments (same customer, same day, not yet billed)
+  useEffect(() => {
+    if (!billingAppt || !billingAppt.customerCode) { setSiblingAppts([]); return; }
+    const dateStr = selectedDate.toISOString().split("T")[0];
+    fetch(`/api/appointments?mode=siblings&date=${dateStr}&customerCode=${encodeURIComponent(billingAppt.customerCode)}&excludeId=${billingAppt.id}`)
+      .then(r => r.json())
+      .then(j => { if (j.success) setSiblingAppts(j.data); else setSiblingAppts([]); })
+      .catch(() => setSiblingAppts([]));
+  }, [billingAppt, selectedDate]);
   const [gstRate,      setGstRate]      = useState<5|18>(18);
   const [currentInvNum,setCurrentInvNum]= useState("");
   const [payProcessing,setPayProcessing]= useState(false);
@@ -1568,7 +1579,9 @@ export default function AppointmentsPage() {
       {/* BILLING MODAL */}
       {billingAppt && (() => {
         const s        = STAFF.find(st => st.id === billingAppt.staffId)!;
-        const base         = billingAppt.services?.length ? billingAppt.services.reduce((sum, sv) => sum + sv.price, 0) : servicePrice(billingAppt.service);
+        const primaryBase  = billingAppt.services?.length ? billingAppt.services.reduce((sum, sv) => sum + sv.price, 0) : servicePrice(billingAppt.service);
+        const siblingBase  = siblingAppts.reduce((s2, sa) => s2 + (sa.services ?? []).reduce((ss, sv) => ss + sv.price, 0), 0);
+        const base         = primaryBase + siblingBase;
         const dv           = Number(discountVal) || 0;
         const discountAmt  = discountType === "PCT"
           ? Math.round(base * dv / 100)
@@ -1599,6 +1612,23 @@ export default function AppointmentsPage() {
           }
           setPayProcessing(true);
           const methodLabel = PAY_OPTS.find(p => p.id === payMethod)?.label ?? payMethod;
+          const primaryStaffName = STAFF.find(st => st.id === billingAppt.staffId)?.name ?? undefined;
+          const allItems = [
+            ...(billingAppt.services ?? []).map(sv => ({
+              type: "Service" as const, dbId: sv.id, name: sv.name,
+              unitPrice: sv.price, qty: 1, gstRate,
+              staffName: primaryStaffName,
+            })),
+            ...siblingAppts.flatMap(sa => {
+              const saStaffName = STAFF.find(st => st.id === sa.staffId)?.name ?? undefined;
+              return (sa.services ?? []).map(sv => ({
+                type: "Service" as const, dbId: sv.id, name: sv.name,
+                unitPrice: sv.price, qty: 1, gstRate,
+                staffName: saStaffName,
+              }));
+            }),
+          ];
+          const staffNames = [...new Set(allItems.map(it => it.staffName).filter(Boolean))] as string[];
           try {
             const res = await fetch("/api/invoices", {
               method: "POST",
@@ -1606,10 +1636,9 @@ export default function AppointmentsPage() {
               body: JSON.stringify({
                 customerId: billingAppt.customerCode,
                 appointmentId: billingAppt.id,
-                items: billingAppt.services.map(sv => ({
-                  type: "Service", dbId: sv.id, name: sv.name,
-                  unitPrice: sv.price, qty: 1, gstRate,
-                })),
+                extraAppointmentIds: siblingAppts.map(sa => sa.id),
+                items: allItems,
+                staffNames: staffNames.length > 0 ? staffNames : undefined,
                 rawSubtotal: base,
                 discountAmt,
                 discountNote: discountNote.trim(),
@@ -1622,6 +1651,8 @@ export default function AppointmentsPage() {
             if (!json.success) { toast.error(json.error || "Could not create invoice."); setPayProcessing(false); return; }
             setCurrentInvNum(json.data.id);
             await changeStatus(billingAppt.id, "COMPLETED");
+            // Mark sibling appointments as completed locally
+            setSiblingAppts([]);
             setPayProcessing(false);
             setPayDone(true);
           } catch {
@@ -1656,6 +1687,9 @@ export default function AppointmentsPage() {
                     <div>
                       <p className="text-white font-display font-bold text-sm">
                         {payDone ? "Invoice" : "Generate Invoice"}
+                        {!payDone && siblingAppts.length > 0 && (
+                          <span className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background:"#6366F120", color:"#A5B4FC" }}>Combined</span>
+                        )}
                       </p>
                       <p className="text-[10px]" style={{ color:"rgba(255,255,255,0.65)" }}>{currentInvNum} - {dateStr}</p>
                     </div>
@@ -1749,7 +1783,11 @@ export default function AppointmentsPage() {
                             <p className="col-span-3 text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Time</p>
                             <p className="col-span-3 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</p>
                           </div>
-                          {(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: base, gstRate }]).map((sv, i) => (
+                          {/* Primary appointment services */}
+                          {siblingAppts.length > 0 && (
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1" style={{ color:"#6366F1" }}>{s.name}</p>
+                          )}
+                          {(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: primaryBase, gstRate }]).map((sv, i) => (
                             <div key={sv.id ?? i} className="grid grid-cols-12 items-center py-1">
                               <div className="col-span-6">
                                 <p className="text-xs font-semibold text-foreground leading-snug">{sv.name}</p>
@@ -1763,6 +1801,24 @@ export default function AppointmentsPage() {
                               </p>
                             </div>
                           ))}
+                          {/* Sibling appointment services */}
+                          {siblingAppts.map(sa => {
+                            const saStaff = STAFF.find(st => st.id === sa.staffId);
+                            return (
+                              <div key={sa.id}>
+                                <p className="text-[9px] font-bold uppercase tracking-wider mt-2 mb-1" style={{ color:"#6366F1" }}>{saStaff?.name ?? "Staff"}</p>
+                                {(sa.services ?? []).map((sv, i) => (
+                                  <div key={sv.id ?? i} className="grid grid-cols-12 items-center py-1">
+                                    <div className="col-span-6">
+                                      <p className="text-xs font-semibold text-foreground leading-snug">{sv.name}</p>
+                                    </div>
+                                    <p className="col-span-3 text-[10px] text-muted-foreground">—</p>
+                                    <p className="col-span-3 text-xs font-semibold text-foreground text-right">Rs.{sv.price.toLocaleString("en-IN")}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })}
                         </div>
 
                         {/* Tax breakdown */}

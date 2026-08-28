@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       collabNote  = "",
       isInfluencer = false,
       staffNames,
+      extraAppointmentIds,
     } = body ?? {};
 
     if (!customerId || !items?.length) {
@@ -210,6 +211,27 @@ export async function POST(request: NextRequest) {
         appointment: { include: { staff: { select: { name: true, designation: true } } } },
       },
     });
+
+    // Mark extra (secondary) appointments as billed — non-fatal
+    step = "update-extra-appointments";
+    if (Array.isArray(extraAppointmentIds) && extraAppointmentIds.length > 0) {
+      for (const apptId of extraAppointmentIds) {
+        try {
+          const existing = await prisma.appointment.findUnique({ where: { id: apptId }, select: { notes: true } });
+          let existingNotes: any = {};
+          try { existingNotes = JSON.parse(existing?.notes || "{}"); } catch {}
+          await prisma.appointment.update({
+            where: { id: apptId },
+            data: {
+              status: "COMPLETED",
+              notes: JSON.stringify({ ...existingNotes, billedWith: invoiceNumber }),
+            },
+          });
+        } catch (e: any) {
+          console.error("[INVOICES POST] extra-appointment update failed (non-fatal):", e?.message);
+        }
+      }
+    }
 
     // Update customer totals — non-fatal
     step = "update-customer";
