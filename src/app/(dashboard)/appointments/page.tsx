@@ -1857,33 +1857,30 @@ export default function AppointmentsPage() {
                             {billingAppt.phone && <p className="text-xs text-muted-foreground">{billingAppt.phone}</p>}
                           </div>
                           <div className="text-right">
-                            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Stylist</p>
-                            <p className="text-xs font-semibold text-foreground">{s.name}</p>
-                            <p className="text-[9px] text-muted-foreground">{s.role}</p>
+                            <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Attended By</p>
+                            {[s, ...siblingAppts.map(sa => STAFF.find(st => st.id === sa.staffId)).filter(Boolean)].map((st, i) => (
+                              <p key={i} className="text-xs font-semibold text-foreground">{st!.name}</p>
+                            ))}
                           </div>
                         </div>
 
-                        {/* Service row(s) */}
+                        {/* Service rows — flat list with inline stylist tag */}
                         <div>
-                          <div className="grid grid-cols-12 pb-1.5 mb-2" style={{ borderBottom:"1.5px solid #e5e5e5" }}>
-                            <p className="col-span-6 text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Service</p>
-                            <p className="col-span-3 text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Time</p>
-                            <p className="col-span-3 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</p>
+                          <div className="flex items-center pb-1.5 mb-1" style={{ borderBottom:"1.5px solid #e5e5e5" }}>
+                            <p className="flex-1 text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Service</p>
+                            <p className="w-20 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-center">Stylist</p>
+                            <p className="w-16 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</p>
                           </div>
                           {/* Primary appointment services */}
-                          {siblingAppts.length > 0 && (
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1" style={{ color:"#6366F1" }}>{s.name}</p>
-                          )}
                           {(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: primaryBase, gstRate }]).map((sv, i) => (
-                            <div key={sv.id ?? i} className="grid grid-cols-12 items-center py-1">
-                              <div className="col-span-6">
-                                <p className="text-xs font-semibold text-foreground leading-snug">{sv.name}</p>
-                                {i === 0 && <p className="text-[9px] text-muted-foreground">{dur} min total</p>}
+                            <div key={sv.id ?? i} className="flex items-center py-1.5 gap-1" style={{ borderBottom:"1px solid #f0f0f0" }}>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-foreground leading-snug truncate">{sv.name}</p>
                               </div>
-                              <p className="col-span-3 text-[10px] text-muted-foreground leading-tight">
-                                {i === 0 ? (<>{slotToTime(billingAppt.startSlot)}<br />{slotToTime(billingAppt.startSlot + billingAppt.durationSlots)}</>) : "—"}
-                              </p>
-                              <p className="col-span-3 text-xs font-semibold text-foreground text-right">
+                              <div className="w-20 flex justify-center">
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full truncate max-w-full" style={{ background:"#6366F110", color:"#6366F1" }}>{s.name}</span>
+                              </div>
+                              <p className="w-16 text-xs font-semibold text-foreground text-right flex-shrink-0">
                                 Rs.{sv.price.toLocaleString("en-IN")}
                               </p>
                             </div>
@@ -1891,20 +1888,19 @@ export default function AppointmentsPage() {
                           {/* Sibling appointment services */}
                           {siblingAppts.map(sa => {
                             const saStaff = STAFF.find(st => st.id === sa.staffId);
-                            return (
-                              <div key={sa.id}>
-                                <p className="text-[9px] font-bold uppercase tracking-wider mt-2 mb-1" style={{ color:"#6366F1" }}>{saStaff?.name ?? "Staff"}</p>
-                                {(sa.services ?? []).map((sv, i) => (
-                                  <div key={sv.id ?? i} className="grid grid-cols-12 items-center py-1">
-                                    <div className="col-span-6">
-                                      <p className="text-xs font-semibold text-foreground leading-snug">{sv.name}</p>
-                                    </div>
-                                    <p className="col-span-3 text-[10px] text-muted-foreground">—</p>
-                                    <p className="col-span-3 text-xs font-semibold text-foreground text-right">Rs.{sv.price.toLocaleString("en-IN")}</p>
-                                  </div>
-                                ))}
+                            return (sa.services ?? []).map((sv, i) => (
+                              <div key={`${sa.id}-${i}`} className="flex items-center py-1.5 gap-1" style={{ borderBottom:"1px solid #f0f0f0" }}>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-foreground leading-snug truncate">{sv.name}</p>
+                                </div>
+                                <div className="w-20 flex justify-center">
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full truncate max-w-full" style={{ background:"#10B98110", color:"#059669" }}>{saStaff?.name ?? "Staff"}</span>
+                                </div>
+                                <p className="w-16 text-xs font-semibold text-foreground text-right flex-shrink-0">
+                                  Rs.{sv.price.toLocaleString("en-IN")}
+                                </p>
                               </div>
-                            );
+                            ));
                           })}
                         </div>
 
