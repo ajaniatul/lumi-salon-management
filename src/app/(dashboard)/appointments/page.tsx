@@ -126,6 +126,7 @@ export default function AppointmentsPage() {
   const calRef = useRef<HTMLDivElement>(null);
   const [billingAppt,  setBillingAppt]  = useState<Appt | null>(null);
   const [siblingAppts, setSiblingAppts] = useState<Appt[]>([]);
+  const [combinedSelect, setCombinedSelect] = useState<{ primaryAppt:Appt; candidates:Appt[]; selectedIds:Set<string>; loading:boolean } | null>(null);
   const [settings,     setSettings]     = useState<any>(null);
   const [movingApptId, setMovingApptId] = useState<string | null>(null);
   const [moveTarget,   setMoveTarget]   = useState<{staffId:string; slot:number} | null>(null);
@@ -158,15 +159,8 @@ export default function AppointmentsPage() {
 
   const [payMethod,    setPayMethod]    = useState<"CASH"|"CARD"|"UPI">("UPI");
 
-  // Fetch sibling appointments (same customer, same day, not yet billed)
-  useEffect(() => {
-    if (!billingAppt || !billingAppt.customerCode) { setSiblingAppts([]); return; }
-    const dateStr = selectedDate.toISOString().split("T")[0];
-    fetch(`/api/appointments?mode=siblings&date=${dateStr}&customerCode=${encodeURIComponent(billingAppt.customerCode)}&excludeId=${billingAppt.id}`)
-      .then(r => r.json())
-      .then(j => { if (j.success) setSiblingAppts(j.data); else setSiblingAppts([]); })
-      .catch(() => setSiblingAppts([]));
-  }, [billingAppt, selectedDate]);
+  // Reset siblingAppts when billing modal closes
+  useEffect(() => { if (!billingAppt) setSiblingAppts([]); }, [billingAppt]);
   const [gstRate,      setGstRate]      = useState<5|18>(18);
   const [currentInvNum,setCurrentInvNum]= useState("");
   const [payProcessing,setPayProcessing]= useState(false);
@@ -952,9 +946,28 @@ export default function AppointmentsPage() {
           },
           {
             icon: <Receipt className="w-3.5 h-3.5" />, label: "Bill Customer",
-            action: () => { setBillingAppt(appt); setContextMenu(null); },
+            action: () => { setBillingAppt(appt); setSiblingAppts([]); setContextMenu(null); },
             disabled: !!appt.invoiceNumber,
             color: "#111111",
+          },
+          {
+            icon: <Receipt className="w-3.5 h-3.5" />, label: "Combined Billing…",
+            action: async () => {
+              setContextMenu(null);
+              if (!appt.customerCode) return;
+              const dateStr = selectedDate.toISOString().split("T")[0];
+              setCombinedSelect({ primaryAppt: appt, candidates: [], selectedIds: new Set([appt.id]), loading: true });
+              try {
+                const r = await fetch(`/api/appointments?mode=siblings&date=${dateStr}&customerCode=${encodeURIComponent(appt.customerCode)}&excludeId=${appt.id}`);
+                const j = await r.json();
+                const candidates: Appt[] = j.success ? [appt, ...j.data] : [appt];
+                setCombinedSelect(prev => prev ? { ...prev, candidates, selectedIds: new Set(candidates.map((c:Appt) => c.id)), loading: false } : null);
+              } catch {
+                setCombinedSelect(prev => prev ? { ...prev, candidates: [appt], loading: false } : null);
+              }
+            },
+            disabled: !!appt.invoiceNumber,
+            color: "#6366F1",
           },
           "sep",
           {
@@ -1577,6 +1590,80 @@ export default function AppointmentsPage() {
       })()}
 
       {/* BILLING MODAL */}
+      {/* ── Combined Billing selection modal ── */}
+      {combinedSelect && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+          style={{ background:"rgba(0,0,0,0.75)", backdropFilter:"blur(4px)" }}
+          onClick={e => { if (e.target === e.currentTarget) setCombinedSelect(null); }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+            <div className="px-5 py-4 flex items-center justify-between flex-shrink-0" style={{ background:"linear-gradient(135deg,#0a0a0a,#1A0F12)" }}>
+              <div>
+                <p className="text-white font-bold text-sm">Combined Billing</p>
+                <p className="text-[10px]" style={{ color:"rgba(255,255,255,0.6)" }}>{combinedSelect.primaryAppt.customer}</p>
+              </div>
+              <button onClick={() => setCombinedSelect(null)} className="p-1.5 rounded-lg hover:bg-white/10"><X className="w-4 h-4 text-white" /></button>
+            </div>
+
+            <div className="p-4 space-y-2 overflow-y-auto flex-1">
+              {combinedSelect.loading ? (
+                <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" /> <span className="text-sm">Loading appointments…</span>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground mb-3">Select the appointments to include in one invoice:</p>
+                  {combinedSelect.candidates.map(c => {
+                    const cStaff = STAFF.find(st => st.id === c.staffId);
+                    const checked = combinedSelect.selectedIds.has(c.id);
+                    const isPrimary = c.id === combinedSelect.primaryAppt.id;
+                    const svcTotal = (c.services ?? []).reduce((s, sv) => s + sv.price, 0);
+                    return (
+                      <label key={c.id} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${checked ? "border-indigo-300 bg-indigo-50" : "border-ivory-200 bg-white hover:border-indigo-200"}`}>
+                        <input type="checkbox" checked={checked} disabled={isPrimary}
+                          onChange={() => {
+                            setCombinedSelect(prev => {
+                              if (!prev) return prev;
+                              const s = new Set(prev.selectedIds);
+                              if (s.has(c.id)) s.delete(c.id); else s.add(c.id);
+                              return { ...prev, selectedIds: s };
+                            });
+                          }}
+                          className="mt-0.5 accent-indigo-600" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground">{cStaff?.name ?? "Staff"}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{c.service}</p>
+                          <p className="text-[10px] font-semibold mt-0.5" style={{ color:"#111" }}>Rs.{svcTotal.toLocaleString("en-IN")}</p>
+                        </div>
+                        {isPrimary && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background:"#6366F110", color:"#6366F1" }}>Primary</span>}
+                      </label>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+
+            {!combinedSelect.loading && (
+              <div className="flex gap-2 px-4 py-3 border-t border-ivory-200 bg-ivory-50 flex-shrink-0">
+                <button onClick={() => setCombinedSelect(null)} className="flex-1 btn-outline text-xs py-2">Cancel</button>
+                <button
+                  disabled={combinedSelect.selectedIds.size === 0}
+                  onClick={() => {
+                    const primary = combinedSelect.primaryAppt;
+                    const siblings = combinedSelect.candidates.filter(c => c.id !== primary.id && combinedSelect.selectedIds.has(c.id));
+                    setSiblingAppts(siblings);
+                    setBillingAppt(primary);
+                    setCombinedSelect(null);
+                  }}
+                  className="flex-1 text-xs py-2 rounded-xl font-bold text-white disabled:opacity-40"
+                  style={{ background:"linear-gradient(135deg,#6366F1,#4F46E5)" }}>
+                  Proceed to Billing ({combinedSelect.selectedIds.size})
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {billingAppt && (() => {
         const s        = STAFF.find(st => st.id === billingAppt.staffId)!;
         const primaryBase  = billingAppt.services?.length ? billingAppt.services.reduce((sum, sv) => sum + sv.price, 0) : servicePrice(billingAppt.service);
