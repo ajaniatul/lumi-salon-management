@@ -20,13 +20,18 @@ function toUI(inv: any) {
   const products = inv.items
     .filter((it: any) => it.itemType !== "SERVICE")
     .map((it: any) => ({ name: it.name, hsn: it.product?.hsnCode ?? "3305" }));
-  const items = inv.items.map((it: any) => ({
-    name:      it.name,
-    type:      it.itemType === "SERVICE" ? "Service" : "Product",
-    code:      it.itemType === "SERVICE" ? "999721" : (it.product?.hsnCode ?? "3305"),
-    amount:    Number(it.total),
-    staffName: it.staffName ?? null,
-  }));
+  // staffItems stored in notes JSON: [{name, staffName}, ...]
+  const staffItems: {name:string;staffName:string}[] = meta.staffItems ?? [];
+  const items = inv.items.map((it: any) => {
+    const si = staffItems.find((s: any) => s.name === it.name);
+    return {
+      name:      it.name,
+      type:      it.itemType === "SERVICE" ? "Service" : "Product",
+      code:      it.itemType === "SERVICE" ? "999721" : (it.product?.hsnCode ?? "3305"),
+      amount:    Number(it.total),
+      staffName: si?.staffName ?? null,
+    };
+  });
 
   return {
     id:             inv.invoiceNumber,
@@ -153,6 +158,10 @@ export async function POST(request: NextRequest) {
                      : paidFinal >= total ? "PAID"
                      : paidFinal > 0     ? "PARTIAL"
                      :                     "PENDING";
+    // Build staffItems index for per-item staff attribution
+    const staffItemsList = items
+      .filter((it: any) => it.staffName)
+      .map((it: any) => ({ name: it.name, staffName: it.staffName }));
     const notesJson = JSON.stringify({
       description,
       discountNote,
@@ -160,6 +169,7 @@ export async function POST(request: NextRequest) {
       isInfluencer,
       methodLabel,
       ...(staffNames?.length ? { staffNames } : {}),
+      ...(staffItemsList.length ? { staffItems: staffItemsList } : {}),
     });
 
     step = "create-invoice";
@@ -185,7 +195,6 @@ export async function POST(request: NextRequest) {
             serviceId: it.type === "Service" ? it.dbId : null,
             productId: it.type === "Product" ? it.dbId : null,
             name:      it.name,
-            staffName: it.staffName ?? null,
             quantity:  it.qty ?? 1,
             unitPrice: it.unitPrice,
             discount:  0,

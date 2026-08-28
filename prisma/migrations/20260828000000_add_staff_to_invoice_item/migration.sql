@@ -1,2 +1,2 @@
--- AlterTable
-ALTER TABLE "InvoiceItem" ADD COLUMN IF NOT EXISTS "staffName" TEXT;
+-- No-op migration: staffName stored in invoice notes JSON instead
+SELECT 1;
