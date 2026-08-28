@@ -31,6 +31,24 @@ function dateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
+// ─── Package / service helpers ────────────────────────────────────────────────
+// Returns package name if appointment was booked as a package, else null
+function extractPkgName(notes?: string): string | null {
+  if (!notes) return null;
+  const m = notes.match(/^\[Package:\s*(.+?)\]/);
+  return m ? m[1].trim() : null;
+}
+// Returns items to display/bill: one line for a package, individual lines otherwise
+function apptItems(appt: { notes?: string; services?: { id: string; name: string; price: number }[]; service?: string; staffId?: string }): { id: string; name: string; price: number }[] {
+  const pkg = extractPkgName(appt.notes);
+  if (pkg) {
+    const total = (appt.services ?? []).reduce((s, sv) => s + sv.price, 0);
+    const firstId = appt.services?.[0]?.id ?? "";
+    return [{ id: firstId, name: pkg, price: total }];
+  }
+  return (appt.services ?? []).map(sv => ({ id: sv.id, name: sv.name, price: sv.price }));
+}
+
 // ─── Gridline helpers ─────────────────────────────────────────────────────────
 // With 5-min slots: hour = every 12, half-hour = every 6, quarter = every 3
 function borderForSlot(i: number) {
@@ -1666,8 +1684,9 @@ export default function AppointmentsPage() {
 
       {billingAppt && (() => {
         const s        = STAFF.find(st => st.id === billingAppt.staffId)!;
-        const primaryBase  = billingAppt.services?.length ? billingAppt.services.reduce((sum, sv) => sum + sv.price, 0) : servicePrice(billingAppt.service);
-        const siblingBase  = siblingAppts.reduce((s2, sa) => s2 + (sa.services ?? []).reduce((ss, sv) => ss + sv.price, 0), 0);
+        const primaryItems = apptItems(billingAppt);
+        const primaryBase  = primaryItems.reduce((s, it) => s + it.price, 0);
+        const siblingBase  = siblingAppts.reduce((s2, sa) => s2 + apptItems(sa).reduce((ss, it) => ss + it.price, 0), 0);
         const base         = primaryBase + siblingBase;
         const dv           = Number(discountVal) || 0;
         const discountAmt  = discountType === "PCT"
@@ -1701,16 +1720,18 @@ export default function AppointmentsPage() {
           const methodLabel = PAY_OPTS.find(p => p.id === payMethod)?.label ?? payMethod;
           const primaryStaffName = STAFF.find(st => st.id === billingAppt.staffId)?.name ?? undefined;
           const allItems = [
-            ...(billingAppt.services ?? []).map(sv => ({
-              type: "Service" as const, dbId: sv.id, name: sv.name,
-              unitPrice: sv.price, qty: 1, gstRate,
+            ...apptItems(billingAppt).map(it => ({
+              type: "Service" as const,
+              dbId: it.id,
+              name: it.name, unitPrice: it.price, qty: 1, gstRate,
               staffName: primaryStaffName,
             })),
             ...siblingAppts.flatMap(sa => {
               const saStaffName = STAFF.find(st => st.id === sa.staffId)?.name ?? undefined;
-              return (sa.services ?? []).map(sv => ({
-                type: "Service" as const, dbId: sv.id, name: sv.name,
-                unitPrice: sv.price, qty: 1, gstRate,
+              return apptItems(sa).map(it => ({
+                type: "Service" as const,
+                dbId: it.id,
+                name: it.name, unitPrice: it.price, qty: 1, gstRate,
                 staffName: saStaffName,
               }));
             }),
@@ -1870,33 +1891,33 @@ export default function AppointmentsPage() {
                             <p className="w-20 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-center">Stylist</p>
                             <p className="w-16 text-[8px] font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</p>
                           </div>
-                          {/* Primary appointment services */}
-                          {(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: primaryBase, gstRate }]).map((sv, i) => (
-                            <div key={sv.id ?? i} className="flex items-center py-1.5 gap-1" style={{ borderBottom:"1px solid #f0f0f0" }}>
+                          {/* Primary appointment services (or package) */}
+                          {primaryItems.map((it, i) => (
+                            <div key={i} className="flex items-center py-1.5 gap-1" style={{ borderBottom:"1px solid #f0f0f0" }}>
                               <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-foreground leading-snug truncate">{sv.name}</p>
+                                <p className="text-xs font-semibold text-foreground leading-snug truncate">{it.name}</p>
                               </div>
                               <div className="w-20 flex justify-center">
                                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full truncate max-w-full" style={{ background:"#6366F110", color:"#6366F1" }}>{s.name}</span>
                               </div>
                               <p className="w-16 text-xs font-semibold text-foreground text-right flex-shrink-0">
-                                Rs.{sv.price.toLocaleString("en-IN")}
+                                {it.price > 0 ? `Rs.${it.price.toLocaleString("en-IN")}` : "—"}
                               </p>
                             </div>
                           ))}
-                          {/* Sibling appointment services */}
+                          {/* Sibling appointment services (or packages) */}
                           {siblingAppts.map(sa => {
                             const saStaff = STAFF.find(st => st.id === sa.staffId);
-                            return (sa.services ?? []).map((sv, i) => (
+                            return apptItems(sa).map((it, i) => (
                               <div key={`${sa.id}-${i}`} className="flex items-center py-1.5 gap-1" style={{ borderBottom:"1px solid #f0f0f0" }}>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold text-foreground leading-snug truncate">{sv.name}</p>
+                                  <p className="text-xs font-semibold text-foreground leading-snug truncate">{it.name}</p>
                                 </div>
                                 <div className="w-20 flex justify-center">
                                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full truncate max-w-full" style={{ background:"#10B98110", color:"#059669" }}>{saStaff?.name ?? "Staff"}</span>
                                 </div>
                                 <p className="w-16 text-xs font-semibold text-foreground text-right flex-shrink-0">
-                                  Rs.{sv.price.toLocaleString("en-IN")}
+                                  {it.price > 0 ? `Rs.${it.price.toLocaleString("en-IN")}` : "—"}
                                 </p>
                               </div>
                             ));
@@ -2075,25 +2096,25 @@ export default function AppointmentsPage() {
                     {/* Price breakdown */}
                     <div className="space-y-2">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Price Breakdown</p>
-                      {/* Individual service lines */}
-                      {(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: primaryBase, gstRate }]).map((sv, i) => (
+                      {/* Individual service / package lines */}
+                      {primaryItems.map((it, i) => (
                         <div key={i} className="flex items-center justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <span className="text-sm text-foreground truncate block">{sv.name}</span>
+                            <span className="text-sm text-foreground truncate block">{it.name}</span>
                             <span className="text-[10px] font-medium" style={{ color:"#6366F1" }}>{s.name}</span>
                           </div>
-                          <span className="text-sm font-semibold text-foreground flex-shrink-0">Rs.{sv.price.toLocaleString("en-IN")}</span>
+                          <span className="text-sm font-semibold text-foreground flex-shrink-0">{it.price > 0 ? `Rs.${it.price.toLocaleString("en-IN")}` : "—"}</span>
                         </div>
                       ))}
                       {siblingAppts.map(sa => {
                         const saStaff = STAFF.find(st => st.id === sa.staffId);
-                        return (sa.services ?? []).map((sv, i) => (
+                        return apptItems(sa).map((it, i) => (
                           <div key={`${sa.id}-${i}`} className="flex items-center justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <span className="text-sm text-foreground truncate block">{sv.name}</span>
+                              <span className="text-sm text-foreground truncate block">{it.name}</span>
                               <span className="text-[10px] font-medium" style={{ color:"#059669" }}>{saStaff?.name ?? "Staff"}</span>
                             </div>
-                            <span className="text-sm font-semibold text-foreground flex-shrink-0">Rs.{sv.price.toLocaleString("en-IN")}</span>
+                            <span className="text-sm font-semibold text-foreground flex-shrink-0">{it.price > 0 ? `Rs.${it.price.toLocaleString("en-IN")}` : "—"}</span>
                           </div>
                         ));
                       })}
@@ -2169,13 +2190,12 @@ export default function AppointmentsPage() {
       {showA4 && billingAppt && (() => {
         const s2      = STAFF.find(st => st.id === billingAppt.staffId)!;
         const dv2     = Number(discountVal) || 0;
-        // Combined: all services from primary + siblings
+        // Combined: packages shown as one line, individual services shown per item
         const allSvcs: { name: string; price: number; staffName: string }[] = [
-          ...(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: servicePrice(billingAppt.service), gstRate }])
-            .map(sv => ({ name: sv.name, price: sv.price, staffName: s2.name })),
+          ...apptItems(billingAppt).map(it => ({ name: it.name, price: it.price, staffName: s2.name })),
           ...siblingAppts.flatMap(sa => {
             const saS = STAFF.find(st => st.id === sa.staffId);
-            return (sa.services ?? []).map(sv => ({ name: sv.name, price: sv.price, staffName: saS?.name ?? "Staff" }));
+            return apptItems(sa).map(it => ({ name: it.name, price: it.price, staffName: saS?.name ?? "Staff" }));
           }),
         ];
         const base2  = allSvcs.reduce((s, sv) => s + sv.price, 0);
