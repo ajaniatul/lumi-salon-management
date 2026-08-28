@@ -22,7 +22,7 @@ const iCls = "w-full px-3 py-2 rounded-xl border border-ivory-300 text-sm text-f
 
 type InvService = { name: string; sac: string };
 type InvProduct = { name: string; hsn: string };
-type InvLine    = { name: string; type: "Service"|"Product"; code: string; amount: number };
+type InvLine    = { name: string; type: "Service"|"Product"; code: string; amount: number; staffName?: string | null };
 type InvoiceType = {
   id: string; dbId?: string; date: string; customer: string; phone: string;
   services: InvService[]; products: InvProduct[];
@@ -32,7 +32,7 @@ type InvoiceType = {
   discount: string; influencerNote: string; discountAmt?: number; description?: string;
   stylist?: string | null; stylistRole?: string | null;
 };
-type CartLine = { name: string; type: "Service"|"Product"; code: string; unitPrice: number; qty: number; dbId: string };
+type CartLine = { name: string; type: "Service"|"Product"; code: string; unitPrice: number; qty: number; dbId: string; staffId?: string; staffName?: string };
 
 // ── Invoice Detail Modal ───────────────────────────────────────────────────
 function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
@@ -66,7 +66,7 @@ function InvoiceModal({ inv, onClose, onRecordPayment, settings }: {
     phone:        inv.phone,
     stylist:      inv.stylist ?? undefined,
     stylistRole:  inv.stylistRole ?? undefined,
-    items:        lineItems.map(it => ({ description: it.name, type: it.type, hsnCode: it.code, amount: it.amount })),
+    items:        lineItems.map(it => ({ description: it.name, type: it.type, hsnCode: it.code, amount: it.amount, detail: it.staffName ? `by ${it.staffName}` : undefined })),
     subtotal:     inv.subtotal,
     discountAmt:  inv.discountAmt || undefined,
     discountNote: inv.discount    || undefined,
@@ -242,6 +242,13 @@ export default function BillingPage() {
     })();
   }, []);
 
+  useEffect(() => {
+    fetch("/api/staff")
+      .then(r => r.json())
+      .then(j => { if (j.success) setStaffList(j.data.map((s: any) => ({ dbId: s.dbId, name: s.name, designation: s.designation }))); })
+      .catch(() => {});
+  }, []);
+
   // Create-invoice form state
   const [pickedCust,   setPickedCust]   = useState<PickedCustomer|null>(null);
   const [cart,         setCart]         = useState<CartLine[]>([]);
@@ -254,6 +261,10 @@ export default function BillingPage() {
   const [discountNote, setDiscountNote] = useState("");
   const [collabNote,   setCollabNote]   = useState("");
   const [description,  setDescription]  = useState("");
+
+  // Staff
+  const [staffList,    setStaffList]    = useState<{dbId:string;name:string;designation:string}[]>([]);
+  const [activeStaff,  setActiveStaff]  = useState<{dbId:string;name:string;designation:string}|null>(null);
 
   // ── Load invoices from DB ──
   const loadInvoices = useCallback(() => {
@@ -296,9 +307,10 @@ export default function BillingPage() {
   const addItem = (it: PickedItem) => {
     if (!it.dbId) return;
     setCart(c => {
-      const idx = c.findIndex(l => l.dbId === it.dbId);
+      // If same item AND same staff, just increment qty
+      const idx = c.findIndex(l => l.dbId === it.dbId && l.staffId === activeStaff?.dbId);
       if (idx >= 0) return c.map((l, i) => i === idx ? { ...l, qty: l.qty + 1 } : l);
-      return [...c, { name: it.name, type: addType, code: it.code, unitPrice: it.price, qty: 1, dbId: it.dbId }];
+      return [...c, { name: it.name, type: addType, code: it.code, unitPrice: it.price, qty: 1, dbId: it.dbId, staffId: activeStaff?.dbId, staffName: activeStaff?.name }];
     });
     setPickerKey(k => k + 1);
   };
@@ -319,7 +331,7 @@ export default function BillingPage() {
   const resetForm = () => {
     setPickedCust(null); setCart([]); setAddType("Service"); setGstRate(18);
     setMethod("UPI"); setPaidAmt(""); setDiscountAmt(""); setDiscountNote("");
-    setCollabNote(""); setDescription(""); setErr("");
+    setCollabNote(""); setDescription(""); setErr(""); setActiveStaff(null);
   };
   const closeCreate = () => { setShowCreate(false); resetForm(); };
 
@@ -337,7 +349,8 @@ export default function BillingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId:  pickedCust.id,
-          items:       cart.map(l => ({ type: l.type, dbId: l.dbId, name: l.name, unitPrice: l.unitPrice, qty: l.qty, gstRate })),
+          items:       cart.map(l => ({ type: l.type, dbId: l.dbId, name: l.name, unitPrice: l.unitPrice, qty: l.qty, gstRate, staffName: l.staffName ?? null })),
+          staffNames:  (() => { const n = [...new Set(cart.filter(l => l.staffName).map(l => l.staffName as string))]; return n.length ? n : undefined; })(),
           rawSubtotal,
           discountAmt: discAmt,
           discountNote: discountNote.trim(),
@@ -532,6 +545,23 @@ export default function BillingPage() {
               {/* Add item */}
               <div>
                 <label className="text-xs font-semibold text-foreground block mb-1">Add Item</label>
+                {/* Staff picker */}
+                {staffList.length > 0 && (
+                  <div className="mb-2">
+                    <select
+                      value={activeStaff?.dbId ?? ""}
+                      onChange={e => {
+                        const s = staffList.find(x => x.dbId === e.target.value) ?? null;
+                        setActiveStaff(s);
+                      }}
+                      className={iCls + " text-xs"}>
+                      <option value="">— No staff assigned —</option>
+                      {staffList.map(s => (
+                        <option key={s.dbId} value={s.dbId}>{s.name} ({s.designation})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="flex rounded-xl border border-ivory-300 overflow-hidden mb-2">
                   {(["Service","Product"] as const).map(t => (
                     <button key={t} type="button" onClick={() => setAddType(t)}
@@ -551,7 +581,7 @@ export default function BillingPage() {
                     <div key={i} className="flex items-center gap-2 px-3 py-2.5 border-b border-ivory-100 last:border-0">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground leading-tight truncate">{l.name}</p>
-                        <p className="text-[10px] text-muted-foreground">{l.type} · {l.type==="Service"?"SAC":"HSN"} {l.code} · Rs.{l.unitPrice.toLocaleString("en-IN")}</p>
+                        <p className="text-[10px] text-muted-foreground">{l.type} · {l.type==="Service"?"SAC":"HSN"} {l.code} · Rs.{l.unitPrice.toLocaleString("en-IN")}{l.staffName ? ` · ${l.staffName}` : ""}</p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button onClick={() => updateQty(i, -1)} className="w-5 h-5 rounded-full bg-ivory-100 flex items-center justify-center hover:bg-ivory-200"><Minus className="w-3 h-3" /></button>

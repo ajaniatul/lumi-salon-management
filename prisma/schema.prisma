@@ -445,6 +445,7 @@ model InvoiceItem {
   serviceId String?
   productId String?
   name      String  // snapshot of name at time of billing
+  staffName String? // staff member who performed this item
   quantity  Int     @default(1)
   unitPrice Decimal @db.Decimal(10, 2)
   discount  Decimal @default(0) @db.Decimal(10, 2)

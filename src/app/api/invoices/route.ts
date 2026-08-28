@@ -21,10 +21,11 @@ function toUI(inv: any) {
     .filter((it: any) => it.itemType !== "SERVICE")
     .map((it: any) => ({ name: it.name, hsn: it.product?.hsnCode ?? "3305" }));
   const items = inv.items.map((it: any) => ({
-    name:   it.name,
-    type:   it.itemType === "SERVICE" ? "Service" : "Product",
-    code:   it.itemType === "SERVICE" ? "999721" : (it.product?.hsnCode ?? "3305"),
-    amount: Number(it.total),
+    name:      it.name,
+    type:      it.itemType === "SERVICE" ? "Service" : "Product",
+    code:      it.itemType === "SERVICE" ? "999721" : (it.product?.hsnCode ?? "3305"),
+    amount:    Number(it.total),
+    staffName: it.staffName ?? null,
   }));
 
   return {
@@ -48,7 +49,7 @@ function toUI(inv: any) {
     influencerNote: isInfluencer ? (meta.collabNote ?? "") : "",
     discountAmt:    Number(inv.discountAmount),
     description:    meta.description ?? "",
-    stylist:        inv.appointment?.staff?.name ?? null,
+    stylist:        inv.appointment?.staff?.name ?? (meta.staffNames?.length ? meta.staffNames.join(", ") : null),
     stylistRole:    inv.appointment?.staff?.designation ?? null,
   };
 }
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
       description = "",
       collabNote  = "",
       isInfluencer = false,
+      staffNames,
     } = body ?? {};
 
     if (!customerId || !items?.length) {
@@ -156,6 +158,7 @@ export async function POST(request: NextRequest) {
       collabNote,
       isInfluencer,
       methodLabel,
+      ...(staffNames?.length ? { staffNames } : {}),
     });
 
     step = "create-invoice";
@@ -181,6 +184,7 @@ export async function POST(request: NextRequest) {
             serviceId: it.type === "Service" ? it.dbId : null,
             productId: it.type === "Product" ? it.dbId : null,
             name:      it.name,
+            staffName: it.staffName ?? null,
             quantity:  it.qty ?? 1,
             unitPrice: it.unitPrice,
             discount:  0,
