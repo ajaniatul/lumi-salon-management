@@ -474,12 +474,15 @@ export default function AppointmentsPage() {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            staffId:      bookModal.staffId,
-            startSlot:    form.fromSlot,
-            endSlot:      form.toSlot,
-            serviceIds:   form.serviceIds,
-            packagePrice: form.packagePrice ?? undefined,
-            notes:        form.packageName
+            staffId:           bookModal.staffId,
+            startSlot:         form.fromSlot,
+            endSlot:           form.toSlot,
+            serviceIds:        form.serviceIds,
+            packagePrice:      form.packagePrice ?? undefined,
+            packageServiceIds: form.packageId
+              ? (packages.find(p => p.id === form.packageId)?.services ?? [])
+              : undefined,
+            notes:             form.packageName
               ? `[Package: ${form.packageName}]${form.notes ? ` ${form.notes}` : ""}`
               : form.notes,
           }),
@@ -519,8 +522,11 @@ export default function AppointmentsPage() {
       staffId: bookModal.staffId,
       startSlot: form.fromSlot,
       endSlot: form.toSlot,
-      serviceIds:   form.serviceIds,
-      packagePrice: form.packagePrice ?? undefined,
+      serviceIds:        form.serviceIds,
+      packagePrice:      form.packagePrice ?? undefined,
+      packageServiceIds: form.packageId
+        ? (packages.find(p => p.id === form.packageId)?.services ?? [])
+        : undefined,
       notes: form.packageName
         ? `[Package: ${form.packageName}]${form.notes ? ` ${form.notes}` : ""}`
         : form.notes,

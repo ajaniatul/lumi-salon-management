@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { date, staffId, startSlot, endSlot, serviceIds, customerCode, newCustomer, notes, packagePrice } = body ?? {};
+    const { date, staffId, startSlot, endSlot, serviceIds, customerCode, newCustomer, notes, packagePrice, packageServiceIds } = body ?? {};
 
     if (!date || !staffId || startSlot == null || endSlot == null || endSlot <= startSlot) {
       return NextResponse.json({ success: false, error: "Missing or invalid booking details." }, { status: 400 });
@@ -201,15 +201,28 @@ export async function POST(request: NextRequest) {
 
     // Attach services if provided, then re-fetch so the include has them
     if (svcs.length > 0) {
+      // If packageServiceIds supplied, only those get package pricing; extras keep real price
+      const pkgSvcSet = new Set<string>(Array.isArray(packageServiceIds) ? packageServiceIds : []);
+      let pkgPriceAssigned = false;
       await prisma.appointmentService.createMany({
-        data: svcs.map((sv, i) => ({
-          appointmentId: created.id,
-          serviceId: sv.id,
-          price: packagePrice != null
-            ? (i === 0 ? Number(packagePrice) : 0)
-            : Number(sv.price),
-          duration,
-        })),
+        data: svcs.map((sv) => {
+          let price: number;
+          if (packagePrice != null && pkgSvcSet.size > 0) {
+            if (pkgSvcSet.has(sv.id)) {
+              price = pkgPriceAssigned ? 0 : Number(packagePrice);
+              pkgPriceAssigned = true;
+            } else {
+              price = Number(sv.price); // individual add-on — keep real price
+            }
+          } else if (packagePrice != null) {
+            // legacy fallback (no packageServiceIds): first = packagePrice, rest = 0
+            price = pkgPriceAssigned ? 0 : Number(packagePrice);
+            pkgPriceAssigned = true;
+          } else {
+            price = Number(sv.price);
+          }
+          return { appointmentId: created.id, serviceId: sv.id, price, duration };
+        }),
       });
       const withSvcs = await prisma.appointment.findUnique({
         where: { id: created.id },
