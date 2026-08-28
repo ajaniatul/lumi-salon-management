@@ -12,9 +12,12 @@ type YearlyRow   = { year:string; services:number; products:number; customers:nu
 type ServiceRow  = { service:string; category:string; bookings:number; revenue:number; avgTicket:number; gst:number };
 type ProductRow  = { product:string; category:string; unitsSold:number; revenue:number; avgPrice:number; gst:number; hsnCode:string|null };
 type ReportData  = { daily:DailyRow[]; weekly:WeeklyRow[]; monthly:MonthlyRow[]; yearly:YearlyRow[]; service:ServiceRow[]; product:ProductRow[] };
-type Tab = "sales" | "weekly" | "monthly" | "yearly" | "service" | "product";
+type DailyInvRow = { invoiceNo:string; customer:string; phone:string; items:string; subtotalExTax:number; cgst:number; sgst:number; totalIncTax:number; paid:number; due:number; status:string; method:string };
+type DailyRptData = { rows:DailyInvRow[]; totals:{ subtotalExTax:number; cgst:number; sgst:number; totalIncTax:number; paid:number; due:number }; count:number };
+type Tab = "daily" | "sales" | "weekly" | "monthly" | "yearly" | "service" | "product";
 
 const TABS: { id:Tab; label:string }[] = [
+  { id:"daily",   label:"Daily Report" },
   { id:"sales",   label:"Sales Report" },
   { id:"weekly",  label:"Weekly Sales" },
   { id:"monthly", label:"Monthly Sales" },
@@ -52,11 +55,15 @@ const EMPTY: ReportData = { daily:[], weekly:[], monthly:[], yearly:[], service:
 
 export default function ReportsPage() {
   const { setAction } = useHeaderAction();
-  const [tab,     setTab]     = useState<Tab>("sales");
-  const [year,    setYear]    = useState(CURRENT_YEAR);
-  const [month,   setMonth]   = useState(CURRENT_MONTH);
-  const [data,    setData]    = useState<ReportData>(EMPTY);
-  const [loading, setLoading] = useState(true);
+  const [tab,        setTab]       = useState<Tab>("daily");
+  const [year,       setYear]      = useState(CURRENT_YEAR);
+  const [month,      setMonth]     = useState(CURRENT_MONTH);
+  const [data,       setData]      = useState<ReportData>(EMPTY);
+  const [loading,    setLoading]   = useState(false);
+  const todayStr = new Date().toISOString().slice(0,10);
+  const [dailyDate,  setDailyDate] = useState(todayStr);
+  const [dailyRpt,   setDailyRpt]  = useState<DailyRptData|null>(null);
+  const [dailyLoad,  setDailyLoad] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -67,7 +74,18 @@ export default function ReportsPage() {
       .finally(() => setLoading(false));
   }, [year, month]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (tab !== "daily") load(); }, [load, tab]);
+
+  const loadDaily = useCallback(() => {
+    setDailyLoad(true);
+    fetch(`/api/reports/daily?date=${dailyDate}`)
+      .then(r => r.json())
+      .then(j => { if (j.success) setDailyRpt(j.data); })
+      .catch(() => {})
+      .finally(() => setDailyLoad(false));
+  }, [dailyDate]);
+
+  useEffect(() => { if (tab === "daily") loadDaily(); }, [loadDaily, tab]);
 
   const ymLabel  = `${year}-${String(month).padStart(2,"0")}`;
   const MonthLabel = MONTHS[month-1].slice(0,3)+" "+year;
@@ -115,7 +133,7 @@ export default function ReportsPage() {
 
   const salesTotal    = data.daily.reduce((s,d)=>({rev:s.rev+d.services+d.products,svc:s.svc+d.services,prd:s.prd+d.products}),{rev:0,svc:0,prd:0});
   const salesCustomers= data.daily.reduce((s,d)=>s+d.customers,0);
-  const showMonthPicker = tab !== "yearly" && tab !== "monthly";
+  const showMonthPicker = tab !== "yearly" && tab !== "monthly" && tab !== "daily";
 
   return (
     <div className="px-6 space-y-6">
@@ -146,12 +164,111 @@ export default function ReportsPage() {
         {loading && <Loader2 className="w-4 h-4 animate-spin" style={{color:"#111111"}}/>}
       </div>
 
-      {loading ? (
+      {/* ══ DAILY REPORT TAB ══ */}
+      {tab === "daily" && (
+        <div className="space-y-4">
+          {/* Date picker */}
+          <div className="flex items-center gap-3">
+            <input type="date" value={dailyDate} max={todayStr}
+              onChange={e => e.target.value && setDailyDate(e.target.value)}
+              className="text-sm px-3 py-1.5 rounded-xl border border-ivory-300 bg-white focus:outline-none focus:ring-2 focus:ring-primary-300 text-foreground" />
+            {dailyLoad && <Loader2 className="w-4 h-4 animate-spin" style={{color:"#111111"}}/>}
+            {dailyRpt && !dailyLoad && (
+              <button onClick={() => {
+                if (!dailyRpt) return;
+                const t = dailyRpt.totals;
+                downloadCSV(`daily_report_${dailyDate}.csv`,
+                  ["Invoice No","Customer","Phone","Items","Taxable Amount","CGST","SGST","Total (incl. tax)","Paid","Due","Status","Payment Method"],
+                  [
+                    ...dailyRpt.rows.map(r=>[r.invoiceNo,r.customer,r.phone,r.items,r.subtotalExTax,r.cgst,r.sgst,r.totalIncTax,r.paid,r.due,r.status,r.method]),
+                    ["TOTAL","","","",t.subtotalExTax,t.cgst,t.sgst,t.totalIncTax,t.paid,t.due,"",""],
+                  ]);
+              }} className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-ivory-300 bg-white hover:bg-ivory-50 transition-colors text-muted-foreground">
+                Download CSV
+              </button>
+            )}
+          </div>
+
+          {dailyLoad ? (
+            <div className="flex items-center justify-center h-32 gap-3">
+              <Loader2 className="w-5 h-5 animate-spin" style={{color:"#111111"}}/>
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            </div>
+          ) : dailyRpt && dailyRpt.rows.length === 0 ? (
+            <div className="card-luxury p-8 text-center text-sm text-muted-foreground">No invoices found for this date.</div>
+          ) : dailyRpt ? (
+            <>
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label:"Invoices",         value: String(dailyRpt.count) },
+                  { label:"Taxable Amount",   value: fmt(dailyRpt.totals.subtotalExTax) },
+                  { label:"GST (CGST+SGST)",  value: fmt(dailyRpt.totals.cgst + dailyRpt.totals.sgst) },
+                  { label:"Total (incl. tax)",value: fmt(dailyRpt.totals.totalIncTax) },
+                ].map(c => (
+                  <div key={c.label} className="card-luxury p-4">
+                    <p className="text-xs text-muted-foreground mb-1">{c.label}</p>
+                    <p className="text-lg font-bold text-foreground">{c.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Invoice table */}
+              <div className="card-luxury overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-ivory-50 border-b border-ivory-200">
+                      {["Invoice","Customer","Items","Taxable Amt","CGST","SGST","Total","Paid","Due","Method","Status"].map(h=>(
+                        <th key={h} className="py-3 px-3 text-[11px] uppercase tracking-wide font-semibold text-muted-foreground text-left whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dailyRpt.rows.map((r,i) => (
+                      <tr key={i} className="border-t border-ivory-100 hover:bg-ivory-50 transition-colors">
+                        <td className="py-2.5 px-3 text-xs font-mono text-foreground whitespace-nowrap">{r.invoiceNo}</td>
+                        <td className="py-2.5 px-3 text-xs font-semibold text-foreground whitespace-nowrap">{r.customer}</td>
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground max-w-[180px] truncate">{r.items}</td>
+                        <td className="py-2.5 px-3 text-xs text-right font-medium">{fmt(r.subtotalExTax)}</td>
+                        <td className="py-2.5 px-3 text-xs text-right text-muted-foreground">{fmt(r.cgst)}</td>
+                        <td className="py-2.5 px-3 text-xs text-right text-muted-foreground">{fmt(r.sgst)}</td>
+                        <td className="py-2.5 px-3 text-xs text-right font-bold text-foreground">{fmt(r.totalIncTax)}</td>
+                        <td className="py-2.5 px-3 text-xs text-right text-emerald-600 font-medium">{fmt(r.paid)}</td>
+                        <td className="py-2.5 px-3 text-xs text-right text-red-500 font-medium">{r.due > 0 ? fmt(r.due) : "—"}</td>
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">{r.method}</td>
+                        <td className="py-2.5 px-3 text-xs">
+                          <span className={cn("px-2 py-0.5 rounded-full font-semibold text-[10px]",
+                            r.status==="PAID"?"bg-emerald-50 text-emerald-700":r.status==="PARTIAL"?"bg-blue-50 text-blue-700":"bg-red-50 text-red-600")}>
+                            {r.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {/* Totals row */}
+                    <tr className="border-t-2 border-ivory-300 bg-ivory-50 font-bold">
+                      <td className="py-3 px-3 text-xs" colSpan={3}>TOTAL ({dailyRpt.count} invoices)</td>
+                      <td className="py-3 px-3 text-xs text-right">{fmt(dailyRpt.totals.subtotalExTax)}</td>
+                      <td className="py-3 px-3 text-xs text-right">{fmt(dailyRpt.totals.cgst)}</td>
+                      <td className="py-3 px-3 text-xs text-right">{fmt(dailyRpt.totals.sgst)}</td>
+                      <td className="py-3 px-3 text-xs text-right">{fmt(dailyRpt.totals.totalIncTax)}</td>
+                      <td className="py-3 px-3 text-xs text-right text-emerald-600">{fmt(dailyRpt.totals.paid)}</td>
+                      <td className="py-3 px-3 text-xs text-right text-red-500">{dailyRpt.totals.due > 0 ? fmt(dailyRpt.totals.due) : "—"}</td>
+                      <td colSpan={2}/>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : null}
+        </div>
+      )}
+
+      {loading && tab !== "daily" ? (
         <div className="flex items-center justify-center h-48 gap-3">
           <Loader2 className="w-6 h-6 animate-spin" style={{color:"#111111"}}/>
           <p className="text-sm text-muted-foreground">Loading report data…</p>
         </div>
-      ) : (
+      ) : tab !== "daily" ? (
         <>
           {/* ══ SALES REPORT (daily) ══ */}
           {tab==="sales" && (
@@ -507,7 +624,7 @@ export default function ReportsPage() {
             )
           )}
         </>
-      )}
+      ) : null}
     </div>
   );
 }
