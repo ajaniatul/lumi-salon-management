@@ -2169,23 +2169,34 @@ export default function AppointmentsPage() {
       {/* A4 Invoice Viewer */}
       {showA4 && billingAppt && (() => {
         const s2      = STAFF.find(st => st.id === billingAppt.staffId)!;
-        const base2   = billingAppt.services?.length ? billingAppt.services.reduce((sum, sv) => sum + sv.price, 0) : servicePrice(billingAppt.service);
         const dv2     = Number(discountVal) || 0;
-        const disc2   = discountType==="PCT" ? Math.round(base2*dv2/100) : Math.min(dv2,base2);
-        const dBase2  = Math.max(0,base2-disc2);
-        const hGst2   = gstRate/2;
+        // Combined: all services from primary + siblings
+        const allSvcs: { name: string; price: number; staffName: string }[] = [
+          ...(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: servicePrice(billingAppt.service), gstRate }])
+            .map(sv => ({ name: sv.name, price: sv.price, staffName: s2.name })),
+          ...siblingAppts.flatMap(sa => {
+            const saS = STAFF.find(st => st.id === sa.staffId);
+            return (sa.services ?? []).map(sv => ({ name: sv.name, price: sv.price, staffName: saS?.name ?? "Staff" }));
+          }),
+        ];
+        const base2  = allSvcs.reduce((s, sv) => s + sv.price, 0);
+        const disc2  = discountType==="PCT" ? Math.round(base2*dv2/100) : Math.min(dv2,base2);
+        const dBase2 = Math.max(0, base2 - disc2);
+        const hGst2  = gstRate / 2;
+        const allStaffNames = [...new Set(allSvcs.map(sv => sv.staffName))].join(", ");
         const a4Data: InvoiceData = {
           invoiceNo:     currentInvNum,
           date:          selectedDate.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}),
           customer:      billingAppt.customer,
           phone:         billingAppt.phone,
-          stylist:       s2.name,
-          stylistRole:   s2.role,
-          items:         (billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: base2, gstRate }])
-            .map((sv, i) => ({
-              description: sv.name, type: "Service", amount: sv.price,
-              detail: i === 0 ? `${billingAppt.durationSlots*SLOT_MINS} min total · ${slotToTime(billingAppt.startSlot)} – ${slotToTime(billingAppt.startSlot+billingAppt.durationSlots)}` : undefined,
-            })),
+          stylist:       allStaffNames,
+          stylistRole:   siblingAppts.length > 0 ? undefined : s2.role,
+          items:         allSvcs.map(sv => ({
+            description: sv.name,
+            type:        "Service" as const,
+            amount:      sv.price,
+            detail:      allSvcs.length > 1 ? `by ${sv.staffName}` : undefined,
+          })),
           subtotal:      dBase2,
           discountAmt:   disc2||undefined,
           discountLabel: discountType==="PCT"?`${dv2}%`:undefined,
