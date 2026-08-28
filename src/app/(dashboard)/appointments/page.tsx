@@ -1738,8 +1738,7 @@ export default function AppointmentsPage() {
             if (!json.success) { toast.error(json.error || "Could not create invoice."); setPayProcessing(false); return; }
             setCurrentInvNum(json.data.id);
             await changeStatus(billingAppt.id, "COMPLETED");
-            // Mark sibling appointments as completed locally
-            setSiblingAppts([]);
+            // siblingAppts intentionally NOT cleared here — kept so invoice view can render all services
             setPayProcessing(false);
             setPayDone(true);
           } catch {
