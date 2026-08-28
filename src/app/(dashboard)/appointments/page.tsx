@@ -38,15 +38,19 @@ function extractPkgName(notes?: string): string | null {
   const m = notes.match(/^\[Package:\s*(.+?)\]/);
   return m ? m[1].trim() : null;
 }
-// Returns items to display/bill: one line for a package, individual lines otherwise
+// Returns items to display/bill: one line for a package, individual lines otherwise.
+// If a package + extra individual services exist: package = first service price,
+// extras = subsequent services with price > 0.
 function apptItems(appt: { notes?: string; services?: { id: string; name: string; price: number }[]; service?: string; staffId?: string }): { id: string; name: string; price: number }[] {
+  const svcs = appt.services ?? [];
   const pkg = extractPkgName(appt.notes);
-  if (pkg) {
-    const total = (appt.services ?? []).reduce((s, sv) => s + sv.price, 0);
-    const firstId = appt.services?.[0]?.id ?? "";
-    return [{ id: firstId, name: pkg, price: total }];
+  if (pkg && svcs.length > 0) {
+    const pkgLine = { id: svcs[0].id, name: pkg, price: svcs[0].price };
+    // Any service after index 0 with price > 0 is an individual add-on
+    const extras = svcs.slice(1).filter(sv => sv.price > 0);
+    return [pkgLine, ...extras.map(sv => ({ id: sv.id, name: sv.name, price: sv.price }))];
   }
-  return (appt.services ?? []).map(sv => ({ id: sv.id, name: sv.name, price: sv.price }));
+  return svcs.map(sv => ({ id: sv.id, name: sv.name, price: sv.price }));
 }
 
 // ─── Gridline helpers ─────────────────────────────────────────────────────────
