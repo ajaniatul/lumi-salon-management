@@ -75,9 +75,12 @@ export async function GET(req: NextRequest) {
           methods[lbl] = (methods[lbl] ?? 0) + 1;
         }
       }
-      const topMethod = Object.entries(methods).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—";
+      const allMethods = Object.entries(methods)
+        .sort((a, b) => b[1] - a[1])
+        .map(([m]) => m)
+        .join(" + ") || "—";
       const date = new Date(year, month - 1, d).toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
-      daily.push({ day: d, date, services: svc, products: prd, customers: custs.size, method: topMethod });
+      daily.push({ day: d, date, services: svc, products: prd, customers: custs.size, method: allMethods });
     }
 
     // ── Weekly ─────────────────────────────────────────────
