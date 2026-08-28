@@ -2076,9 +2076,31 @@ export default function AppointmentsPage() {
                     {/* Price breakdown */}
                     <div className="space-y-2">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Price Breakdown</p>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-foreground">Service Charge</span>
-                        <span className="text-sm font-semibold text-foreground">Rs.{base.toLocaleString("en-IN")}</span>
+                      {/* Individual service lines */}
+                      {(billingAppt.services?.length ? billingAppt.services : [{ id:"_", name: billingAppt.service, price: primaryBase, gstRate }]).map((sv, i) => (
+                        <div key={i} className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm text-foreground truncate block">{sv.name}</span>
+                            <span className="text-[10px] font-medium" style={{ color:"#6366F1" }}>{s.name}</span>
+                          </div>
+                          <span className="text-sm font-semibold text-foreground flex-shrink-0">Rs.{sv.price.toLocaleString("en-IN")}</span>
+                        </div>
+                      ))}
+                      {siblingAppts.map(sa => {
+                        const saStaff = STAFF.find(st => st.id === sa.staffId);
+                        return (sa.services ?? []).map((sv, i) => (
+                          <div key={`${sa.id}-${i}`} className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm text-foreground truncate block">{sv.name}</span>
+                              <span className="text-[10px] font-medium" style={{ color:"#059669" }}>{saStaff?.name ?? "Staff"}</span>
+                            </div>
+                            <span className="text-sm font-semibold text-foreground flex-shrink-0">Rs.{sv.price.toLocaleString("en-IN")}</span>
+                          </div>
+                        ));
+                      })}
+                      <div className="flex justify-between pt-1" style={{ borderTop:"1px solid #f0f0f0" }}>
+                        <span className="text-xs text-muted-foreground">Subtotal</span>
+                        <span className="text-xs text-muted-foreground">Rs.{base.toLocaleString("en-IN")}</span>
                       </div>
                       {discountAmt > 0 && (
                         <div className="flex justify-between">
