@@ -42,15 +42,17 @@ function extractPkgName(notes?: string): string | null {
 // If a package + extra individual services exist: package = first service price,
 // extras = subsequent services with price > 0.
 function apptItems(appt: { notes?: string; services?: { id: string; name: string; price: number }[]; service?: string; staffId?: string }): { id: string; name: string; price: number }[] {
-  const svcs = appt.services ?? [];
+  const rawSvcs = appt.services ?? [];
   const pkg = extractPkgName(appt.notes);
-  if (pkg && svcs.length > 0) {
+  if (pkg && rawSvcs.length > 0) {
+    // Sort descending by price: the packagePrice service floats to top regardless of DB order
+    const svcs = [...rawSvcs].sort((a, b) => b.price - a.price);
     const pkgLine = { id: svcs[0].id, name: pkg, price: svcs[0].price };
-    // Any service after index 0 with price > 0 is an individual add-on
+    // Any service after index 0 with price > 0 is an individual add-on (not a package sub-service)
     const extras = svcs.slice(1).filter(sv => sv.price > 0);
     return [pkgLine, ...extras.map(sv => ({ id: sv.id, name: sv.name, price: sv.price }))];
   }
-  return svcs.map(sv => ({ id: sv.id, name: sv.name, price: sv.price }));
+  return rawSvcs.map(sv => ({ id: sv.id, name: sv.name, price: sv.price }));
 }
 
 // ─── Gridline helpers ─────────────────────────────────────────────────────────
@@ -1337,13 +1339,18 @@ export default function AppointmentsPage() {
                           const pkgSvcIds = pkg.services
                             .map((name: string) => services.find(s => s.name.trim().toLowerCase() === name.trim().toLowerCase())?.id)
                             .filter(Boolean) as string[];
-                          setForm(p => ({
-                            ...p,
-                            packageId:    pkg.id,
-                            packageName:  pkg.name,
-                            packagePrice: pkg.packagePrice,
-                            serviceIds:   pkgSvcIds,
-                          }));
+                          setForm(p => {
+                            const pkgSet = new Set(pkgSvcIds);
+                            // Keep any individual services already chosen that aren't part of the new package
+                            const existing = p.serviceIds.filter(id => !pkgSet.has(id));
+                            return {
+                              ...p,
+                              packageId:    pkg.id,
+                              packageName:  pkg.name,
+                              packagePrice: pkg.packagePrice,
+                              serviceIds:   [...pkgSvcIds, ...existing],
+                            };
+                          });
                         }}>
                         <option value="">Select a package...</option>
                         {packages.map(pkg => (
