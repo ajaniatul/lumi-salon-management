@@ -41,16 +41,30 @@ function extractPkgName(notes?: string): string | null {
 // Returns items to display/bill: one line for a package, individual lines otherwise.
 // If a package + extra individual services exist: package = first service price,
 // extras = subsequent services with price > 0.
-function apptItems(appt: { notes?: string; services?: { id: string; name: string; price: number }[]; service?: string; staffId?: string }): { id: string; name: string; price: number }[] {
+function apptItems(
+  appt: { notes?: string; services?: { id: string; name: string; price: number }[]; service?: string; staffId?: string },
+  pkgDefs?: { id: string; name: string; services: string[]; packagePrice: number }[]
+): { id: string; name: string; price: number }[] {
   const rawSvcs = appt.services ?? [];
   const pkg = extractPkgName(appt.notes);
   if (pkg && rawSvcs.length > 0) {
     // Sort descending by price: the packagePrice service floats to top regardless of DB order
-    const svcs = [...rawSvcs].sort((a, b) => b.price - a.price);
-    const pkgLine = { id: svcs[0].id, name: pkg, price: svcs[0].price };
-    // Any service after index 0 with price > 0 is an individual add-on (not a package sub-service)
-    const extras = svcs.slice(1).filter(sv => sv.price > 0);
-    return [pkgLine, ...extras.map(sv => ({ id: sv.id, name: sv.name, price: sv.price }))];
+    const sorted = [...rawSvcs].sort((a, b) => b.price - a.price);
+    const repId = sorted[0].id; // service that carries the packagePrice
+
+    // Use package definition to find component service IDs if available
+    const pkgDef = pkgDefs?.find(p => p.name === pkg);
+    const pkgSvcSet = pkgDef ? new Set(pkgDef.services) : null;
+    const pkgPrice = pkgDef?.packagePrice ?? sorted[0].price;
+
+    const pkgLine = { id: repId, name: pkg, price: pkgPrice };
+
+    // Add-ons: services NOT in the package component set AND not the representative
+    const extras = rawSvcs
+      .filter(sv => sv.id !== repId && (pkgSvcSet ? !pkgSvcSet.has(sv.id) : sv.price > 0))
+      .map(sv => ({ id: sv.id, name: sv.name, price: sv.price }));
+
+    return [pkgLine, ...extras];
   }
   return rawSvcs.map(sv => ({ id: sv.id, name: sv.name, price: sv.price }));
 }
@@ -1701,9 +1715,9 @@ export default function AppointmentsPage() {
 
       {billingAppt && (() => {
         const s        = STAFF.find(st => st.id === billingAppt.staffId)!;
-        const primaryItems = apptItems(billingAppt);
+        const primaryItems = apptItems(billingAppt, packages);
         const primaryBase  = primaryItems.reduce((s, it) => s + it.price, 0);
-        const siblingBase  = siblingAppts.reduce((s2, sa) => s2 + apptItems(sa).reduce((ss, it) => ss + it.price, 0), 0);
+        const siblingBase  = siblingAppts.reduce((s2, sa) => s2 + apptItems(sa, packages).reduce((ss, it) => ss + it.price, 0), 0);
         const base         = primaryBase + siblingBase;
         const dv           = Number(discountVal) || 0;
         const discountAmt  = discountType === "PCT"
@@ -1737,7 +1751,7 @@ export default function AppointmentsPage() {
           const methodLabel = PAY_OPTS.find(p => p.id === payMethod)?.label ?? payMethod;
           const primaryStaffName = STAFF.find(st => st.id === billingAppt.staffId)?.name ?? undefined;
           const allItems = [
-            ...apptItems(billingAppt).map(it => ({
+            ...apptItems(billingAppt, packages).map(it => ({
               type: "Service" as const,
               dbId: it.id,
               name: it.name, unitPrice: it.price, qty: 1, gstRate,
@@ -1745,7 +1759,7 @@ export default function AppointmentsPage() {
             })),
             ...siblingAppts.flatMap(sa => {
               const saStaffName = STAFF.find(st => st.id === sa.staffId)?.name ?? undefined;
-              return apptItems(sa).map(it => ({
+              return apptItems(sa, packages).map(it => ({
                 type: "Service" as const,
                 dbId: it.id,
                 name: it.name, unitPrice: it.price, qty: 1, gstRate,
@@ -1925,7 +1939,7 @@ export default function AppointmentsPage() {
                           {/* Sibling appointment services (or packages) */}
                           {siblingAppts.map(sa => {
                             const saStaff = STAFF.find(st => st.id === sa.staffId);
-                            return apptItems(sa).map((it, i) => (
+                            return apptItems(sa, packages).map((it, i) => (
                               <div key={`${sa.id}-${i}`} className="flex items-center py-1.5 gap-1" style={{ borderBottom:"1px solid #f0f0f0" }}>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-xs font-semibold text-foreground leading-snug truncate">{it.name}</p>
@@ -2125,7 +2139,7 @@ export default function AppointmentsPage() {
                       ))}
                       {siblingAppts.map(sa => {
                         const saStaff = STAFF.find(st => st.id === sa.staffId);
-                        return apptItems(sa).map((it, i) => (
+                        return apptItems(sa, packages).map((it, i) => (
                           <div key={`${sa.id}-${i}`} className="flex items-center justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <span className="text-sm text-foreground truncate block">{it.name}</span>
@@ -2209,10 +2223,10 @@ export default function AppointmentsPage() {
         const dv2     = Number(discountVal) || 0;
         // Combined: packages shown as one line, individual services shown per item
         const allSvcs: { name: string; price: number; staffName: string }[] = [
-          ...apptItems(billingAppt).map(it => ({ name: it.name, price: it.price, staffName: s2.name })),
+          ...apptItems(billingAppt, packages).map(it => ({ name: it.name, price: it.price, staffName: s2.name })),
           ...siblingAppts.flatMap(sa => {
             const saS = STAFF.find(st => st.id === sa.staffId);
-            return apptItems(sa).map(it => ({ name: it.name, price: it.price, staffName: saS?.name ?? "Staff" }));
+            return apptItems(sa, packages).map(it => ({ name: it.name, price: it.price, staffName: saS?.name ?? "Staff" }));
           }),
         ];
         const base2  = allSvcs.reduce((s, sv) => s + sv.price, 0);
