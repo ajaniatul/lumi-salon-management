@@ -52,16 +52,19 @@ function apptItems(
     const sorted = [...rawSvcs].sort((a, b) => b.price - a.price);
     const repId = sorted[0].id; // service that carries the packagePrice
 
-    // Use package definition to find component service IDs if available
+    // Use package definition to find component service names if available
+    // (serviceList stores names, not IDs)
     const pkgDef = pkgDefs?.find(p => p.name === pkg);
-    const pkgSvcSet = pkgDef ? new Set(pkgDef.services) : null;
+    const pkgSvcSet = pkgDef
+      ? new Set(pkgDef.services.map((s: string) => s.trim().toLowerCase()))
+      : null;
     const pkgPrice = pkgDef?.packagePrice ?? sorted[0].price;
 
     const pkgLine = { id: repId, name: pkg, price: pkgPrice };
 
-    // Add-ons: services NOT in the package component set AND not the representative
+    // Add-ons: services whose name is NOT in the package component list AND not the representative
     const extras = rawSvcs
-      .filter(sv => sv.id !== repId && (pkgSvcSet ? !pkgSvcSet.has(sv.id) : sv.price > 0))
+      .filter(sv => sv.id !== repId && (pkgSvcSet ? !pkgSvcSet.has(sv.name.trim().toLowerCase()) : sv.price > 0))
       .map(sv => ({ id: sv.id, name: sv.name, price: sv.price }));
 
     return [pkgLine, ...extras];
