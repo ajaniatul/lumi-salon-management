@@ -54,7 +54,10 @@ function toUI(inv: any) {
     influencerNote: isInfluencer ? (meta.collabNote ?? "") : "",
     discountAmt:    Number(inv.discountAmount),
     description:    meta.description ?? "",
-    stylist:        inv.appointment?.staff?.name ?? (meta.staffNames?.length ? meta.staffNames.join(", ") : null),
+    // For combined invoices, prefer all staff names stored in notes over just the primary
+    stylist:        meta.staffNames?.length > 1
+      ? meta.staffNames.join(", ")
+      : (inv.appointment?.staff?.name ?? (meta.staffNames?.length ? meta.staffNames[0] : null)),
     stylistRole:    inv.appointment?.staff?.designation ?? null,
   };
 }
