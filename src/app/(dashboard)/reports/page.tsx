@@ -14,7 +14,14 @@ type ProductRow  = { product:string; category:string; unitsSold:number; revenue:
 type ReportData  = { daily:DailyRow[]; weekly:WeeklyRow[]; monthly:MonthlyRow[]; yearly:YearlyRow[]; service:ServiceRow[]; product:ProductRow[] };
 type DailyInvRow = { invoiceNo:string; customer:string; phone:string; items:string; subtotalExTax:number; cgst:number; sgst:number; totalIncTax:number; paid:number; due:number; status:string; method:string };
 type DailyRptData = { rows:DailyInvRow[]; totals:{ subtotalExTax:number; cgst:number; sgst:number; totalIncTax:number; paid:number; due:number }; count:number };
-type Tab = "daily" | "sales" | "weekly" | "monthly" | "yearly" | "service" | "product";
+type Tab = "daily" | "sales" | "weekly" | "monthly" | "yearly" | "service" | "product" | "range";
+
+type RangeRow = {
+  invoiceNo: string; date: string; customer: string; attendedBy: string;
+  itemName: string; itemType: string; category: string;
+  taxableAmt: number; nonTaxableAmt: number; totalTax: number;
+  discountPct: number; totalPaid: number;
+};
 
 const TABS: { id:Tab; label:string }[] = [
   { id:"daily",   label:"Daily Report" },
@@ -24,6 +31,7 @@ const TABS: { id:Tab; label:string }[] = [
   { id:"yearly",  label:"Yearly Sales" },
   { id:"service", label:"Service-wise" },
   { id:"product", label:"Product-wise" },
+  { id:"range",   label:"Date Range" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────
@@ -64,6 +72,13 @@ export default function ReportsPage() {
   const [dailyDate,  setDailyDate] = useState(todayStr);
   const [dailyRpt,   setDailyRpt]  = useState<DailyRptData|null>(null);
   const [dailyLoad,  setDailyLoad] = useState(false);
+  // Date-range tab
+  const [rangeFrom,  setRangeFrom] = useState<string|null>(null);
+  const [rangeTo,    setRangeTo]   = useState<string|null>(null);
+  const [rangeRows,  setRangeRows] = useState<RangeRow[]>([]);
+  const [rangeLoad,  setRangeLoad] = useState(false);
+  const [rangeCalYear,  setRangeCalYear]  = useState(CURRENT_YEAR);
+  const [rangeCalMonth, setRangeCalMonth] = useState(CURRENT_MONTH);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -74,7 +89,7 @@ export default function ReportsPage() {
       .finally(() => setLoading(false));
   }, [year, month]);
 
-  useEffect(() => { if (tab !== "daily") load(); }, [load, tab]);
+  useEffect(() => { if (tab !== "daily" && tab !== "range") load(); }, [load, tab]);
 
   const loadDaily = useCallback(() => {
     setDailyLoad(true);
@@ -86,6 +101,32 @@ export default function ReportsPage() {
   }, [dailyDate]);
 
   useEffect(() => { if (tab === "daily") loadDaily(); }, [loadDaily, tab]);
+
+  // Range tab: auto-fetch when both dates are set
+  const loadRange = useCallback((from: string, to: string) => {
+    setRangeLoad(true);
+    fetch(`/api/reports/range?from=${from}&to=${to}`)
+      .then(r => r.json())
+      .then(j => { if (j.success) setRangeRows(j.data); })
+      .catch(() => {})
+      .finally(() => setRangeLoad(false));
+  }, []);
+
+  const handleRangeCalClick = (dateStr: string) => {
+    if (!rangeFrom || (rangeFrom && rangeTo)) {
+      // Start new selection
+      setRangeFrom(dateStr);
+      setRangeTo(null);
+      setRangeRows([]);
+    } else {
+      // Second click — set To (ensure from <= to)
+      const from = rangeFrom <= dateStr ? rangeFrom : dateStr;
+      const to   = rangeFrom <= dateStr ? dateStr   : rangeFrom;
+      setRangeFrom(from);
+      setRangeTo(to);
+      loadRange(from, to);
+    }
+  };
 
   const ymLabel  = `${year}-${String(month).padStart(2,"0")}`;
   const MonthLabel = MONTHS[month-1].slice(0,3)+" "+year;
@@ -123,8 +164,16 @@ export default function ReportsPage() {
           ["Product","Category","HSN Code","Units Sold","Revenue","Avg Price","GST%"],
           D.product.map(p=>[p.product,p.category,p.hsnCode??"",p.unitsSold,p.revenue,p.avgPrice,p.gst]));
         break;
+      case "range":
+        if (rangeRows.length > 0) {
+          const lbl = rangeFrom && rangeTo ? `${rangeFrom}_to_${rangeTo}` : "range";
+          downloadCSV(`range_report_${lbl}.csv`,
+            ["Invoice No","Date","Name","Attended By","Service/Product Name","Type","Category","Taxable Amount","Non-Taxable Amount","Total Tax","Discount %","Total Amount Paid"],
+            rangeRows.map(r=>[r.invoiceNo,r.date,r.customer,r.attendedBy,r.itemName,r.itemType,r.category,r.taxableAmt,r.nonTaxableAmt,r.totalTax,r.discountPct,r.totalPaid]));
+        }
+        break;
     }
-  }, [tab, data, ymLabel, year]);
+  }, [tab, data, ymLabel, year, rangeRows, rangeFrom, rangeTo]);
 
   useEffect(() => {
     setAction({ label: "Download CSV", variant: "outline", onClick: makeDownload });
@@ -133,7 +182,7 @@ export default function ReportsPage() {
 
   const salesTotal    = data.daily.reduce((s,d)=>({rev:s.rev+d.services+d.products,svc:s.svc+d.services,prd:s.prd+d.products}),{rev:0,svc:0,prd:0});
   const salesCustomers= data.daily.reduce((s,d)=>s+d.customers,0);
-  const showMonthPicker = tab !== "yearly" && tab !== "monthly" && tab !== "daily";
+  const showMonthPicker = tab !== "yearly" && tab !== "monthly" && tab !== "daily" && tab !== "range";
 
   return (
     <div className="px-6 space-y-6">
@@ -155,7 +204,7 @@ export default function ReportsPage() {
             {MONTHS.map((m,i)=><option key={i} value={i+1}>{m}</option>)}
           </select>
         )}
-        {tab !== "yearly" && (
+        {tab !== "yearly" && tab !== "range" && (
           <select value={year} onChange={e=>setYear(Number(e.target.value))}
             className="text-sm px-3 py-1.5 rounded-xl border border-ivory-300 bg-white focus:outline-none focus:ring-2 focus:ring-primary-300 text-foreground">
             {YEARS.map(y=><option key={y} value={y}>{y}</option>)}
@@ -263,12 +312,12 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {loading && tab !== "daily" ? (
+      {loading && tab !== "daily" && tab !== "range" ? (
         <div className="flex items-center justify-center h-48 gap-3">
           <Loader2 className="w-6 h-6 animate-spin" style={{color:"#111111"}}/>
           <p className="text-sm text-muted-foreground">Loading report data…</p>
         </div>
-      ) : tab !== "daily" ? (
+      ) : tab !== "daily" && tab !== "range" ? (
         <>
           {/* ══ SALES REPORT (daily) ══ */}
           {tab==="sales" && (
@@ -625,6 +674,159 @@ export default function ReportsPage() {
           )}
         </>
       ) : null}
+
+      {/* ══ DATE RANGE TAB ══ */}
+      {tab === "range" && (
+        <div className="space-y-5">
+          {/* Calendar */}
+          <div className="card-luxury p-5 max-w-sm">
+            {/* Month nav */}
+            <div className="flex items-center justify-between mb-3">
+              <button onClick={() => {
+                const prev = rangeCalMonth === 1 ? 12 : rangeCalMonth - 1;
+                const prevY = rangeCalMonth === 1 ? rangeCalYear - 1 : rangeCalYear;
+                setRangeCalMonth(prev); setRangeCalYear(prevY);
+              }} className="p-1.5 rounded-lg hover:bg-ivory-100 transition-colors text-muted-foreground">‹</button>
+              <span className="text-sm font-semibold text-foreground">{MONTHS[rangeCalMonth-1]} {rangeCalYear}</span>
+              <button onClick={() => {
+                const next = rangeCalMonth === 12 ? 1 : rangeCalMonth + 1;
+                const nextY = rangeCalMonth === 12 ? rangeCalYear + 1 : rangeCalYear;
+                setRangeCalMonth(next); setRangeCalYear(nextY);
+              }} className="p-1.5 rounded-lg hover:bg-ivory-100 transition-colors text-muted-foreground">›</button>
+            </div>
+            {/* Weekday headers */}
+            <div className="grid grid-cols-7 mb-1">
+              {["Su","Mo","Tu","We","Th","Fr","Sa"].map(d=>(
+                <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1">{d}</div>
+              ))}
+            </div>
+            {/* Days */}
+            {(()=>{
+              const firstDay = new Date(rangeCalYear, rangeCalMonth-1, 1).getDay();
+              const daysInMonth = new Date(rangeCalYear, rangeCalMonth, 0).getDate();
+              const cells: (number|null)[] = [...Array(firstDay).fill(null), ...Array.from({length:daysInMonth},(_,i)=>i+1)];
+              while (cells.length % 7 !== 0) cells.push(null);
+              return (
+                <div className="grid grid-cols-7 gap-y-0.5">
+                  {cells.map((day, idx) => {
+                    if (!day) return <div key={idx}/>;
+                    const ds = `${rangeCalYear}-${String(rangeCalMonth).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+                    const isFrom = ds === rangeFrom;
+                    const isTo   = ds === rangeTo;
+                    const inRange = rangeFrom && rangeTo && ds > rangeFrom && ds < rangeTo;
+                    return (
+                      <button key={idx} onClick={() => handleRangeCalClick(ds)}
+                        className={cn(
+                          "text-xs py-1.5 rounded-lg transition-colors font-medium w-full",
+                          (isFrom || isTo) ? "text-white" : inRange ? "bg-primary-50 text-primary-700" : "hover:bg-ivory-100 text-foreground"
+                        )}
+                        style={(isFrom || isTo) ? {background:"#111111"} : {}}>
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+            {/* Range label */}
+            <div className="mt-3 text-xs text-muted-foreground border-t border-ivory-100 pt-2.5">
+              {rangeFrom && rangeTo
+                ? <span><span className="font-semibold text-foreground">{rangeFrom}</span> → <span className="font-semibold text-foreground">{rangeTo}</span></span>
+                : rangeFrom
+                ? <span>From: <span className="font-semibold text-foreground">{rangeFrom}</span> — click a second date</span>
+                : <span>Click a date to start selection</span>
+              }
+            </div>
+          </div>
+
+          {/* Results */}
+          {rangeLoad ? (
+            <div className="flex items-center justify-center h-32 gap-3">
+              <Loader2 className="w-5 h-5 animate-spin" style={{color:"#111111"}}/>
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            </div>
+          ) : rangeRows.length === 0 && rangeFrom && rangeTo ? (
+            <div className="card-luxury p-8 text-center text-sm text-muted-foreground">No records found for this date range.</div>
+          ) : rangeRows.length > 0 ? (
+            <>
+              {/* Summary strip */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {(()=>{
+                  const totalPaid     = rangeRows.reduce((s,r)=>s+r.totalPaid,0);
+                  const totalTaxable  = rangeRows.reduce((s,r)=>s+r.taxableAmt,0);
+                  const totalNonTax   = rangeRows.reduce((s,r)=>s+r.nonTaxableAmt,0);
+                  const totalTax      = rangeRows.reduce((s,r)=>s+r.totalTax,0);
+                  const uniqueInvs    = new Set(rangeRows.map(r=>r.invoiceNo)).size;
+                  return [
+                    {label:"Invoices",         value:String(uniqueInvs)},
+                    {label:"Taxable Amount",   value:fmt(totalTaxable)},
+                    {label:"Non-Taxable",      value:fmt(totalNonTax)},
+                    {label:"Total Tax",        value:fmt(totalTax)},
+                  ].map(c=>(
+                    <div key={c.label} className="card-luxury p-4">
+                      <p className="text-xs text-muted-foreground mb-1">{c.label}</p>
+                      <p className="text-lg font-bold text-foreground">{c.value}</p>
+                    </div>
+                  ));
+                })()}
+              </div>
+              {/* Download */}
+              <div className="flex justify-end">
+                <button onClick={() => {
+                  const lbl = rangeFrom && rangeTo ? `${rangeFrom}_to_${rangeTo}` : "range";
+                  downloadCSV(`range_report_${lbl}.csv`,
+                    ["Invoice No","Date","Name","Attended By","Service/Product Name","Type","Category","Taxable Amount","Non-Taxable Amount","Total Tax","Discount %","Total Amount Paid"],
+                    rangeRows.map(r=>[r.invoiceNo,r.date,r.customer,r.attendedBy,r.itemName,r.itemType,r.category,r.taxableAmt,r.nonTaxableAmt,r.totalTax,r.discountPct,r.totalPaid]));
+                }} className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-ivory-300 bg-white hover:bg-ivory-50 transition-colors text-muted-foreground">
+                  Download CSV
+                </button>
+              </div>
+              {/* Table */}
+              <div className="card-luxury overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-ivory-50 border-b border-ivory-200">
+                      {["Invoice No","Date","Name","Attended By","Service/Product","Type","Category","Taxable Amt","Non-Taxable","Tax","Disc %","Total Paid"].map(h=>(
+                        <th key={h} className="py-3 px-3 text-[11px] uppercase tracking-wide font-semibold text-muted-foreground text-left whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rangeRows.map((r,i)=>(
+                      <tr key={i} className="border-t border-ivory-100 hover:bg-ivory-50 transition-colors">
+                        <td className="py-2.5 px-3 text-xs font-mono text-foreground whitespace-nowrap">{r.invoiceNo}</td>
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">{r.date}</td>
+                        <td className="py-2.5 px-3 text-xs font-semibold text-foreground whitespace-nowrap">{r.customer}</td>
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">{r.attendedBy}</td>
+                        <td className="py-2.5 px-3 text-xs text-foreground max-w-[160px] truncate">{r.itemName}</td>
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">{r.itemType}</td>
+                        <td className="py-2.5 px-3 text-xs">
+                          <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full",CAT_COLOR[r.category]??"bg-ivory-100 text-muted-foreground")}>{r.category||"—"}</span>
+                        </td>
+                        <td className="py-2.5 px-3 text-xs text-right font-medium">{r.taxableAmt > 0 ? fmt(r.taxableAmt) : "—"}</td>
+                        <td className="py-2.5 px-3 text-xs text-right">{r.nonTaxableAmt > 0 ? fmt(r.nonTaxableAmt) : "—"}</td>
+                        <td className="py-2.5 px-3 text-xs text-right text-muted-foreground">{r.totalTax > 0 ? fmt(r.totalTax) : "—"}</td>
+                        <td className="py-2.5 px-3 text-xs text-right text-muted-foreground">{r.discountPct > 0 ? `${r.discountPct}%` : "—"}</td>
+                        <td className="py-2.5 px-3 text-xs text-right font-bold text-foreground">{fmt(r.totalPaid)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-ivory-300 bg-ivory-50 font-bold">
+                      <td className="py-3 px-3 text-xs" colSpan={7}>TOTAL ({new Set(rangeRows.map(r=>r.invoiceNo)).size} invoices, {rangeRows.length} items)</td>
+                      <td className="py-3 px-3 text-xs text-right">{fmt(rangeRows.reduce((s,r)=>s+r.taxableAmt,0))}</td>
+                      <td className="py-3 px-3 text-xs text-right">{fmt(rangeRows.reduce((s,r)=>s+r.nonTaxableAmt,0))}</td>
+                      <td className="py-3 px-3 text-xs text-right">{fmt(rangeRows.reduce((s,r)=>s+r.totalTax,0))}</td>
+                      <td/>
+                      <td className="py-3 px-3 text-xs text-right">{fmt(rangeRows.reduce((s,r)=>s+r.totalPaid,0))}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
