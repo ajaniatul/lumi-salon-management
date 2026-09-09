@@ -20,7 +20,7 @@ type RangeRow = {
   invoiceNo: string; date: string; customer: string; attendedBy: string;
   itemName: string; itemType: string; category: string;
   taxableAmt: number; nonTaxableAmt: number; totalTax: number;
-  discountPct: number; totalPaid: number;
+  discountPct: number; totalPaid: number; paymentMethod: string;
 };
 
 const TABS: { id:Tab; label:string }[] = [
@@ -168,8 +168,8 @@ export default function ReportsPage() {
         if (rangeRows.length > 0) {
           const lbl = rangeFrom && rangeTo ? `${rangeFrom}_to_${rangeTo}` : "range";
           downloadCSV(`range_report_${lbl}.csv`,
-            ["Invoice No","Date","Name","Attended By","Service/Product Name","Type","Category","Taxable Amount","Non-Taxable Amount","Total Tax","Discount %","Total Amount Paid"],
-            rangeRows.map(r=>[r.invoiceNo,r.date,r.customer,r.attendedBy,r.itemName,r.itemType,r.category,r.taxableAmt,r.nonTaxableAmt,r.totalTax,r.discountPct,r.totalPaid]));
+            ["Invoice No","Date","Name","Attended By","Service/Product Name","Type","Category","Taxable Amount","Non-Taxable Amount","Total Tax","Discount %","Total Amount Paid","Payment Method"],
+            rangeRows.map(r=>[r.invoiceNo,r.date,r.customer,r.attendedBy,r.itemName,r.itemType,r.category,r.taxableAmt,r.nonTaxableAmt,r.totalTax,r.discountPct,r.totalPaid,r.paymentMethod]));
         }
         break;
     }
@@ -775,8 +775,8 @@ export default function ReportsPage() {
                 <button onClick={() => {
                   const lbl = rangeFrom && rangeTo ? `${rangeFrom}_to_${rangeTo}` : "range";
                   downloadCSV(`range_report_${lbl}.csv`,
-                    ["Invoice No","Date","Name","Attended By","Service/Product Name","Type","Category","Taxable Amount","Non-Taxable Amount","Total Tax","Discount %","Total Amount Paid"],
-                    rangeRows.map(r=>[r.invoiceNo,r.date,r.customer,r.attendedBy,r.itemName,r.itemType,r.category,r.taxableAmt,r.nonTaxableAmt,r.totalTax,r.discountPct,r.totalPaid]));
+                    ["Invoice No","Date","Name","Attended By","Service/Product Name","Type","Category","Taxable Amount","Non-Taxable Amount","Total Tax","Discount %","Total Amount Paid","Payment Method"],
+                    rangeRows.map(r=>[r.invoiceNo,r.date,r.customer,r.attendedBy,r.itemName,r.itemType,r.category,r.taxableAmt,r.nonTaxableAmt,r.totalTax,r.discountPct,r.totalPaid,r.paymentMethod]));
                 }} className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-ivory-300 bg-white hover:bg-ivory-50 transition-colors text-muted-foreground">
                   Download CSV
                 </button>
@@ -786,7 +786,7 @@ export default function ReportsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-ivory-50 border-b border-ivory-200">
-                      {["Invoice No","Date","Name","Attended By","Service/Product","Type","Category","Taxable Amt","Non-Taxable","Tax","Disc %","Total Paid"].map(h=>(
+                      {["Invoice No","Date","Name","Attended By","Service/Product","Type","Category","Taxable Amt","Non-Taxable","Tax","Disc %","Total Paid","Payment Method"].map(h=>(
                         <th key={h} className="py-3 px-3 text-[11px] uppercase tracking-wide font-semibold text-muted-foreground text-left whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -808,6 +808,7 @@ export default function ReportsPage() {
                         <td className="py-2.5 px-3 text-xs text-right text-muted-foreground">{r.totalTax > 0 ? fmt(r.totalTax) : "—"}</td>
                         <td className="py-2.5 px-3 text-xs text-right text-muted-foreground">{r.discountPct > 0 ? `${r.discountPct}%` : "—"}</td>
                         <td className="py-2.5 px-3 text-xs text-right font-bold text-foreground">{fmt(r.totalPaid)}</td>
+                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">{r.paymentMethod}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -819,6 +820,7 @@ export default function ReportsPage() {
                       <td className="py-3 px-3 text-xs text-right">{fmt(rangeRows.reduce((s,r)=>s+r.totalTax,0))}</td>
                       <td/>
                       <td className="py-3 px-3 text-xs text-right">{fmt(rangeRows.reduce((s,r)=>s+r.totalPaid,0))}</td>
+                      <td/>
                     </tr>
                   </tfoot>
                 </table>

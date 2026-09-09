@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
           },
         },
         appointment: { include: { staff: { select: { name: true } } } },
+        payments:    { select: { method: true } },
       },
       orderBy: { createdAt: "asc" },
     });
@@ -43,6 +44,9 @@ export async function GET(req: NextRequest) {
       const attendedBy = meta.staffNames?.length
         ? (meta.staffNames as string[]).join(", ")
         : (inv.appointment?.staff?.name ?? "—");
+
+      const paymentMethod = meta.methodLabel
+        ?? (inv.payments?.[0]?.method ?? "—");
 
       const discountAmt = Number(inv.discountAmount);
       const subtotal    = Number(inv.subtotal);
@@ -83,6 +87,7 @@ export async function GET(req: NextRequest) {
           totalTax:       itemGst,
           discountPct,
           totalPaid:      Number(inv.paidAmount),
+          paymentMethod,
         });
       }
     }
